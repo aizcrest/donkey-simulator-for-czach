@@ -11,6 +11,8 @@ namespace DonkeyForest
     {
         public int version = 1, kills, coins, sword = 1, armor = 1, barding = 1, potions = 3;
         public float health = 100, time = 0.25f, x, z;
+        public int gemMask, gemsPlaced;
+        public bool dragonDefeated;
     }
 
     public sealed class ForestGame : MonoBehaviour
@@ -20,6 +22,7 @@ namespace DonkeyForest
         public Progress data = new Progress();
         public Transform rider;
         public ForestTerrain Landscape { get; private set; }
+        public DragonEncounter Encounter { get; private set; }
         public Vector3 Ground(Vector3 position, float clearance = 0) => Landscape.Ground(position, clearance);
         public float MaxHealth => 90 + data.armor * 10 + data.barding * 10;
         public bool Night => data.time < .22f || data.time > .76f;
@@ -29,10 +32,11 @@ namespace DonkeyForest
         CharacterController controller;
         Camera view;
         Light sun;
-        Text status, message, inventory;
-        GameObject menu;
+        Text status, message, inventory, objective;
+        GameObject menu, creditsPanel;
         Transform sword, donkey;
-        float attackCooldown, swing, spawnClock, autoSave, messageClock;
+        float attackCooldown, swing, spawnClock, autoSave, messageClock, dodgeCooldown, dodgeTime;
+        Vector3 dodgeDirection;
         string notice = "Welcome, rider. Hunt for loot. Zombies arrive after dark.";
         readonly List<Material> mats = new List<Material>();
         readonly Dictionary<Color, Material> palette = new Dictionary<Color, Material>();
@@ -47,13 +51,19 @@ namespace DonkeyForest
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
             Load();
             BuildWorld(); BuildRider(); BuildUI();
-            for (int i = 0; i < 14; i++) SpawnEnemy(false);
+            Encounter=new GameObject("Gems and summoning altar").AddComponent<DragonEncounter>();
+            Encounter.Setup(this);
+            if(!Encounter.Active)for (int i = 0; i < 14; i++) SpawnEnemy(false);
             Show(notice);
         }
         public Material Mat(Color color)
         {
             if (palette.TryGetValue(color, out var existing)) return existing;
             var m = new Material(Shader.Find("Standard")); m.color = color; mats.Add(m); palette.Add(color,m); return m;
+        }
+        public Material Glow(Color color)
+        {
+            var material=Mat(color);material.EnableKeyword("_EMISSION");material.SetColor("_EmissionColor",color*.8f);return material;
         }
         public GameObject Shape(string name, PrimitiveType type, Transform parent, Vector3 pos, Vector3 scale, Material material)
         {
@@ -75,7 +85,7 @@ namespace DonkeyForest
             {
                 Vector2 p = UnityEngine.Random.insideUnitCircle * 85;
                 var position = Ground(new Vector3(p.x,0,p.y));
-                if (p.magnitude < 9 || ForestTerrain.PathWeight(p.x,p.y) > .2f || Landscape.Slope(position) > 28) continue;
+                if (p.magnitude < 18 || ForestTerrain.PathWeight(p.x,p.y) > .2f || Landscape.Slope(position) > 28) continue;
                 float h = UnityEngine.Random.Range(3f,7f);
                 var tree = new GameObject("Pine").transform; tree.SetParent(world); tree.position = position;
                 tree.gameObject.layer = ForestTerrain.SceneryLayer;
@@ -87,7 +97,7 @@ namespace DonkeyForest
             for(int i=0;i<45;i++)
             {
                 var p=UnityEngine.Random.insideUnitCircle*82;
-                if(p.magnitude < 8 || ForestTerrain.PathWeight(p.x,p.y) > .3f) continue;
+                if(p.magnitude < 18 || ForestTerrain.PathWeight(p.x,p.y) > .3f) continue;
                 var stone = Shape("Weathered stone",PrimitiveType.Sphere,world,Ground(new Vector3(p.x,0,p.y)),
                     new Vector3(1,.65f,.8f)*UnityEngine.Random.Range(.6f,2.4f),rocks);
                 stone.transform.rotation = Quaternion.Euler(UnityEngine.Random.Range(-12,12),UnityEngine.Random.Range(0,360),UnityEngine.Random.Range(-12,12));
@@ -140,6 +150,8 @@ namespace DonkeyForest
             if(Input.GetKeyDown(KeyCode.F5)) Save();
             if(Input.GetKeyDown(KeyCode.Space)) Attack();
             if(Input.GetKeyDown(KeyCode.H)) Heal();
+            if(Input.GetKeyDown(KeyCode.LeftShift)||Input.GetKeyDown(KeyCode.RightShift))Dodge();
+            if(Input.GetKeyDown(KeyCode.E))Encounter.OfferGems();
             if(!Paused && !Dead)
             {
                 float dt=Time.deltaTime;
@@ -147,12 +159,14 @@ namespace DonkeyForest
                 input=Vector2.ClampMagnitude(input,1);
                 var forward=Vector3.ProjectOnPlane(view.transform.forward,Vector3.up).normalized;
                 var direction=forward*input.y+view.transform.right*input.x;direction.y=0;
+                dodgeCooldown=Mathf.Max(0,dodgeCooldown-dt);
+                if(dodgeTime>0){direction=dodgeDirection;dodgeTime=Mathf.Max(0,dodgeTime-dt);}
                 if(direction.sqrMagnitude>.01f) rider.rotation=Quaternion.Slerp(rider.rotation,Quaternion.LookRotation(direction),dt*10);
-                controller.Move((direction*6.5f+Vector3.down*15)*dt);
+                controller.Move((direction*(dodgeTime>0?14f:6.5f)+Vector3.down*15)*dt);
                 Vector3 pos=rider.position;pos.x=Mathf.Clamp(pos.x,-86,86);pos.z=Mathf.Clamp(pos.z,-86,86);rider.position=pos;
                 donkey.localPosition=Vector3.up*(Mathf.Sin(Time.time*13)*.035f*input.magnitude);
                 data.time=Mathf.Repeat(data.time+dt/360,1);
-                spawnClock+=dt;if(spawnClock>4){spawnClock=0;if(enemies.Count<22)SpawnEnemy(Night);}
+                spawnClock+=dt;if(spawnClock>4){spawnClock=0;if(enemies.Count<22&&!Encounter.Active)SpawnEnemy(Night);}
                 autoSave+=dt;if(autoSave>30){autoSave=0;Save(false);}
                 attackCooldown-=dt;swing=Mathf.Max(0,swing-dt);
             }
@@ -162,13 +176,14 @@ namespace DonkeyForest
             RenderSettings.ambientLight=Color.Lerp(new Color(.18f,.22f,.34f),new Color(.65f,.68f,.57f),daylight);
             RenderSettings.fogColor=Color.Lerp(new Color(.055f,.075f,.13f),new Color(.48f,.59f,.5f),daylight);view.backgroundColor=RenderSettings.fogColor;
             status.text=$"FOREST RIDER  •  {(Night?"NIGHT — ZOMBIES":"DAY — FOREST HUNT")}\nHealth {Mathf.CeilToInt(data.health)} / {MaxHealth:0}    Coins {data.coins}    Kills {data.kills}\nSword {data.sword}  •  Armor {data.armor}  •  Donkey gear {data.barding}  •  Potions {data.potions}";
+            objective.text=Encounter.Objective+$" • Dodge {(dodgeCooldown<=0?"READY":dodgeCooldown.ToString("0.0")+"s")}";
             messageClock-=Time.unscaledDeltaTime;message.text=Dead?"You fell. Open CAMP to revive.":messageClock>0?notice:"";
         }
         void LateUpdate()
         {
             if(!rider)return;
             Vector3 look = rider.position + Vector3.up * 1.6f;
-            Vector3 target = rider.position + new Vector3(0,7,-9);
+            Vector3 target = rider.position + (Encounter && Encounter.Active?new Vector3(0,12,-16):new Vector3(0,7,-9));
             target.y = Mathf.Max(target.y, Ground(target).y + 2);
             var sight = target - look;
             int mask = (1 << ForestTerrain.GroundLayer) | (1 << ForestTerrain.SceneryLayer);
@@ -179,10 +194,16 @@ namespace DonkeyForest
             view.transform.position=next;
             view.transform.LookAt(look);
         }
+        public void Dodge()
+        {
+            if(Paused||Dead||dodgeCooldown>0)return;
+            dodgeDirection=rider.forward;dodgeTime=.32f;dodgeCooldown=1.6f;
+        }
         public void Attack()
         {
             if(Paused||Dead||attackCooldown>0)return;
             attackCooldown=.6f;swing=.3f;
+            if(Encounter && Encounter.Boss)Encounter.Boss.Hit(17+data.sword*8);
             foreach(var enemy in enemies.ToArray())
             {
                 if(!enemy)continue;
@@ -194,7 +215,7 @@ namespace DonkeyForest
         }
         public void Damage(float amount)
         {
-            if(Dead||Paused)return;
+            if(Dead||Paused||dodgeTime>0)return;
             data.health=Mathf.Max(0,data.health-Mathf.Max(1,amount*(1-Mathf.Min(.65f,(data.armor+data.barding)*.035f))));
             if(Dead){Show("You fell. Your equipment is safe. Revive at camp.");Save(false);}
         }
@@ -213,7 +234,8 @@ namespace DonkeyForest
                 found=true;break;
             }
             if(!found)return;
-            var enemy=new GameObject(zombie?"Zombie":UnityEngine.Random.value<.45f?"Bear":"Deer").AddComponent<ForestEnemy>();
+            string[] species={"Bear","Deer","Moose","Wolf","Fox"};
+            var enemy=new GameObject(zombie?"Zombie":species[UnityEngine.Random.Range(0,species.Length)]).AddComponent<ForestEnemy>();
             enemy.transform.position=pos;enemy.Setup(this,enemy.name);enemies.Add(enemy);
         }
         public void Killed(ForestEnemy enemy)
@@ -260,14 +282,17 @@ namespace DonkeyForest
                     var loaded=JsonUtility.FromJson<Progress>(json);
                     if(loaded==null||loaded.version!=1||loaded.sword<1||float.IsNaN(loaded.health)||float.IsNaN(loaded.time)||float.IsInfinity(loaded.time)||float.IsNaN(loaded.x)||float.IsNaN(loaded.z)||float.IsInfinity(loaded.x)||float.IsInfinity(loaded.z))continue;
                     data=loaded;data.sword=Mathf.Clamp(data.sword,1,10);data.armor=Mathf.Clamp(data.armor,1,10);data.barding=Mathf.Clamp(data.barding,1,10);
-                    data.health=Mathf.Clamp(data.health,0,MaxHealth);data.coins=Mathf.Max(0,data.coins);data.potions=Mathf.Max(0,data.potions);data.time=Mathf.Repeat(data.time,1);return;
+                    data.health=Mathf.Clamp(data.health,0,MaxHealth);data.coins=Mathf.Max(0,data.coins);data.potions=Mathf.Max(0,data.potions);data.time=Mathf.Repeat(data.time,1);
+                    data.gemMask &= GemRules.FullMask;
+                    data.gemsPlaced=Mathf.Clamp(data.gemsPlaced,0,GemRules.Count(data.gemMask));
+                    return;
                 }catch(Exception){Debug.LogWarning("Could not read save; trying recovery copy.");}
             }
         }
         void OnApplicationPause(bool pause){if(pause)Save(false);}
         void OnApplicationQuit(){Save(false);}
         void OnDestroy(){foreach(var m in mats)if(m)Destroy(m);if(Instance==this)Instance=null;}
-        void ToggleMenu(){Paused=!Paused;menu.SetActive(Paused);moveInput=Vector2.zero;RefreshCamp();}
+        void ToggleMenu(){Paused=!Paused;menu.SetActive(Paused);if(creditsPanel)creditsPanel.SetActive(false);moveInput=Vector2.zero;RefreshCamp();}
         void RefreshCamp(){inventory.text=$"CAMP & EQUIPMENT\nCoins: {data.coins}\nSword Lv.{data.sword}   Rider armor Lv.{data.armor}   Donkey armor Lv.{data.barding}\nUpgrades cost 40 × current level. Maximum level 10.\nLocal autosave every 30 seconds. One save per device.";}
         void Upgrade(int kind)
         {
@@ -277,7 +302,7 @@ namespace DonkeyForest
             data.coins-=level*40;if(kind==0)data.sword++;else if(kind==1)data.armor++;else data.barding++;
             RefreshCamp();Save();
         }
-        void Revive(){if(!Dead){Show("You can revive after falling in battle.");return;}data.health=MaxHealth;controller.enabled=false;rider.position=Ground(Vector3.zero,.08f);controller.enabled=true;foreach(var e in enemies.ToArray())if(e)Destroy(e.gameObject);enemies.Clear();Save();ToggleMenu();}
+        void Revive(){if(!Dead){Show("You can revive after falling in battle.");return;}data.health=MaxHealth;controller.enabled=false;rider.position=Ground(Vector3.zero,.08f);controller.enabled=true;foreach(var e in enemies.ToArray())if(e)Destroy(e.gameObject);enemies.Clear();dodgeTime=0;dodgeCooldown=0;Encounter.RestartBoss();Save();ToggleMenu();}
         Font font;
         RectTransform Panel(string name,Transform parent,Vector2 anchor,Vector2 pos,Vector2 size,Color color)
         {
@@ -304,9 +329,12 @@ namespace DonkeyForest
             var sr=safe.GetComponent<RectTransform>();sr.offsetMin=sr.offsetMax=Vector2.zero;
             var parent=safe.transform;
             status=Label(parent,"",new Vector2(.5f,1),new Vector2(0,-65),new Vector2(950,110),23);
+            objective=Label(parent,"",new Vector2(.5f,1),new Vector2(0,-150),new Vector2(1120,70),20);
             message=Label(parent,"",new Vector2(.5f,.5f),new Vector2(0,125),new Vector2(950,80),25);
             Button(parent,"CAMP",new Vector2(1,1),new Vector2(-85,-55),new Vector2(140,60),ToggleMenu);
             Button(parent,"ATTACK",new Vector2(1,0),new Vector2(-110,115),new Vector2(180,110),Attack);
+            Button(parent,"DODGE",new Vector2(1,0),new Vector2(-300,180),new Vector2(150,70),Dodge);
+            Button(parent,"OFFER GEMS",new Vector2(0,1),new Vector2(120,-230),new Vector2(200,60),()=>Encounter.OfferGems());
             Button(parent,"HEAL",new Vector2(1,0),new Vector2(-280,80),new Vector2(120,70),Heal);
             var joystick=Panel("Movement",parent,Vector2.zero,new Vector2(135,135),new Vector2(190,190),new Color(.12f,.18f,.16f,.7f));
             var knob=Panel("Thumb",joystick,new Vector2(.5f,.5f),Vector2.zero,new Vector2(65,65),new Color(.7f,.78f,.6f,.9f));
@@ -320,7 +348,14 @@ namespace DonkeyForest
             Button(panel,"SAVE",new Vector2(.5f,.5f),new Vector2(-270,-100),new Vector2(240,65),()=>Save());
             Button(panel,"REVIVE",new Vector2(.5f,.5f),new Vector2(0,-100),new Vector2(240,65),Revive);
             Button(panel,"RESUME",new Vector2(.5f,.5f),new Vector2(270,-100),new Vector2(240,65),ToggleMenu);
-            Label(panel,"WASD / arrows: ride    Space: attack    H: heal    Esc: camp    F5: save",new Vector2(.5f,0),new Vector2(0,50),new Vector2(850,60),20);
+            Label(panel,"WASD: ride • Space: attack • Shift: dodge • E: offer gems • H: heal • F5: save",new Vector2(.5f,0),new Vector2(0,50),new Vector2(850,60),20);
+            Button(panel,"ASSET CREDITS",new Vector2(1,1),new Vector2(-115,-30),new Vector2(210,42),()=>creditsPanel.SetActive(true));
+            var credits=Panel("Asset credits",panel,new Vector2(.5f,.5f),Vector2.zero,new Vector2(880,530),new Color(.06f,.1f,.09f,1));
+            creditsPanel=credits.gameObject;
+            Label(credits,"FREE MODEL CREDITS\n\nBear and Elk (adapted as Moose): Poly by Google\nCreative Commons Attribution 3.0\nhttps://creativecommons.org/licenses/by/3.0/\n\nDeer, Wolf, Fox, Zombie and Dragon: Quaternius\nCC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/\n\nModels converted to FBX. Moose antlers adapted.\nOriginal model links and modification details are in THIRD_PARTY.md.",new Vector2(.5f,.5f),new Vector2(0,40),new Vector2(830,380),21);
+            Button(credits,"MODEL SOURCES",new Vector2(.5f,0),new Vector2(-150,65),new Vector2(250,65),()=>Application.OpenURL("https://github.com/aizcrest/donkey-simulator-for-czach/blob/main/THIRD_PARTY.md"));
+            Button(credits,"BACK",new Vector2(.5f,0),new Vector2(150,65),new Vector2(250,65),()=>creditsPanel.SetActive(false));
+            creditsPanel.SetActive(false);
             menu.SetActive(false);
         }
     }

@@ -1,4 +1,5 @@
 """Lightweight repository sanity checks; Unity is required for compilation."""
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -20,4 +21,15 @@ for path in (root/'Assets').rglob('*.cs'):
     assert 'namespace DonkeyForest' in source, path
 for name in ['ForestGame.cs','ForestEnemy.cs']:
     assert (root/'Assets/Scripts'/name).is_file()
-print('Project structure and package checks passed. Unity compilation still required.')
+entries=json.loads((root/'Tools/AssetSources/models.json').read_text())
+assert len(entries)==7
+for entry in entries:
+    model=root/'Assets/Resources/Enemies'/(entry['kind']+'.fbx')
+    content=model.read_bytes()
+    assert content.startswith(b'Kaydara FBX Binary'), model
+    assert hashlib.sha256(content).hexdigest()==entry['fbx_sha256'], model
+    assert entry['license'] in ['CC0 1.0','CC BY 3.0']
+    assert entry['source'] in (root/'THIRD_PARTY.md').read_text()
+for path in (root/'Assets').rglob('*'):
+    if path.suffix!='.meta': assert Path(str(path)+'.meta').exists(), path
+print('Project, package, FBX integrity and asset credit checks passed. Unity compilation still required.')

@@ -1,6 +1,6 @@
 # Forest Rider
 
-A Unity 2022.3 LTS C# mobile PvE prototype. Ride an armored donkey through a seeded 3D forest, fight bears and deer, and survive zombies at night. Ground uses native Unity Terrain with generated hills, surface textures and grass. Characters and props use original low-poly primitive geometry assembled in code; no third-party assets or paid packages are required.
+A Unity 2022.3 LTS C# mobile PvE prototype. Ride an armored donkey through a seeded 3D forest, fight bears, deer, moose, wolves and foxes, survive zombies at night, and collect ten gems to summon a dragon. Ground uses native Unity Terrain with generated hills, surface textures and grass. Enemies use included free-use model assets by Quaternius and Poly by Google, with licenses and credits in [THIRD_PARTY.md](THIRD_PARTY.md). The rider, donkey and scenery remain original primitive geometry; no paid assets are required.
 
 ## Visual concept
 
@@ -11,21 +11,33 @@ This generated concept illustrates the intended art direction; it is not a scree
 ## Run
 
 1. Install Unity **2022.3.62f1** with Android Build Support (SDK, NDK, OpenJDK) and/or iOS Build Support through Unity Hub.
-2. Add this folder as a project and open it. Allow the initial import and compilation to finish.
+2. Add this folder as a project and open it. Allow the initial model/animation import and compilation to finish; the included FBX files need no external importer.
 3. The editor generates `Assets/Scenes/Forest.unity` and registers it for builds. If needed use **Forest Rider → Create or open game scene**.
 4. Press Play. The game creates its world, rider, enemies, camera, lighting, and UI automatically when the scene loads.
 
-Mobile: drag the left stick to ride; tap ATTACK to swing in front of your donkey; HEAL uses a potion; CAMP pauses combat and opens equipment upgrades, manual save, revive, and resume. Desktop: WASD/arrows, Space, H, Escape, F5 respectively. Movement is relative to the fixed follow camera. Ride over golden loot cubes to collect them.
+Mobile: drag the left stick to ride; ATTACK swings in front of your donkey; DODGE dashes forward with brief damage immunity; HEAL uses a potion; OFFER GEMS deposits carried gems at the central altar; CAMP pauses combat and opens equipment, save, revive and asset credits. Desktop: WASD/arrows to ride, Space to attack, Shift to dodge, H to heal, E to offer gems, Escape for camp, F5 to save. Movement is relative to the fixed follow camera. Ride over golden loot cubes to collect them.
 
 ## Rules
 
 - Start with a level 1 sword, rider armor, donkey armor, and three potions.
-- Bears and deer roam the forest. Deer flee until struck; bears chase nearby riders.
+- Bears, deer, moose, wolves and foxes roam the forest. Deer and foxes flee until struck. Wolves are faster pursuers; moose defend their space and have more health and damage. Models retain supplied animation clips; bear and moose use static source meshes.
 - A full day lasts six real minutes. Night spawns zombies, which disappear at dawn.
 - Every kill awards coins and has a 65% chance to drop a potion, sword upgrade, rider armor, donkey armor, or extra coins, each equally likely.
 - Gear caps at level 10. Camp upgrades cost 40 times the current level. Armor reduces incoming damage, up to 65%; both armor types increase maximum health. Potions restore 50 health.
 - Death keeps equipment and progress. CAMP → REVIVE restores health and returns you to the clearing.
-- Local JSON saves preserve health, position, day phase, kills, coins, potions and equipment. Manual save, 30-second autosave, loot collection, upgrades, death, application backgrounding and quit write progress. Save files live in `Application.persistentDataPath/forest-rider.json`; a backup and temporary file provide recovery copies. Enemy positions and dropped loot are transient. Uninstalling the app can remove saves.
+- Local JSON saves preserve health, position, day phase, kills, coins, potions, equipment, collected gem IDs, altar deposits and dragon victory. Manual save, 30-second autosave, loot collection, upgrades, death, application backgrounding and quit write progress. Save files live in `Application.persistentDataPath/forest-rider.json`; a backup and temporary file provide recovery copies. Enemy positions and dropped loot are transient. Uninstalling the app can remove saves.
+
+## Ten gems and the dragon
+
+- Find ten unique glowing turquoise gems around the forest. The HUD shows the nearest uncollected gem's distance and cardinal direction (north is forward in the normal camera). Ride over a gem to collect it. Each has a stable saved ID, so reloading never duplicates a pickup.
+- Ride within 4.5 metres of the central altar and use **OFFER GEMS / E**. You can deposit gems in batches. All ten light the altar and summon the dragon. Ordinary enemies despawn and stop spawning during the encounter.
+- **Aerial fireballs — 10 seconds:** the dragon circles above the altar and fires roughly every 1.4 seconds. Orange circles lock onto your position when each shot launches. After 1.2 seconds, the fireball hits a 2.1m-radius area for 22 base damage. Ride out or dodge; the shot does not keep tracking you.
+- **Dive warning — 1.5 seconds:** a red 3m-radius marker locks onto your position. Move out before the dragon commits.
+- **Dive — 0.8 seconds:** the dragon dives to the marked location and deals 36 base damage on impact. Each dive deals damage only once.
+- **Stunned — exactly 5 seconds:** the dragon is grounded, a green ring appears, and sword hits can damage it. Outside this window it is immune. The cycle repeats until its 650 health is depleted.
+- **DODGE / Shift:** 0.32-second forward dash and damage immunity, with a 1.6-second cooldown. Collision and terrain still apply, so dodge toward open space. Armor also reduces dragon damage.
+- Leaving the arena (32m from the altar) resets boss health and hazards. Return to restart. Death/revival and reloading restart an unlocked fight at full boss health; your ten deposited gems remain safe. Boss health and attack phase are transient.
+- Victory awards 500 coins and three potions and saves the dragon-defeated flag. The boss is a one-time progression encounter in the current save.
 
 ## Terrain
 
@@ -51,4 +63,8 @@ Unity -batchmode -quit -projectPath "$PWD" -executeMethod DonkeyForest.Editor.Ga
 
 ## Validation and limits
 
-This repository was authored in an environment without the Unity editor or a C# compiler. No APK, device run, or Unity compilation has been verified here. Run the checklist in `TESTING.md` before using the game on a device. The visuals are intentionally prototype quality: primitive character/prop models, procedural terrain textures, no rigged animations, music, hand-sculpted terrain, or audio. The world is bounded to an approximately 172m square; at most 22 enemies are active. No ads, accounts, network play, analytics, or cloud saves.
+The Unity editor is unavailable here. The three engine-independent NUnit tests for gem progression and dragon timing passed under .NET 8; all C# files passed C# 9 syntax parsing; model meshes, textures and animation clips passed Blender round-trip checks. No APK, device run, or compilation against Unity APIs has been verified here. Run the checklist in `TESTING.md` before using the game on a device. The visuals are intentionally prototype quality: a primitive rider/donkey and props, procedural terrain textures and mixed free model styles. Source animations are retained for deer, wolves, foxes, zombies and the dragon; bear and moose models are static. No music, hand-sculpted terrain or audio is included. The world is bounded to an approximately 172m square; at most 22 enemies are active. No ads, accounts, network play, analytics, or cloud saves.
+
+## Automated checks
+
+`python3 Tools/check_project.py` checks repository structure, asset licensing records and model files. `blender -b --python Tools/verify_models.py` checks the converted FBX meshes, textures and animation clips. In Unity, open **Window → General → Test Runner → EditMode → Run All** for gem uniqueness/deposit tests and exact dragon phase timing/order tests. The same three NUnit test methods passed outside Unity under .NET 8. Running them through Unity Test Runner is still required to validate the project environment.

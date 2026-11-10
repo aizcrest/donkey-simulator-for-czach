@@ -22,3 +22,17 @@ Automated repository checks: `python3 Tools/check_project.py`. These validate so
 - Save on a hillside, quit and reopen; check that the rider reappears at the correct terrain height. Also load a save created before the terrain upgrade.
 - Revive at camp and confirm the donkey appears above the clearing. Check camera clearance behind hill crests and tree trunks.
 - Measure frame rate and grass pop-in on a target phone; lower detail density/distance first if needed. Terrain generation adds startup work, so measure initial load time on device too.
+
+## Free enemy models and gem/dragon progression
+
+- Let all FBX imports finish and enter Play Mode. Verify Bear, Deer, Moose, Wolf, Fox and Zombie render at sensible ground height, face their movement direction and have correct materials. Check movement/attack clips where available; Bear/Moose are static source meshes.
+- Open CAMP → ASSET CREDITS. Confirm creators, licenses and a link to individual model sources are visible.
+- Collect a gem, save, reload: it must stay collected and carried count must match. Deposit a partial set at the central altar, reload, verify altar slots and inventory. Find all ten; test repeated collection or repeated OFFER GEMS cannot duplicate progress.
+- Offer the tenth gem: exactly one dragon appears; ordinary enemies and their spawner stop. Check the dragon model/flight clip and wider camera on a phone.
+- Time the repeating cycle: 10 seconds of fireballs, 1.5s locked red warning, .8s dive, 5 seconds stunned. Aerial shots show orange 2.1m circles for 1.2s before damage. The target does not move after marking. Leftover shots must disappear before the dive warning.
+- Move outside orange/red circles and verify no damage. Remain inside each and verify a single damage event per impact; dodge through an impact to verify immunity. Check dodge cooldown and simultaneous joystick/dodge/attack touches.
+- Try hitting the airborne/diving dragon: no damage. During the green stun window, hit it in front of the donkey; verify boss health falls, then becomes immune again exactly at takeoff.
+- Open CAMP during each phase/projectile flight. Timers, damage, movement and animations must pause. Resume and verify the remaining timing is preserved.
+- Ride more than 32m from camp and return: boss health resets and old attacks vanish. Die, revive, save/reload mid-fight: gem deposits persist and one fresh boss starts; no ghost hazards remain.
+- Defeat the dragon: verify +500 coins, +3 potions and victory survives reload. Ordinary wildlife spawning resumes and the altar cannot summon duplicate bosses after victory.
+- Run EditMode tests in Unity Test Runner. The three rules tests passed in a standalone .NET 8 NUnit run. Full Unity compilation, the Unity Test Runner run and device gameplay still require the Unity editor.

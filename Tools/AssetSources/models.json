@@ -1,0 +1,79 @@
+[
+  {
+    "kind": "Bear",
+    "original_title": "Bear",
+    "creator": "Poly by Google",
+    "source": "https://poly.pizza/m/0PXWfxfb0Hu",
+    "download": "https://static.poly.pizza/4df3c877-5c14-4fbe-8c16-d31d8a67cc8c.glb",
+    "license": "CC BY 3.0",
+    "license_url": "https://creativecommons.org/licenses/by/3.0/",
+    "changes": "Converted GLB to FBX; normalized scale at runtime.",
+    "fbx_sha256": "8a375f961cf78725cb7f61a8c5bfe050457b022aab4da9bcd957b14bb47f2d18"
+  },
+  {
+    "kind": "Deer",
+    "original_title": "Deer",
+    "creator": "Quaternius",
+    "source": "https://poly.pizza/m/T6Cs7tmMHJ",
+    "download": "https://static.poly.pizza/4b6c2a41-43c7-404c-ae37-e8c4645ff93b.glb",
+    "license": "CC0 1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "Converted GLB to FBX; normalized scale at runtime.",
+    "fbx_sha256": "4f4745bffdbaccd0d14c888d843c96b6c24781792e0a357a33f605d4fba6dab3"
+  },
+  {
+    "kind": "Moose",
+    "original_title": "Elk",
+    "creator": "Poly by Google",
+    "source": "https://poly.pizza/m/bO8XPdrAb5G",
+    "download": "https://static.poly.pizza/0dac29e1-fae0-4cad-b117-03b6c0dbbd37.glb",
+    "license": "CC BY 3.0",
+    "license_url": "https://creativecommons.org/licenses/by/3.0/",
+    "changes": "Converted GLB to FBX; normalized scale at runtime. Adapted original Elk mesh into a stylized moose by replacing upper antlers with broad palmate antlers. This is an adaptation, not a separate original moose asset.",
+    "fbx_sha256": "b1ed3f847f14f08c7dd638588f2aefb2b3fe0e337bb02ade9530c279c9fa03d3"
+  },
+  {
+    "kind": "Zombie",
+    "original_title": "Zombie",
+    "creator": "Quaternius",
+    "source": "https://poly.pizza/m/VlXjG0N8Eg",
+    "download": "https://static.poly.pizza/c4002f69-6979-42e8-ad6e-2f4e14fc3a9d.glb",
+    "license": "CC0 1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "Converted GLB to FBX; normalized scale at runtime.",
+    "fbx_sha256": "0897382654e7af131a5e68cf92dc0554279c06543cc611d65cec15da0babdfe3"
+  },
+  {
+    "kind": "Dragon",
+    "original_title": "Dragon",
+    "creator": "Quaternius",
+    "source": "https://poly.pizza/m/VBvzjFIYws",
+    "download": "https://static.poly.pizza/9714f533-5d2d-4cfd-b8f1-c8dfff64a672.glb",
+    "license": "CC0 1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "Converted GLB to FBX; normalized scale at runtime.",
+    "fbx_sha256": "7ceacc8c190a0949e6d2408ca23e2bad3b32e40d8c70014e69afa8e315b16820"
+  },
+  {
+    "kind": "Wolf",
+    "original_title": "Wolf",
+    "creator": "Quaternius",
+    "source": "https://poly.pizza/m/P1gU3Qkr9r",
+    "download": "https://static.poly.pizza/f1d12388-e39b-4157-b32a-646a1d089fc4.glb",
+    "license": "CC0 1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "Converted GLB to FBX; normalized scale at runtime.",
+    "fbx_sha256": "b9002a39a9bc9550439faabdcb3a1560e480aed547c3fe2294808e6fdcdadd1c"
+  },
+  {
+    "kind": "Fox",
+    "original_title": "Fox",
+    "creator": "Quaternius",
+    "source": "https://poly.pizza/m/Bc97C66HKi",
+    "download": "https://static.poly.pizza/e18e86df-1692-48d8-ac6e-1e25ab4ad574.glb",
+    "license": "CC0 1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "Converted GLB to FBX; normalized scale at runtime.",
+    "fbx_sha256": "27e959a9d477f4cddff25ce0c6a5cba7847b59b07a193ea127ae0672981b399e"
+  }
+]
