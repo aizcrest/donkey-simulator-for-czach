@@ -15,6 +15,7 @@ namespace DonkeyForest.Editor
             PlayerSettings.allowedAutorotateToPortrait=false;PlayerSettings.allowedAutorotateToPortraitUpsideDown=false;
             PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android,"com.aizcrest.forestrider");
             PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.iOS,"com.aizcrest.forestrider");
+            System.IO.Directory.CreateDirectory("Assets/Scenes");
             if(!System.IO.File.Exists(Scene))
             {
                 var scene=EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
