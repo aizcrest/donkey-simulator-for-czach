@@ -8,6 +8,7 @@ namespace DonkeyForest
         float health,maxHealth,cooldown,wanderTime;
         Vector3 wander;
         Transform healthBar;
+        CharacterController controller;
         bool angry;
         public void Setup(ForestGame owner,string species)
         {
@@ -37,7 +38,9 @@ namespace DonkeyForest
                     game.Shape("Eye",PrimitiveType.Sphere,transform,new Vector3(s*.26f,1.4f,1.04f),Vector3.one*.08f,dark);
                 }
             }
-            var collider=gameObject.AddComponent<CapsuleCollider>();collider.radius=.65f;collider.height=2;collider.center=Vector3.up;
+            controller=gameObject.AddComponent<CharacterController>();
+            controller.radius=.55f;controller.height=2;controller.center=Vector3.up;
+            controller.stepOffset=.4f;controller.slopeLimit=45;
             healthBar=game.Shape("Health",PrimitiveType.Cube,transform,new Vector3(0,2.6f,0),new Vector3(1,.08f,.08f),game.Mat(new Color(.8f,.22f,.15f))).transform;
         }
         void Update()
@@ -51,16 +54,21 @@ namespace DonkeyForest
             if(chase) direction=distance>1.7f?delta.normalized:Vector3.zero;
             else if(kind=="Deer"&&!angry&&distance<7)direction=-delta.normalized;
             else {if(wanderTime<0){wanderTime=Random.Range(2,5);wander=Quaternion.Euler(0,Random.Range(0,360),0)*Vector3.forward;}direction=wander*.45f;}
+            Vector3 velocity = Vector3.zero;
             if(direction.sqrMagnitude>.001f)
             {
                 transform.rotation=Quaternion.Slerp(transform.rotation,Quaternion.LookRotation(direction),dt*5);
-                // Sphere casts keep animals from walking through trees and other creatures.
-                if(!Physics.SphereCast(transform.position+Vector3.up,.3f,direction,out _,1f))
-                    transform.position+=direction*(kind=="Deer"?3.8f:kind=="Bear"?2.8f:2.3f)*dt;
-                else {wander=-direction;wanderTime=1;transform.position+=Vector3.Cross(direction,Vector3.up)*dt;}
+                // Check trunks only; terrain slopes are handled by the controller below.
+                if(Physics.SphereCast(transform.position+Vector3.up,.35f,direction.normalized,out _,1.2f,1<<ForestTerrain.SceneryLayer))
+                {
+                    direction=Vector3.Cross(direction,Vector3.up);wander=direction;wanderTime=1;
+                }
+                velocity=direction*(kind=="Deer"?3.8f:kind=="Bear"?2.8f:2.3f);
             }
-            var p=transform.position;p.x=Mathf.Clamp(p.x,-85,85);p.z=Mathf.Clamp(p.z,-85,85);transform.position=p;
-            if(chase&&distance<2.2f&&cooldown<=0){cooldown=1.4f;game.Damage(kind=="Bear"?18:kind=="Zombie"?13:8);}
+            controller.Move((velocity+Vector3.down*15)*dt);
+            var p=transform.position;
+            controller.Move(new Vector3(Mathf.Clamp(p.x,-85,85)-p.x,0,Mathf.Clamp(p.z,-85,85)-p.z));
+            if(chase&&distance<2.2f&&Mathf.Abs(transform.position.y-game.rider.position.y)<2.5f&&cooldown<=0){cooldown=1.4f;game.Damage(kind=="Bear"?18:kind=="Zombie"?13:8);}
             if(distance>65){game.enemies.Remove(this);Destroy(gameObject);}
         }
         public void Hit(float damage)

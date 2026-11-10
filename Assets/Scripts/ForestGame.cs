@@ -19,6 +19,8 @@ namespace DonkeyForest
         public readonly List<ForestEnemy> enemies = new List<ForestEnemy>();
         public Progress data = new Progress();
         public Transform rider;
+        public ForestTerrain Landscape { get; private set; }
+        public Vector3 Ground(Vector3 position, float clearance = 0) => Landscape.Ground(position, clearance);
         public float MaxHealth => 90 + data.armor * 10 + data.barding * 10;
         public bool Night => data.time < .22f || data.time > .76f;
         public bool Dead => data.health <= 0;
@@ -64,35 +66,53 @@ namespace DonkeyForest
         void BuildWorld()
         {
             UnityEngine.Random.InitState(7419);
-            var ground = Shape("Forest floor", PrimitiveType.Cube, null, new Vector3(0,-.3f,0), new Vector3(180,.5f,180), Mat(new Color(.19f,.29f,.13f)));
-            ground.AddComponent<BoxCollider>();
+            Landscape = new GameObject("Forest landscape").AddComponent<ForestTerrain>();
+            Landscape.Generate();
             var bark = Mat(new Color(.28f,.16f,.09f));
             var leaves = Mat(new Color(.12f,.32f,.15f)); var rocks = Mat(new Color(.4f,.43f,.39f));
             var world = new GameObject("Seeded forest").transform;
             for (int i=0;i<230;i++)
             {
                 Vector2 p = UnityEngine.Random.insideUnitCircle * 85;
-                if (p.magnitude < 8) continue;
+                var position = Ground(new Vector3(p.x,0,p.y));
+                if (p.magnitude < 9 || ForestTerrain.PathWeight(p.x,p.y) > .2f || Landscape.Slope(position) > 28) continue;
                 float h = UnityEngine.Random.Range(3f,7f);
-                var tree = new GameObject("Pine").transform; tree.SetParent(world); tree.position = new Vector3(p.x,0,p.y);
+                var tree = new GameObject("Pine").transform; tree.SetParent(world); tree.position = position;
+                tree.gameObject.layer = ForestTerrain.SceneryLayer;
                 Shape("Trunk",PrimitiveType.Cylinder,tree,new Vector3(0,h*.35f,0),new Vector3(.45f,h*.35f,.45f),bark);
-                Shape("Crown",PrimitiveType.Sphere,tree,new Vector3(0,h*.8f,0),new Vector3(3,h*.85f,3),leaves);
+                Shape("Lower canopy",PrimitiveType.Sphere,tree,new Vector3(0,h*.65f,0),new Vector3(3.5f,h*.6f,3.5f),leaves);
+                Shape("Upper canopy",PrimitiveType.Sphere,tree,new Vector3(.15f,h*.98f,0),new Vector3(2.4f,h*.7f,2.4f),leaves);
                 var obstacle=tree.gameObject.AddComponent<CapsuleCollider>(); obstacle.radius=.45f;obstacle.height=h;obstacle.center=Vector3.up*h*.5f;
             }
             for(int i=0;i<45;i++)
             {
                 var p=UnityEngine.Random.insideUnitCircle*82;
-                Shape("Stone",PrimitiveType.Sphere,world,new Vector3(p.x,0,p.y),Vector3.one*UnityEngine.Random.Range(.5f,1.8f),rocks);
+                if(p.magnitude < 8 || ForestTerrain.PathWeight(p.x,p.y) > .3f) continue;
+                var stone = Shape("Weathered stone",PrimitiveType.Sphere,world,Ground(new Vector3(p.x,0,p.y)),
+                    new Vector3(1,.65f,.8f)*UnityEngine.Random.Range(.6f,2.4f),rocks);
+                stone.transform.rotation = Quaternion.Euler(UnityEngine.Random.Range(-12,12),UnityEngine.Random.Range(0,360),UnityEngine.Random.Range(-12,12));
             }
             var lamp=new GameObject("Sun");sun=lamp.AddComponent<Light>();sun.type=LightType.Directional;sun.shadows=LightShadows.None;
             RenderSettings.fog=true;RenderSettings.fogMode=FogMode.ExponentialSquared;RenderSettings.fogDensity=.014f;
             var cameraObject = new GameObject("Follow Camera");view=cameraObject.AddComponent<Camera>();cameraObject.AddComponent<AudioListener>();view.farClipPlane=160;view.fieldOfView=58;
+            Physics.SyncTransforms();
             UnityEngine.Random.InitState(Environment.TickCount);
         }
         void BuildRider()
         {
-            rider=new GameObject("Mounted player").transform;rider.position=new Vector3(Mathf.Clamp(data.x,-82,82),0,Mathf.Clamp(data.z,-82,82));
-            controller=rider.gameObject.AddComponent<CharacterController>();controller.center=new Vector3(0,1,0);controller.height=2;controller.radius=.55f;controller.stepOffset=.4f;
+            rider=new GameObject("Mounted player").transform;
+            Vector3 savedPosition=new Vector3(Mathf.Clamp(data.x,-82,82),0,Mathf.Clamp(data.z,-82,82));
+            Vector3 start=Ground(savedPosition,.08f);
+            // Older flat-world saves can now land inside a newly placed tree trunk.
+            for(int attempt=0;attempt<24;attempt++)
+            {
+                if(!Physics.CheckCapsule(start+Vector3.up*.6f,start+Vector3.up*1.5f,.7f,1<<ForestTerrain.SceneryLayer))break;
+                float angle=attempt*2.4f, radius=1+attempt*.25f;
+                start=Ground(savedPosition+new Vector3(Mathf.Cos(angle)*radius,0,Mathf.Sin(angle)*radius),.08f);
+            }
+            start.x=Mathf.Clamp(start.x,-86,86);start.z=Mathf.Clamp(start.z,-86,86);
+            rider.position=Ground(start,.08f);
+            controller=rider.gameObject.AddComponent<CharacterController>();controller.center=new Vector3(0,1,0);controller.height=2;controller.radius=.55f;controller.stepOffset=.4f;controller.slopeLimit=45;
             donkey=new GameObject("Donkey").transform;donkey.SetParent(rider,false);
             var gray=Mat(new Color(.43f,.4f,.37f));var dark=Mat(new Color(.16f,.12f,.1f));var steel=Mat(new Color(.48f,.6f,.64f));var cloth=Mat(new Color(.55f,.18f,.11f));
             Shape("Donkey body",PrimitiveType.Capsule,donkey,new Vector3(0,.95f,0),new Vector3(.85f,.7f,1.5f),gray).transform.localRotation=Quaternion.Euler(90,0,0);
@@ -111,6 +131,8 @@ namespace DonkeyForest
             sword=new GameObject("Sword pivot").transform;sword.SetParent(donkey,false);sword.localPosition=new Vector3(.45f,1.95f,0);
             Shape("Sword",PrimitiveType.Cube,sword,new Vector3(0,0,.6f),new Vector3(.1f,.08f,1.2f),steel);
             Shape("Guard",PrimitiveType.Cube,sword,new Vector3(0,0,.12f),new Vector3(.4f,.12f,.1f),dark);
+            view.transform.position=rider.position+new Vector3(0,7,-9);
+            view.transform.LookAt(rider.position+Vector3.up*1.6f);
         }
         void Update()
         {
@@ -145,9 +167,17 @@ namespace DonkeyForest
         void LateUpdate()
         {
             if(!rider)return;
-            Vector3 target=rider.position+new Vector3(0,7,-9);
-            view.transform.position=Vector3.Lerp(view.transform.position,target,1-Mathf.Exp(-8*Time.unscaledDeltaTime));
-            view.transform.LookAt(rider.position+Vector3.up*1.3f);
+            Vector3 look = rider.position + Vector3.up * 1.6f;
+            Vector3 target = rider.position + new Vector3(0,7,-9);
+            target.y = Mathf.Max(target.y, Ground(target).y + 2);
+            var sight = target - look;
+            int mask = (1 << ForestTerrain.GroundLayer) | (1 << ForestTerrain.SceneryLayer);
+            if(Physics.SphereCast(look,.35f,sight.normalized,out var hit,sight.magnitude,mask))
+                target = look + sight.normalized * Mathf.Max(.5f,hit.distance-.2f);
+            Vector3 next=Vector3.Lerp(view.transform.position,target,1-Mathf.Exp(-8*Time.unscaledDeltaTime));
+            next.y=Mathf.Max(next.y,Ground(next).y+1);
+            view.transform.position=next;
+            view.transform.LookAt(look);
         }
         public void Attack()
         {
@@ -156,7 +186,9 @@ namespace DonkeyForest
             foreach(var enemy in enemies.ToArray())
             {
                 if(!enemy)continue;
-                var delta=enemy.transform.position-rider.position;delta.y=0;
+                var delta=enemy.transform.position-rider.position;
+                if(Mathf.Abs(delta.y)>2.5f)continue;
+                delta.y=0;
                 if(delta.magnitude<3.4f && Vector3.Dot(rider.forward,delta.normalized)>-.15f)enemy.Hit(17+data.sword*8);
             }
         }
@@ -168,8 +200,19 @@ namespace DonkeyForest
         }
         void SpawnEnemy(bool zombie)
         {
-            Vector2 offset=UnityEngine.Random.insideUnitCircle.normalized*UnityEngine.Random.Range(16,34);
-            Vector3 pos=rider.position+new Vector3(offset.x,0,offset.y);pos.x=Mathf.Clamp(pos.x,-80,80);pos.z=Mathf.Clamp(pos.z,-80,80);
+            Vector3 pos = Vector3.zero;
+            bool found = false;
+            for(int attempt=0;attempt<16;attempt++)
+            {
+                Vector2 offset=UnityEngine.Random.insideUnitCircle.normalized*UnityEngine.Random.Range(16,34);
+                pos=rider.position+new Vector3(offset.x,0,offset.y);
+                pos.x=Mathf.Clamp(pos.x,-80,80);pos.z=Mathf.Clamp(pos.z,-80,80);
+                pos=Ground(pos,.08f);
+                if(Vector3.Distance(pos,rider.position)<12 || Landscape.Slope(pos)>32)continue;
+                if(Physics.CheckCapsule(pos+Vector3.up*.6f,pos+Vector3.up*1.5f,.8f,1<<ForestTerrain.SceneryLayer))continue;
+                found=true;break;
+            }
+            if(!found)return;
             var enemy=new GameObject(zombie?"Zombie":UnityEngine.Random.value<.45f?"Bear":"Deer").AddComponent<ForestEnemy>();
             enemy.transform.position=pos;enemy.Setup(this,enemy.name);enemies.Add(enemy);
         }
@@ -179,7 +222,7 @@ namespace DonkeyForest
             if(UnityEngine.Random.value<.65f)
             {
                 var drop=new GameObject("Loot — ride over to collect").AddComponent<ForestLoot>();
-                drop.transform.position=enemy.transform.position+Vector3.up*.6f;drop.reward=UnityEngine.Random.Range(0,5);
+                drop.transform.position=Ground(enemy.transform.position,.6f);drop.reward=UnityEngine.Random.Range(0,5);
                 Shape("Loot",PrimitiveType.Cube,drop.transform,Vector3.zero,Vector3.one*.45f,Mat(new Color(1,.74f,.15f)));
             }
         }
@@ -234,7 +277,7 @@ namespace DonkeyForest
             data.coins-=level*40;if(kind==0)data.sword++;else if(kind==1)data.armor++;else data.barding++;
             RefreshCamp();Save();
         }
-        void Revive(){if(!Dead){Show("You can revive after falling in battle.");return;}data.health=MaxHealth;controller.enabled=false;rider.position=Vector3.zero;controller.enabled=true;foreach(var e in enemies.ToArray())if(e)Destroy(e.gameObject);enemies.Clear();Save();ToggleMenu();}
+        void Revive(){if(!Dead){Show("You can revive after falling in battle.");return;}data.health=MaxHealth;controller.enabled=false;rider.position=Ground(Vector3.zero,.08f);controller.enabled=true;foreach(var e in enemies.ToArray())if(e)Destroy(e.gameObject);enemies.Clear();Save();ToggleMenu();}
         Font font;
         RectTransform Panel(string name,Transform parent,Vector2 anchor,Vector2 pos,Vector2 size,Color color)
         {

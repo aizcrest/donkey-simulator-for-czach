@@ -12,3 +12,13 @@
 - iOS: export Xcode project, sign on macOS, run on a physical device and repeat mobile acceptance checks.
 
 Automated repository checks: `python3 Tools/check_project.py`. These validate source/configuration structure only and do not replace Unity compilation or gameplay checks.
+
+## Terrain upgrade acceptance
+
+- In Play Mode run **Forest Rider → Validate terrain (Play Mode)**. Confirm the validation passes in the Console.
+- Inspect the runtime terrain: rolling hills, level camp, winding earth trails, moss and rock blends, grass off the trails. Check for magenta shaders in both Editor and an actual Android/WebGL build.
+- Ride uphill, downhill and sideways over hill crests. Confirm the donkey remains grounded without sinking or falling through; check animal movement on the same slopes.
+- Kill enemies on a slope and collect loot; verify no hits occur across excessive height differences.
+- Save on a hillside, quit and reopen; check that the rider reappears at the correct terrain height. Also load a save created before the terrain upgrade.
+- Revive at camp and confirm the donkey appears above the clearing. Check camera clearance behind hill crests and tree trunks.
+- Measure frame rate and grass pop-in on a target phone; lower detail density/distance first if needed. Terrain generation adds startup work, so measure initial load time on device too.

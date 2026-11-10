@@ -15,6 +15,7 @@ namespace DonkeyForest.Editor
             PlayerSettings.allowedAutorotateToPortrait=false;PlayerSettings.allowedAutorotateToPortraitUpsideDown=false;
             PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android,"com.aizcrest.forestrider");
             PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.iOS,"com.aizcrest.forestrider");
+            KeepRuntimeShaders();
             System.IO.Directory.CreateDirectory("Assets/Scenes");
             if(!System.IO.File.Exists(Scene))
             {
@@ -22,6 +23,27 @@ namespace DonkeyForest.Editor
                 EditorSceneManager.SaveScene(scene,Scene);
             }
             EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(Scene,true)};
+        }
+        // Runtime-created terrain has no renderer in the saved scene for the build scanner.
+        // Retain the terrain and grass shaders explicitly so player builds render them too.
+        static void KeepRuntimeShaders()
+        {
+            var assets=AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/GraphicsSettings.asset");
+            if(assets.Length==0)return;
+            var settings=new SerializedObject(assets[0]);
+            var shaders=settings.FindProperty("m_AlwaysIncludedShaders");
+            if(shaders==null)return;
+            foreach(string name in new[]{"Standard","Nature/Terrain/Standard","Hidden/TerrainEngine/Details/BillboardWavingDoublePass","UI/Default"})
+            {
+                var shader=Shader.Find(name);
+                if(!shader){Debug.LogWarning("Required runtime shader was not found: "+name);continue;}
+                bool found=false;
+                for(int i=0;i<shaders.arraySize;i++)if(shaders.GetArrayElementAtIndex(i).objectReferenceValue==shader)found=true;
+                if(found)continue;
+                int next=shaders.arraySize;shaders.InsertArrayElementAtIndex(next);
+                shaders.GetArrayElementAtIndex(next).objectReferenceValue=shader;
+            }
+            settings.ApplyModifiedPropertiesWithoutUndo();
         }
         [MenuItem("Forest Rider/Build Android APK")]
         public static void Android()
