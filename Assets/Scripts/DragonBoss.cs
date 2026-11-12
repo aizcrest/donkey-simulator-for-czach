@@ -68,14 +68,14 @@ namespace DonkeyForest
         {
             if(phase==DragonPhase.DiveWarning)
             {
-                ClearHazards();diveTarget=game.Ground(game.rider.position,.12f);diveStart=visual.transform.position;
+                game.Audio.Play("roar",.65f);ClearHazards();diveTarget=game.Ground(game.rider.position,.12f);diveStart=visual.transform.position;
                 encounter.Ring(hazards,diveTarget,3,new Color(1,.15f,.08f));
                 game.Show("DIVE INCOMING! The red circle is locked — ride or DODGE away.");
             }
-            else if(phase==DragonPhase.Diving)visual.Play("attack");
+            else if(phase==DragonPhase.Diving){visual.Play("attack");game.Audio.Play("dive");}
             else if(phase==DragonPhase.Stunned)
             {
-                visual.transform.position=diveTarget;visual.transform.rotation=Quaternion.Euler(0,visual.transform.eulerAngles.y,0);
+                game.Audio.Play("kick",.65f);visual.transform.position=diveTarget;visual.transform.rotation=Quaternion.Euler(0,visual.transform.eulerAngles.y,0);
                 if(Inside(game.rider.position,diveTarget,3))game.Damage(36);
                 ClearHazards();visual.Play("stun");
                 encounter.Ring(hazards,diveTarget,3.4f,new Color(.3f,1,.2f));
@@ -89,16 +89,17 @@ namespace DonkeyForest
         }
         void Fireball()
         {
+            game.Audio.Play("fireball",.45f);
             var obj=new GameObject("Dragon fireball");obj.transform.SetParent(hazards,false);
             obj.AddComponent<DragonFireball>().Setup(game,encounter,visual.transform.position+Vector3.down*.5f,game.Ground(game.rider.position,.1f));
         }
-        public void Hit(float damage)
+        public Vector3 Position=>visual.transform.position;
+        public void Hit(float damage)=>HitArea(damage,game.rider.position,game.rider.forward,4,-.15f);
+        public bool HitArea(float damage,Vector3 origin,Vector3 direction,float radius,float minDot)
         {
-            if(game.Paused||game.Dead||waiting||!pattern.Vulnerable||health<=0)return;
-            Vector3 delta=visual.transform.position-game.rider.position;
-            if(Mathf.Abs(delta.y)>3)return;delta.y=0;
-            if(delta.magnitude>4 || Vector3.Dot(game.rider.forward,delta.normalized)<-.15f)return;
-            health-=damage;if(health<=0)encounter.Win();
+            if(game.Paused||game.Dead||waiting||!pattern.Vulnerable||health<=0)return false;
+            if(!MountedSkills.InArea(Position,origin,direction,radius,minDot))return false;
+            health-=damage;game.Audio.Play("hit");if(health<=0)encounter.Win();return true;
         }
         public static bool Inside(Vector3 point,Vector3 center,float radius)
         {

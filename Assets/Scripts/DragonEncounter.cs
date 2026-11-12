@@ -76,7 +76,7 @@ namespace DonkeyForest
                 if(Vector3.Distance(game.rider.position+Vector3.up*.8f,gemLocations[i])>1.9f)continue;
                 if(GemRules.TryCollect(ref game.data.gemMask,i))
                 {
-                    Destroy(gems[i]);gems[i]=null;
+                    Destroy(gems[i]);gems[i]=null;game.Audio.Play("gem");game.GainXP(25);
                     game.Show($"Ancient gem found! {GemRules.Count(game.data.gemMask)}/10. Bring gems to the central altar.");game.Save(false);
                 }
             }
@@ -128,6 +128,7 @@ namespace DonkeyForest
         public void Win()
         {
             game.data.dragonDefeated=true;game.data.coins+=500;game.data.potions+=3;
+            game.GainXP(250);game.Audio.Play("level");
             game.Show("DRAGON DEFEATED! +500 coins and 3 healing potions.");game.Save(false);CancelBoss();
         }
     }

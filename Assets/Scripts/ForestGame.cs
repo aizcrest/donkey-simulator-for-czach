@@ -13,6 +13,10 @@ namespace DonkeyForest
         public float health = 100, time = 0.25f, x, z;
         public int gemMask, gemsPlaced;
         public bool dragonDefeated;
+        public SkillSave skills=new SkillSave();
+        public JourneySave journey=new JourneySave();
+        public float masterVolume=.75f,musicVolume=.2f,effectsVolume=.8f;
+        public int quality; // Low is the default on a fresh or older save.
     }
 
     public sealed class ForestGame : MonoBehaviour
@@ -23,8 +27,15 @@ namespace DonkeyForest
         public Transform rider;
         public ForestTerrain Landscape { get; private set; }
         public DragonEncounter Encounter { get; private set; }
+        public MountedSkills Skills { get; private set; }
+        public GameAudio Audio { get; private set; }
+        public CampAdditions Additions { get; private set; }
+        public PlayerMountVisual MountedModel { get; private set; }
+        public Camera View=>view;
+        public bool IsDodging=>dodgeTime>0;
+        public float WeaponDamage=>(17+data.sword*8)*(1+(data.journey.level-1)*.01f);
         public Vector3 Ground(Vector3 position, float clearance = 0) => Landscape.Ground(position, clearance);
-        public float MaxHealth => 90 + data.armor * 10 + data.barding * 10;
+        public float MaxHealth => 90 + data.armor * 10 + data.barding * 10 + (data.journey==null?0:(Mathf.Clamp(data.journey.level,1,20)-1)*3);
         public bool Night => data.time < .22f || data.time > .76f;
         public bool Dead => data.health <= 0;
         public bool Paused { get; private set; }
@@ -34,10 +45,13 @@ namespace DonkeyForest
         Light sun;
         Text status, message, inventory, objective;
         GameObject menu, creditsPanel;
-        Transform sword, donkey;
+        float comboWindow,hudClock,frameTime=1f/30;
+        static readonly string[] AnimalSpecies={"Bear","Deer","Moose","Wolf","Fox"};
+        int comboStep;
         float attackCooldown, swing, spawnClock, autoSave, messageClock, dodgeCooldown, dodgeTime;
         Vector3 dodgeDirection;
         string notice = "Welcome, rider. Hunt for loot. Zombies arrive after dark.";
+        readonly ForestPropMeshes propMeshes=new ForestPropMeshes();
         readonly List<Material> mats = new List<Material>();
         readonly Dictionary<Color, Material> palette = new Dictionary<Color, Material>();
         string SavePath => Path.Combine(Application.persistentDataPath, "forest-rider.json");
@@ -47,19 +61,28 @@ namespace DonkeyForest
         void Awake()
         {
             Instance = this;
-            Application.targetFrameRate = 60;
+            Application.targetFrameRate = 30;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
             Load();
-            BuildWorld(); BuildRider(); BuildUI();
+            if(data.skills==null)data.skills=new SkillSave();if(data.journey==null)data.journey=new JourneySave();
+            SkillRules.Normalize(data.skills);JourneyRules.Normalize(data.journey);data.health=Mathf.Clamp(data.health,0,MaxHealth);
+            data.masterVolume=SafeVolume(data.masterVolume,.75f);data.musicVolume=SafeVolume(data.musicVolume,.2f);data.effectsVolume=SafeVolume(data.effectsVolume,.8f);
+            data.quality=Mathf.Clamp(data.quality,0,2);
+            Audio=gameObject.AddComponent<GameAudio>();Audio.Setup(this);
+            BuildWorld(); BuildRider();
+            Skills=gameObject.AddComponent<MountedSkills>();Skills.Setup(this);
+            BuildUI();
+            MobilePerformance.Apply(this);
             Encounter=new GameObject("Gems and summoning altar").AddComponent<DragonEncounter>();
             Encounter.Setup(this);
-            if(!Encounter.Active)for (int i = 0; i < 14; i++) SpawnEnemy(false);
+            if(!Encounter.Active)for (int i = 0; i < MobilePerformance.InitialEnemies(data.quality); i++) SpawnEnemy(false);
             Show(notice);
         }
+        static float SafeVolume(float value,float fallback)=>float.IsNaN(value)||float.IsInfinity(value)?fallback:Mathf.Clamp01(value);
         public Material Mat(Color color)
         {
             if (palette.TryGetValue(color, out var existing)) return existing;
-            var m = new Material(Shader.Find("Standard")); m.color = color; mats.Add(m); palette.Add(color,m); return m;
+            var m = new Material(Shader.Find("Standard")); m.color = color;m.enableInstancing=true; mats.Add(m); palette.Add(color,m); return m;
         }
         public Material Glow(Color color)
         {
@@ -70,8 +93,15 @@ namespace DonkeyForest
             var g = GameObject.CreatePrimitive(type); g.name = name; g.transform.SetParent(parent, false);
             g.transform.localPosition = pos; g.transform.localScale = scale;
             g.GetComponent<Renderer>().sharedMaterial = material;
-            var c = g.GetComponent<Collider>(); if(c) Destroy(c);
+            var c = g.GetComponent<Collider>(); if(c){c.enabled=false;Destroy(c);}
             return g;
+        }
+        GameObject Prop(string name,Mesh mesh,Transform parent,Vector3 position,Vector3 scale,Material material)
+        {
+            var obj=new GameObject(name,typeof(MeshFilter),typeof(MeshRenderer));obj.transform.SetParent(parent,false);
+            obj.transform.localPosition=position;obj.transform.localScale=scale;
+            obj.GetComponent<MeshFilter>().sharedMesh=mesh;var renderer=obj.GetComponent<MeshRenderer>();renderer.sharedMaterial=material;
+            renderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;renderer.receiveShadows=false;return obj;
         }
         void BuildWorld()
         {
@@ -89,22 +119,23 @@ namespace DonkeyForest
                 float h = UnityEngine.Random.Range(3f,7f);
                 var tree = new GameObject("Pine").transform; tree.SetParent(world); tree.position = position;
                 tree.gameObject.layer = ForestTerrain.SceneryLayer;
-                Shape("Trunk",PrimitiveType.Cylinder,tree,new Vector3(0,h*.35f,0),new Vector3(.45f,h*.35f,.45f),bark);
-                Shape("Lower canopy",PrimitiveType.Sphere,tree,new Vector3(0,h*.65f,0),new Vector3(3.5f,h*.6f,3.5f),leaves);
-                Shape("Upper canopy",PrimitiveType.Sphere,tree,new Vector3(.15f,h*.98f,0),new Vector3(2.4f,h*.7f,2.4f),leaves);
+                Prop("Trunk",propMeshes.Trunk,tree,new Vector3(0,h*.35f,0),new Vector3(.45f,h*.35f,.45f),bark);
+                Prop("Lower canopy",propMeshes.Cone,tree,new Vector3(0,h*.65f,0),new Vector3(3.5f,h*.6f,3.5f),leaves);
+                Prop("Upper canopy",propMeshes.Cone,tree,new Vector3(.15f,h*.98f,0),new Vector3(2.4f,h*.7f,2.4f),leaves);
                 var obstacle=tree.gameObject.AddComponent<CapsuleCollider>(); obstacle.radius=.45f;obstacle.height=h;obstacle.center=Vector3.up*h*.5f;
             }
             for(int i=0;i<45;i++)
             {
                 var p=UnityEngine.Random.insideUnitCircle*82;
                 if(p.magnitude < 18 || ForestTerrain.PathWeight(p.x,p.y) > .3f) continue;
-                var stone = Shape("Weathered stone",PrimitiveType.Sphere,world,Ground(new Vector3(p.x,0,p.y)),
+                var stone = Prop("Weathered stone",propMeshes.Stone,world,Ground(new Vector3(p.x,0,p.y)),
                     new Vector3(1,.65f,.8f)*UnityEngine.Random.Range(.6f,2.4f),rocks);
                 stone.transform.rotation = Quaternion.Euler(UnityEngine.Random.Range(-12,12),UnityEngine.Random.Range(0,360),UnityEngine.Random.Range(-12,12));
             }
             var lamp=new GameObject("Sun");sun=lamp.AddComponent<Light>();sun.type=LightType.Directional;sun.shadows=LightShadows.None;
             RenderSettings.fog=true;RenderSettings.fogMode=FogMode.ExponentialSquared;RenderSettings.fogDensity=.014f;
             var cameraObject = new GameObject("Follow Camera");view=cameraObject.AddComponent<Camera>();cameraObject.AddComponent<AudioListener>();view.farClipPlane=160;view.fieldOfView=58;
+            StaticBatchingUtility.Combine(world.gameObject);
             Physics.SyncTransforms();
             UnityEngine.Random.InitState(Environment.TickCount);
         }
@@ -123,24 +154,7 @@ namespace DonkeyForest
             start.x=Mathf.Clamp(start.x,-86,86);start.z=Mathf.Clamp(start.z,-86,86);
             rider.position=Ground(start,.08f);
             controller=rider.gameObject.AddComponent<CharacterController>();controller.center=new Vector3(0,1,0);controller.height=2;controller.radius=.55f;controller.stepOffset=.4f;controller.slopeLimit=45;
-            donkey=new GameObject("Donkey").transform;donkey.SetParent(rider,false);
-            var gray=Mat(new Color(.43f,.4f,.37f));var dark=Mat(new Color(.16f,.12f,.1f));var steel=Mat(new Color(.48f,.6f,.64f));var cloth=Mat(new Color(.55f,.18f,.11f));
-            Shape("Donkey body",PrimitiveType.Capsule,donkey,new Vector3(0,.95f,0),new Vector3(.85f,.7f,1.5f),gray).transform.localRotation=Quaternion.Euler(90,0,0);
-            Shape("Neck",PrimitiveType.Capsule,donkey,new Vector3(0,1.25f,.65f),new Vector3(.45f,.55f,.5f),gray);
-            Shape("Head",PrimitiveType.Cube,donkey,new Vector3(0,1.65f,.85f),new Vector3(.43f,.43f,.7f),gray);
-            for(int side=-1;side<=1;side+=2)
-            {
-                Shape("Long ear",PrimitiveType.Capsule,donkey,new Vector3(side*.16f,2,.68f),new Vector3(.12f,.35f,.12f),gray);
-                Shape("Eye",PrimitiveType.Sphere,donkey,new Vector3(side*.225f,1.74f,.97f),Vector3.one*.075f,dark);
-                for(int end=-1;end<=1;end+=2) Shape("Leg",PrimitiveType.Cube,donkey,new Vector3(side*.27f,.4f,end*.48f),new Vector3(.16f,.8f,.18f),dark);
-                Shape("Donkey armor",PrimitiveType.Cube,donkey,new Vector3(side*.44f,1,0),new Vector3(.08f,.48f,.85f),steel);
-            }
-            Shape("Saddle",PrimitiveType.Cube,donkey,new Vector3(0,1.35f,-.12f),new Vector3(.65f,.15f,.65f),cloth);
-            Shape("Rider breastplate",PrimitiveType.Capsule,donkey,new Vector3(0,1.86f,-.12f),new Vector3(.5f,.55f,.4f),steel);
-            Shape("Helmet",PrimitiveType.Sphere,donkey,new Vector3(0,2.43f,-.12f),Vector3.one*.43f,steel);
-            sword=new GameObject("Sword pivot").transform;sword.SetParent(donkey,false);sword.localPosition=new Vector3(.45f,1.95f,0);
-            Shape("Sword",PrimitiveType.Cube,sword,new Vector3(0,0,.6f),new Vector3(.1f,.08f,1.2f),steel);
-            Shape("Guard",PrimitiveType.Cube,sword,new Vector3(0,0,.12f),new Vector3(.4f,.12f,.1f),dark);
+            MountedModel=rider.gameObject.AddComponent<PlayerMountVisual>();MountedModel.Setup(this);
             view.transform.position=rider.position+new Vector3(0,7,-9);
             view.transform.LookAt(rider.position+Vector3.up*1.6f);
         }
@@ -152,6 +166,11 @@ namespace DonkeyForest
             if(Input.GetKeyDown(KeyCode.H)) Heal();
             if(Input.GetKeyDown(KeyCode.LeftShift)||Input.GetKeyDown(KeyCode.RightShift))Dodge();
             if(Input.GetKeyDown(KeyCode.E))Encounter.OfferGems();
+            if(Input.GetKeyDown(KeyCode.Alpha1))Skills.Use(SkillId.Whirlwind);
+            if(Input.GetKeyDown(KeyCode.Alpha2))Skills.Use(SkillId.Guard);
+            if(Input.GetKeyDown(KeyCode.Alpha3))Skills.Use(SkillId.Charge);
+            if(Input.GetKeyDown(KeyCode.Alpha4))Skills.Use(SkillId.Kick);
+            if(Dead)Skills.Tick(0);
             if(!Paused && !Dead)
             {
                 float dt=Time.deltaTime;
@@ -159,24 +178,38 @@ namespace DonkeyForest
                 input=Vector2.ClampMagnitude(input,1);
                 var forward=Vector3.ProjectOnPlane(view.transform.forward,Vector3.up).normalized;
                 var direction=forward*input.y+view.transform.right*input.x;direction.y=0;
+                comboWindow=Mathf.Max(0,comboWindow-dt);
+                bool charging=Skills.Charging;
+                if(charging)direction=Skills.ChargeDirection;
                 dodgeCooldown=Mathf.Max(0,dodgeCooldown-dt);
                 if(dodgeTime>0){direction=dodgeDirection;dodgeTime=Mathf.Max(0,dodgeTime-dt);}
                 if(direction.sqrMagnitude>.01f) rider.rotation=Quaternion.Slerp(rider.rotation,Quaternion.LookRotation(direction),dt*10);
-                controller.Move((direction*(dodgeTime>0?14f:6.5f)+Vector3.down*15)*dt);
-                Vector3 pos=rider.position;pos.x=Mathf.Clamp(pos.x,-86,86);pos.z=Mathf.Clamp(pos.z,-86,86);rider.position=pos;
-                donkey.localPosition=Vector3.up*(Mathf.Sin(Time.time*13)*.035f*input.magnitude);
+                Vector3 previous=rider.position;
+                controller.Move((direction*(dodgeTime>0?14f:charging?12.5f:6.5f)+Vector3.down*15)*dt);
+                Vector3 pos=rider.position;var correction=new Vector3(Mathf.Clamp(pos.x,-86,86)-pos.x,0,Mathf.Clamp(pos.z,-86,86)-pos.z);
+                if(correction.sqrMagnitude>0)controller.Move(correction);
+                if(charging)Skills.CheckCharge(previous,rider.position);
+                Skills.Tick(dt);
+                MountedModel.Animate(direction.sqrMagnitude>.01f,charging||dodgeTime>0,swing);
+                Audio.Hooves(dt,(rider.position-previous).sqrMagnitude>.0001f&&direction.sqrMagnitude>.01f,charging||dodgeTime>0);
                 data.time=Mathf.Repeat(data.time+dt/360,1);
-                spawnClock+=dt;if(spawnClock>4){spawnClock=0;if(enemies.Count<22&&!Encounter.Active)SpawnEnemy(Night);}
+                spawnClock+=dt;if(spawnClock>4){spawnClock=0;if(enemies.Count<MobilePerformance.EnemyCap(data.quality)&&!Encounter.Active)SpawnEnemy(Night);}
                 autoSave+=dt;if(autoSave>30){autoSave=0;Save(false);}
                 attackCooldown-=dt;swing=Mathf.Max(0,swing-dt);
             }
-            sword.localRotation=Quaternion.Euler(0,swing>0?Mathf.Sin(swing/.3f*Mathf.PI)*-120:0,0);
             float daylight=Night?.12f:Mathf.Clamp01(Mathf.Sin((data.time-.22f)/.54f*Mathf.PI));
             sun.intensity=Mathf.Lerp(.12f,1.1f,daylight);sun.transform.rotation=Quaternion.Euler(data.time*360-90,35,0);
             RenderSettings.ambientLight=Color.Lerp(new Color(.18f,.22f,.34f),new Color(.65f,.68f,.57f),daylight);
             RenderSettings.fogColor=Color.Lerp(new Color(.055f,.075f,.13f),new Color(.48f,.59f,.5f),daylight);view.backgroundColor=RenderSettings.fogColor;
-            status.text=$"FOREST RIDER  •  {(Night?"NIGHT — ZOMBIES":"DAY — FOREST HUNT")}\nHealth {Mathf.CeilToInt(data.health)} / {MaxHealth:0}    Coins {data.coins}    Kills {data.kills}\nSword {data.sword}  •  Armor {data.armor}  •  Donkey gear {data.barding}  •  Potions {data.potions}";
+            frameTime=Mathf.Lerp(frameTime,Mathf.Max(.001f,Time.unscaledDeltaTime),.05f);
+            hudClock-=Time.unscaledDeltaTime;
+            if(hudClock<=0)
+            {
+            hudClock=.2f;
+            status.text=$"FOREST RIDER • {(Night?"NIGHT — ZOMBIES":"DAY — FOREST HUNT")} • {(data.quality==0?"LOW":data.quality==1?"BALANCED":"HIGH")} / {Mathf.RoundToInt(1/frameTime)} FPS\nHealth {Mathf.CeilToInt(data.health)} / {MaxHealth:0}    Coins {data.coins}    Kills {data.kills}    Lv.{data.journey.level}\nSword {data.sword}  •  Armor {data.armor}  •  Donkey gear {data.barding}  •  Potions {data.potions}";
             objective.text=Encounter.Objective+$" • Dodge {(dodgeCooldown<=0?"READY":dodgeCooldown.ToString("0.0")+"s")}";
+            Additions.Refresh();
+            }
             messageClock-=Time.unscaledDeltaTime;message.text=Dead?"You fell. Open CAMP to revive.":messageClock>0?notice:"";
         }
         void LateUpdate()
@@ -196,28 +229,32 @@ namespace DonkeyForest
         }
         public void Dodge()
         {
-            if(Paused||Dead||dodgeCooldown>0)return;
-            dodgeDirection=rider.forward;dodgeTime=.32f;dodgeCooldown=1.6f;
+            if(Paused||Dead||dodgeCooldown>0||Skills.Charging)return;
+            dodgeDirection=rider.forward;dodgeTime=.32f;dodgeCooldown=1.6f;Audio.Play("swing",.5f);
         }
         public void Attack()
         {
             if(Paused||Dead||attackCooldown>0)return;
             attackCooldown=.6f;swing=.3f;
-            if(Encounter && Encounter.Boss)Encounter.Boss.Hit(17+data.sword*8);
+            if(comboWindow<=0)comboStep=0;comboStep=comboStep%3+1;comboWindow=1.3f;
+            bool heavy=comboStep==3;float damage=WeaponDamage*(heavy?1.4f:1);
+            Audio.Play("swing",heavy?1:.7f);
+            if(Encounter && Encounter.Boss)Encounter.Boss.Hit(damage);
             foreach(var enemy in enemies.ToArray())
             {
                 if(!enemy)continue;
                 var delta=enemy.transform.position-rider.position;
                 if(Mathf.Abs(delta.y)>2.5f)continue;
                 delta.y=0;
-                if(delta.magnitude<3.4f && Vector3.Dot(rider.forward,delta.normalized)>-.15f)enemy.Hit(17+data.sword*8);
+                if(delta.magnitude<3.4f && Vector3.Dot(rider.forward,delta.normalized)>-.15f)enemy.SkillHit(damage,heavy?.35f:0,heavy?delta.normalized*.8f:Vector3.zero);
             }
         }
         public void Damage(float amount)
         {
             if(Dead||Paused||dodgeTime>0)return;
-            data.health=Mathf.Max(0,data.health-Mathf.Max(1,amount*(1-Mathf.Min(.65f,(data.armor+data.barding)*.035f))));
-            if(Dead){Show("You fell. Your equipment is safe. Revive at camp.");Save(false);}
+            data.health=Mathf.Max(0,data.health-Mathf.Max(1,amount*Skills.GuardMultiplier*(1-Mathf.Min(.65f,(data.armor+data.barding)*.035f))));
+            Audio.Play("hit",.55f);
+            if(Dead){Skills.CancelEffects();Audio.Play("death");Show("You fell. Your equipment is safe. Revive at camp.");Save(false);}
         }
         void SpawnEnemy(bool zombie)
         {
@@ -234,22 +271,30 @@ namespace DonkeyForest
                 found=true;break;
             }
             if(!found)return;
-            string[] species={"Bear","Deer","Moose","Wolf","Fox"};
-            var enemy=new GameObject(zombie?"Zombie":species[UnityEngine.Random.Range(0,species.Length)]).AddComponent<ForestEnemy>();
-            enemy.transform.position=pos;enemy.Setup(this,enemy.name);enemies.Add(enemy);
+            var enemy=new GameObject(zombie?"Zombie":AnimalSpecies[UnityEngine.Random.Range(0,AnimalSpecies.Length)]).AddComponent<ForestEnemy>();
+            enemy.transform.position=pos;enemy.Setup(this,enemy.name,UnityEngine.Random.value<.12f);enemies.Add(enemy);
         }
         public void Killed(ForestEnemy enemy)
         {
-            enemies.Remove(enemy);data.kills++;data.coins+=enemy.kind=="Zombie"?12:8;
-            if(UnityEngine.Random.value<.65f)
+            enemies.Remove(enemy);data.kills++;data.coins+=(enemy.kind=="Zombie"?12:8)*(enemy.Elite?2:1);
+            if(enemy.kind=="Zombie")data.journey.zombies++;else data.journey.hunts++;
+            GainXP(JourneyRules.XP(enemy.kind,enemy.Elite));
+            if(UnityEngine.Random.value<(enemy.Elite?.9f:.65f))
             {
                 var drop=new GameObject("Loot — ride over to collect").AddComponent<ForestLoot>();
                 drop.transform.position=Ground(enemy.transform.position,.6f);drop.reward=UnityEngine.Random.Range(0,5);
                 Shape("Loot",PrimitiveType.Cube,drop.transform,Vector3.zero,Vector3.one*.45f,Mat(new Color(1,.74f,.15f)));
             }
+            Save(false);
+        }
+        public void GainXP(int amount)
+        {
+            int levels=JourneyRules.GainXP(data.journey,amount);
+            if(levels>0){data.health=Mathf.Min(MaxHealth,data.health+levels*3);Show($"Level {data.journey.level}! +{levels} skill point(s). Train in CAMP → SKILLS.");Audio.Play("level");}
         }
         public void Collect(int reward)
         {
+            Audio.Play("loot");
             if(reward==0){data.potions++;Show("Found a healing potion.");}
             else if(reward==1){data.sword=Mathf.Min(10,data.sword+1);Show("Found a sword upgrade!");}
             else if(reward==2){data.armor=Mathf.Min(10,data.armor+1);Show("Found rider armor!");}
@@ -257,7 +302,7 @@ namespace DonkeyForest
             else{data.coins+=25;Show("Found 25 coins.");}
             Save(false);
         }
-        public void Heal(){if(Paused||Dead)return;if(data.potions<=0){Show("No potions left.");return;}if(data.health>=MaxHealth)return;data.potions--;data.health=Mathf.Min(MaxHealth,data.health+50);Show("Recovered 50 health.");}
+        public void Heal(){if(Paused||Dead)return;if(data.potions<=0){Show("No potions left.");return;}if(data.health>=MaxHealth)return;data.potions--;data.health=Mathf.Min(MaxHealth,data.health+50);Show("Recovered 50 health.");Audio.Play("heal");}
         public void Show(string text){notice=text;messageClock=6;}
         public void Save(bool notify=true)
         {
@@ -281,6 +326,7 @@ namespace DonkeyForest
                     string json=File.ReadAllText(path);if(!json.TrimStart().StartsWith("{"))continue;
                     var loaded=JsonUtility.FromJson<Progress>(json);
                     if(loaded==null||loaded.version!=1||loaded.sword<1||float.IsNaN(loaded.health)||float.IsNaN(loaded.time)||float.IsInfinity(loaded.time)||float.IsNaN(loaded.x)||float.IsNaN(loaded.z)||float.IsInfinity(loaded.x)||float.IsInfinity(loaded.z))continue;
+                    if(!json.Contains("\"masterVolume\"")){loaded.masterVolume=.75f;loaded.musicVolume=.2f;loaded.effectsVolume=.8f;}
                     data=loaded;data.sword=Mathf.Clamp(data.sword,1,10);data.armor=Mathf.Clamp(data.armor,1,10);data.barding=Mathf.Clamp(data.barding,1,10);
                     data.health=Mathf.Clamp(data.health,0,MaxHealth);data.coins=Mathf.Max(0,data.coins);data.potions=Mathf.Max(0,data.potions);data.time=Mathf.Repeat(data.time,1);
                     data.gemMask &= GemRules.FullMask;
@@ -291,8 +337,8 @@ namespace DonkeyForest
         }
         void OnApplicationPause(bool pause){if(pause)Save(false);}
         void OnApplicationQuit(){Save(false);}
-        void OnDestroy(){foreach(var m in mats)if(m)Destroy(m);if(Instance==this)Instance=null;}
-        void ToggleMenu(){Paused=!Paused;menu.SetActive(Paused);if(creditsPanel)creditsPanel.SetActive(false);moveInput=Vector2.zero;RefreshCamp();}
+        void OnDestroy(){propMeshes.Dispose();foreach(var m in mats)if(m)Destroy(m);if(Instance==this)Instance=null;}
+        void ToggleMenu(){Paused=!Paused;menu.SetActive(Paused);if(creditsPanel)creditsPanel.SetActive(false);moveInput=Vector2.zero;if(Additions)Additions.Close();RefreshCamp();Audio.Play("ui");if(!Paused)Save(false);}
         void RefreshCamp(){inventory.text=$"CAMP & EQUIPMENT\nCoins: {data.coins}\nSword Lv.{data.sword}   Rider armor Lv.{data.armor}   Donkey armor Lv.{data.barding}\nUpgrades cost 40 × current level. Maximum level 10.\nLocal autosave every 30 seconds. One save per device.";}
         void Upgrade(int kind)
         {
@@ -302,22 +348,22 @@ namespace DonkeyForest
             data.coins-=level*40;if(kind==0)data.sword++;else if(kind==1)data.armor++;else data.barding++;
             RefreshCamp();Save();
         }
-        void Revive(){if(!Dead){Show("You can revive after falling in battle.");return;}data.health=MaxHealth;controller.enabled=false;rider.position=Ground(Vector3.zero,.08f);controller.enabled=true;foreach(var e in enemies.ToArray())if(e)Destroy(e.gameObject);enemies.Clear();dodgeTime=0;dodgeCooldown=0;Encounter.RestartBoss();Save();ToggleMenu();}
+        void Revive(){if(!Dead){Show("You can revive after falling in battle.");return;}data.health=MaxHealth;controller.enabled=false;rider.position=Ground(Vector3.zero,.08f);controller.enabled=true;foreach(var e in enemies.ToArray())if(e)Destroy(e.gameObject);enemies.Clear();dodgeTime=0;dodgeCooldown=0;comboStep=0;comboWindow=0;Skills.CancelEffects();Encounter.RestartBoss();Save();ToggleMenu();}
         Font font;
-        RectTransform Panel(string name,Transform parent,Vector2 anchor,Vector2 pos,Vector2 size,Color color)
+        public RectTransform Panel(string name,Transform parent,Vector2 anchor,Vector2 pos,Vector2 size,Color color)
         {
             var obj=new GameObject(name,typeof(RectTransform),typeof(Image));obj.transform.SetParent(parent,false);
             var rect=obj.GetComponent<RectTransform>();rect.anchorMin=rect.anchorMax=anchor;rect.anchoredPosition=pos;rect.sizeDelta=size;obj.GetComponent<Image>().color=color;return rect;
         }
-        Text Label(Transform parent,string text,Vector2 anchor,Vector2 pos,Vector2 size,int fontsize)
+        public Text Label(Transform parent,string text,Vector2 anchor,Vector2 pos,Vector2 size,int fontsize)
         {
             var obj=new GameObject("Label",typeof(RectTransform),typeof(Text));obj.transform.SetParent(parent,false);
             var r=obj.GetComponent<RectTransform>();r.anchorMin=r.anchorMax=anchor;r.anchoredPosition=pos;r.sizeDelta=size;
             var t=obj.GetComponent<Text>();t.font=font;t.fontSize=fontsize;t.text=text;t.color=Color.white;t.alignment=TextAnchor.MiddleCenter;t.raycastTarget=false;return t;
         }
-        void Button(Transform parent,string text,Vector2 anchor,Vector2 pos,Vector2 size,UnityEngine.Events.UnityAction click)
+        public Button Button(Transform parent,string text,Vector2 anchor,Vector2 pos,Vector2 size,UnityEngine.Events.UnityAction click)
         {
-            var rect=Panel(text,parent,anchor,pos,size,new Color(.18f,.25f,.23f,.95f));var b=rect.gameObject.AddComponent<Button>();b.targetGraphic=rect.GetComponent<Image>();b.onClick.AddListener(click);Label(rect,text,new Vector2(.5f,.5f),Vector2.zero,size,22);
+            var rect=Panel(text,parent,anchor,pos,size,new Color(.18f,.25f,.23f,.95f));var b=rect.gameObject.AddComponent<Button>();b.targetGraphic=rect.GetComponent<Image>();b.onClick.AddListener(click);Label(rect,text,new Vector2(.5f,.5f),Vector2.zero,size,22);return b;
         }
         void BuildUI()
         {
@@ -341,7 +387,7 @@ namespace DonkeyForest
             var stick=joystick.gameObject.AddComponent<MobileStick>();stick.knob=knob;stick.game=this;
             Label(parent,"Drag to ride",Vector2.zero,new Vector2(135,30),new Vector2(230,30),19);
             var panel=Panel("Camp",parent,new Vector2(.5f,.5f),Vector2.zero,new Vector2(880,530),new Color(.06f,.1f,.09f,.98f));menu=panel.gameObject;
-            inventory=Label(panel,"",new Vector2(.5f,1),new Vector2(0,-100),new Vector2(840,180),24);
+            inventory=Label(panel,"",new Vector2(.5f,1),new Vector2(0,-132),new Vector2(840,145),22);
             Button(panel,"Sword",new Vector2(.5f,.5f),new Vector2(-270,0),new Vector2(240,65),()=>Upgrade(0));
             Button(panel,"Rider armor",new Vector2(.5f,.5f),Vector2.zero,new Vector2(240,65),()=>Upgrade(1));
             Button(panel,"Donkey armor",new Vector2(.5f,.5f),new Vector2(270,0),new Vector2(240,65),()=>Upgrade(2));
@@ -352,10 +398,11 @@ namespace DonkeyForest
             Button(panel,"ASSET CREDITS",new Vector2(1,1),new Vector2(-115,-30),new Vector2(210,42),()=>creditsPanel.SetActive(true));
             var credits=Panel("Asset credits",panel,new Vector2(.5f,.5f),Vector2.zero,new Vector2(880,530),new Color(.06f,.1f,.09f,1));
             creditsPanel=credits.gameObject;
-            Label(credits,"FREE MODEL CREDITS\n\nBear and Elk (adapted as Moose): Poly by Google\nCreative Commons Attribution 3.0\nhttps://creativecommons.org/licenses/by/3.0/\n\nDeer, Wolf, Fox, Zombie and Dragon: Quaternius\nCC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/\n\nModels converted to FBX. Moose antlers adapted.\nOriginal model links and modification details are in THIRD_PARTY.md.",new Vector2(.5f,.5f),new Vector2(0,40),new Vector2(830,380),21);
+            Label(credits,"FREE MODEL CREDITS\n\nBear / Elk (Moose adaptation): Poly by Google\nKnight / mounted rider: Dawid2K • both under CC BY 3.0\nhttps://creativecommons.org/licenses/by/3.0/\n\nDonkey, Deer, Wolf, Fox, Zombie and Dragon: Quaternius\nCC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/\n\nModels converted to FBX; moose and rider adapted.\nAudio and mounted rider animations are original project work.\nOriginal model links and modification details are in THIRD_PARTY.md.",new Vector2(.5f,.5f),new Vector2(0,40),new Vector2(830,380),21);
             Button(credits,"MODEL SOURCES",new Vector2(.5f,0),new Vector2(-150,65),new Vector2(250,65),()=>Application.OpenURL("https://github.com/aizcrest/donkey-simulator-for-czach/blob/main/THIRD_PARTY.md"));
             Button(credits,"BACK",new Vector2(.5f,0),new Vector2(150,65),new Vector2(250,65),()=>creditsPanel.SetActive(false));
             creditsPanel.SetActive(false);
+            Additions=gameObject.AddComponent<CampAdditions>();Additions.Setup(this,panel,parent);
             menu.SetActive(false);
         }
     }

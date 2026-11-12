@@ -8,10 +8,10 @@
 - Open CAMP. Verify enemies, world time and player movement pause. Buy each upgrade with sufficient coins; verify insufficient coins and level 10 are handled.
 - Save, close the app, reopen. Check equipment, potions, coins, kills, health, location and day phase. Repeat after backgrounding. Confirm recovery from a damaged primary save using the backup.
 - Die and reopen the game; verify CAMP → REVIVE returns you to the clearing with full health and retained gear.
-- Android: build ARM64 APK with installed SDK/NDK and test simultaneous left-stick drag plus right-hand attack. Test safe areas, pause/resume and 10 minutes of play on target hardware.
+- Android: build ARMv7 + ARM64 APK (OpenGL ES 3) with installed SDK/NDK and test simultaneous left-stick drag plus right-hand attack. Test safe areas, pause/resume and 10 minutes of play on target hardware.
 - iOS: export Xcode project, sign on macOS, run on a physical device and repeat mobile acceptance checks.
 
-Automated repository checks: `python3 Tools/check_project.py`. These validate source/configuration structure only and do not replace Unity compilation or gameplay checks.
+Automated repository checks: `python3 Tools/check_project.py`. These validate repository/asset integrity only and do not replace Unity compilation or gameplay checks.
 
 ## Terrain upgrade acceptance
 
@@ -35,4 +35,23 @@ Automated repository checks: `python3 Tools/check_project.py`. These validate so
 - Open CAMP during each phase/projectile flight. Timers, damage, movement and animations must pause. Resume and verify the remaining timing is preserved.
 - Ride more than 32m from camp and return: boss health resets and old attacks vanish. Die, revive, save/reload mid-fight: gem deposits persist and one fresh boss starts; no ghost hazards remain.
 - Defeat the dragon: verify +500 coins, +3 potions and victory survives reload. Ordinary wildlife spawning resumes and the altar cannot summon duplicate bosses after victory.
-- Run EditMode tests in Unity Test Runner. The three rules tests passed in a standalone .NET 8 NUnit run. Full Unity compilation, the Unity Test Runner run and device gameplay still require the Unity editor.
+- Run EditMode tests in Unity Test Runner. The rules tests passed in a standalone .NET 8 NUnit run. Full Unity compilation, the Unity Test Runner run and device gameplay still require the Unity editor.
+
+## Mounted skills, presentation and progression
+
+- Run all **nine** EditMode tests. These same nine tests passed under standalone .NET 8; Unity Test Runner still needs to be run.
+- Check the new knight/donkey models, sitting pose, saddle alignment, sword/hand attachment, idle/walk/gallop/kick and mounted attack/guard animations in Unity. Check both full and reduced skinning settings, shadows/materials, and animation pause/resume. In-engine visual polish remains unverified.
+- Use Whirlwind surrounded by animals; check radial damage. Stand behind/front of an animal while using Rear Kick and verify rear-only hits, knockback and stun. Charge into several enemies; each should be hit once, and trunks/bounds must still stop movement. Charge cannot activate during dodge; dodge cannot activate during charge.
+- Guard an identical enemy/dragon hit with and without Iron Guard and compare damage. Verify guard lasts its displayed duration and is not invulnerability. Skill cooldowns/active durations must freeze in camp and on death active effects must end. Save/reload during cooldown: levels and remaining cooldown survive, active buffs do not.
+- Hit the dragon with every damaging skill during flight/dive: no damage. During its five-second stun, skill/sword hits work; stun/knockback must never change the boss cycle.
+- Try upgrading with insufficient coins/points and at skill level 5. Spend a point and reload: balances/levels must match. Old saves should load with skills at level 1 and Low graphics, without losing old gear/gems/victory.
+- Check XP level-ups, health cap, skill point awards and level 20 cap. Complete/claim each Journal contract, reload and try claiming twice. Old gem/victory progress should qualify for corresponding contracts.
+- Make three rapid sword attacks: verify the third is heavier and staggers. Wait to reset the combo. Find elite variants, confirm gold marker/extra health/rewards, dodge the moose's telegraphed rush, and observe wolves flanking.
+- Listen to day/night ambience, music, hoof cadence, attacks, skill sounds, gems, healing, menu feedback and boss attacks. Move Master/Music/Effects sliders, mute, pause/resume, background/restart and verify saved volumes and no duplicate listeners or unwanted delayed menu sounds.
+
+## Graphics selection and low-end acceptance
+
+- CAMP → SETTINGS must expose **Low / Balanced / High** with the active selection marked. Low is the first-run and old-save default.
+- Select every preset and verify the HUD's quality/FPS label, saved selection, frame-rate target, grass range/density, camera distance, texture mip limit and enemy cap. Mobile resolution should scale from the original render dimensions, not shrink again on repeated clicks.
+- Lower High → Low with more than 12 wildlife alive: surplus enemies are removed without kills/XP/loot. The dragon encounter should still have ordinary wildlife suspended.
+- Test on both a 32-bit Android installation and ARM64 hardware if available. Measure sustained FPS/memory/heat on a budget phone for at least 10 minutes; a 30 FPS setting alone is not evidence of actual performance. Follow `Docs/PERFORMANCE.md`.

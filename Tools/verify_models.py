@@ -21,7 +21,7 @@ for entry in json.loads((root/'Tools/AssetSources/models.json').read_text()):
     actions=[a.name.lower() for a in bpy.data.actions]
     if name not in ['Bear','Moose']:
         assert actions, 'Animations lost: '+name
-        expected='flying' if name=='Dragon' else 'walk'
+        expected='flying' if name=='Dragon' else 'mountedride' if name=='Rider' else 'walk'
         assert any(expected in a for a in actions), 'Missing movement clip: '+name
         assert any('attack' in a or 'punch' in a for a in actions), 'Missing attack clip: '+name
     if name in ['Bear','Moose','Zombie']:

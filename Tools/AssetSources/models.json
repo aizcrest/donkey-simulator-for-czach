@@ -75,5 +75,27 @@
     "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
     "changes": "Converted GLB to FBX; normalized scale at runtime.",
     "fbx_sha256": "27e959a9d477f4cddff25ce0c6a5cba7847b59b07a193ea127ae0672981b399e"
+  },
+  {
+    "kind": "Donkey",
+    "original_title": "Donkey",
+    "creator": "Quaternius",
+    "source": "https://poly.pizza/m/qmX6nhnvp7",
+    "download": "https://static.poly.pizza/ca29f94e-0874-41b6-8334-66642af56a61.glb",
+    "license": "CC0 1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "changes": "Converted GLB to FBX; normalized scale at runtime.",
+    "fbx_sha256": "0b6a23ffd006d8ecb6b6e4e49b77f5b9ff9a564fe3681d15cc5ce23f835cc6b2"
+  },
+  {
+    "kind": "Rider",
+    "original_title": "Knight",
+    "creator": "Dawid2K",
+    "source": "https://poly.pizza/m/isC73B8SKq",
+    "download": "https://static.poly.pizza/5aef0a90-a166-4024-b3bb-ca6ad8c733f3.glb",
+    "license": "CC BY 3.0",
+    "license_url": "https://creativecommons.org/licenses/by/3.0/",
+    "changes": "Converted GLB to FBX; normalized scale at runtime. Adapted rig and bind pose for riding; added original MountedIdle, MountedRide, MountedAttack and MountedGuard clips.",
+    "fbx_sha256": "c24928d9470f7128fddfb16ac25337a1fabc202b897ee15d3a5b7d9f635dd7ee"
   }
 ]

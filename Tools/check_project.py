@@ -2,6 +2,8 @@
 import hashlib
 import json
 import re
+import wave
+import array
 from pathlib import Path
 root=Path(__file__).resolve().parents[1]
 manifest=json.loads((root/'Packages/manifest.json').read_text())
@@ -22,7 +24,7 @@ for path in (root/'Assets').rglob('*.cs'):
 for name in ['ForestGame.cs','ForestEnemy.cs']:
     assert (root/'Assets/Scripts'/name).is_file()
 entries=json.loads((root/'Tools/AssetSources/models.json').read_text())
-assert len(entries)==7
+assert len(entries)==9
 for entry in entries:
     model=root/'Assets/Resources/Enemies'/(entry['kind']+'.fbx')
     content=model.read_bytes()
@@ -32,4 +34,13 @@ for entry in entries:
     assert entry['source'] in (root/'THIRD_PARTY.md').read_text()
 for path in (root/'Assets').rglob('*'):
     if path.suffix!='.meta': assert Path(str(path)+'.meta').exists(), path
-print('Project, package, FBX integrity and asset credit checks passed. Unity compilation still required.')
+audio=list((root/'Assets/Resources/Audio').glob('*.wav'))
+assert len(audio)==19
+for path in audio:
+    with wave.open(str(path),'rb') as sound:
+        assert sound.getnchannels()==1 and sound.getsampwidth()==2 and sound.getframerate()==22050, path
+        frames=sound.readframes(sound.getnframes());assert len(frames)>1000, path
+        samples=array.array('h',frames);assert max(abs(x) for x in samples)>1000, path
+        assert samples[0]==0 and samples[-1]==0, path
+assert (root/'Assets/Scripts/MobilePerformance.cs').is_file()
+print('Project, FBX integrity, credits, mono audio and metadata checks passed. Unity compilation still required.')

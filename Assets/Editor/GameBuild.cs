@@ -51,7 +51,9 @@ namespace DonkeyForest.Editor
             EnsureScene();System.IO.Directory.CreateDirectory("Builds");
             PlayerSettings.Android.minSdkVersion=AndroidSdkVersions.AndroidApiLevel26;
             PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android,ScriptingImplementation.IL2CPP);
-            PlayerSettings.Android.targetArchitectures=AndroidArchitecture.ARM64;
+            PlayerSettings.Android.targetArchitectures=AndroidArchitecture.ARMv7|AndroidArchitecture.ARM64;
+            PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android,false);
+            PlayerSettings.SetGraphicsAPIs(BuildTarget.Android,new[]{UnityEngine.Rendering.GraphicsDeviceType.OpenGLES3});
             var report=BuildPipeline.BuildPlayer(new[]{Scene},"Builds/ForestRider.apk",BuildTarget.Android,BuildOptions.None);
             if(report.summary.result!=UnityEditor.Build.Reporting.BuildResult.Succeeded)throw new System.Exception("Android build failed: "+report.summary.result);
         }

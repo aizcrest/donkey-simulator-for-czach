@@ -10,11 +10,17 @@ sources=Path(sys.argv[sys.argv.index('--')+1])
 out=root/'Assets/Resources/Enemies'
 for entry in json.loads((root/'Tools/AssetSources/models.json').read_text()):
     name=entry['kind']
+    if '--only' in sys.argv and name not in sys.argv[sys.argv.index('--only')+1:]:continue
     bpy.ops.object.select_all(action='SELECT');bpy.ops.object.delete(use_global=False)
     for collection in [bpy.data.actions,bpy.data.meshes,bpy.data.armatures,bpy.data.materials,bpy.data.images]:
         for block in list(collection):
             if block.users==0:collection.remove(block)
     bpy.ops.import_scene.gltf(filepath=str(sources/(name+'.glb')))
+    if name=='Rider':
+        sys.path.insert(0,str(root/'Tools'))
+        from mounted_rider import prepare
+        prepare()
+    bpy.context.view_layer.update()
     meshes=[o for o in bpy.context.scene.objects if o.type=='MESH']
     points=[o.matrix_world@Vector(c) for o in meshes for c in o.bound_box]
     lo=Vector(tuple(min(v[i] for v in points) for i in range(3)))

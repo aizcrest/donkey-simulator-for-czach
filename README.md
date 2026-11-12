@@ -1,70 +1,116 @@
 # Forest Rider
 
-A Unity 2022.3 LTS C# mobile PvE prototype. Ride an armored donkey through a seeded 3D forest, fight bears, deer, moose, wolves and foxes, survive zombies at night, and collect ten gems to summon a dragon. Ground uses native Unity Terrain with generated hills, surface textures and grass. Enemies use included free-use model assets by Quaternius and Poly by Google, with licenses and credits in [THIRD_PARTY.md](THIRD_PARTY.md). The rider, donkey and scenery remain original primitive geometry; no paid assets are required.
+Unity **2022.3.62f1** C# mobile PvE game: ride an armored donkey through a hilly forest, fight wildlife and nighttime zombies, train rider/mount skills, and gather ten gems to summon a dragon. Free-use knight, donkey and enemy models are included; [THIRD_PARTY.md](THIRD_PARTY.md) records licenses and adaptations. No paid asset packages are needed.
 
-## Visual concept
+## Open and play
 
-![Forest Rider concept artwork](Docs/forest-rider-concept.png)
+1. Install Unity 2022.3.62f1 through Unity Hub, with Android Build Support (SDK, NDK, OpenJDK) and/or iOS Build Support.
+2. Add this folder as a project. Let package, FBX, animation and audio imports finish.
+3. Open **Forest Rider → Create or open game scene**, then press Play. The world is generated at runtime.
 
-This generated concept illustrates the intended art direction; it is not a screenshot of the current prototype.
+| Action | Mobile | Keyboard |
+| --- | --- | --- |
+| Ride | Left joystick | WASD / arrows |
+| Sword attack / three-hit combo | ATTACK | Space |
+| Dodge | DODGE | Shift |
+| Potion | HEAL | H |
+| Rider / donkey skills | Four numbered skill buttons | 1–4 |
+| Deposit gems at central altar | OFFER GEMS | E |
+| Equipment, training, journal, settings, save, revive | CAMP | Escape |
+| Manual save | CAMP → SAVE | F5 |
 
-## Run
+Movement follows the camera. The third consecutive sword attack deals 40% extra damage and briefly staggers ordinary enemies; wait more than 1.3 seconds between attacks to reset the combo. Dodge lasts .32 seconds with damage immunity and a 1.6-second cooldown. Charge and dodge cannot run at the same time.
 
-1. Install Unity **2022.3.62f1** with Android Build Support (SDK, NDK, OpenJDK) and/or iOS Build Support through Unity Hub.
-2. Add this folder as a project and open it. Allow the initial model/animation import and compilation to finish; the included FBX files need no external importer.
-3. The editor generates `Assets/Scenes/Forest.unity` and registers it for builds. If needed use **Forest Rider → Create or open game scene**.
-4. Press Play. The game creates its world, rider, enemies, camera, lighting, and UI automatically when the scene loads.
+## Rider and donkey skills
 
-Mobile: drag the left stick to ride; ATTACK swings in front of your donkey; DODGE dashes forward with brief damage immunity; HEAL uses a potion; OFFER GEMS deposits carried gems at the central altar; CAMP pauses combat and opens equipment, save, revive and asset credits. Desktop: WASD/arrows to ride, Space to attack, Shift to dodge, H to heal, E to offer gems, Escape for camp, F5 to save. Movement is relative to the fixed follow camera. Ride over golden loot cubes to collect them.
+All four skills start at level 1. Upgrade them in **CAMP → SKILLS** using **one skill point + 60 × current skill level coins**. Maximum skill level is 5. Button labels show level, active state and remaining cooldown.
 
-## Rules
+| Key | Skill | Level 1 effect | Level 1 cooldown |
+| --- | --- | --- | --- |
+| 1 | Rider: Whirlwind | 4.25m spin attack; 1.35× weapon damage and brief stagger | 8s |
+| 2 | Rider: Iron Guard | 50% less damage for 4s, applied with armor reduction | 16s |
+| 3 | Donkey: Charge | Forward rush at 12.5m/s for .8s; each enemy takes 1.5× weapon damage once and is stunned for 1s | 12s |
+| 4 | Donkey: Rear Kick | Rear cone, 3.2m reach; 1.2× damage, 2m knockback, 1.5s stun | 7s |
 
-- Start with a level 1 sword, rider armor, donkey armor, and three potions.
-- Bears, deer, moose, wolves and foxes roam the forest. Deer and foxes flee until struck. Wolves are faster pursuers; moose defend their space and have more health and damage. Models retain supplied animation clips; bear and moose use static source meshes.
-- A full day lasts six real minutes. Night spawns zombies, which disappear at dawn.
-- Every kill awards coins and has a 65% chance to drop a potion, sword upgrade, rider armor, donkey armor, or extra coins, each equally likely.
-- Gear caps at level 10. Camp upgrades cost 40 times the current level. Armor reduces incoming damage, up to 65%; both armor types increase maximum health. Potions restore 50 health.
-- Death keeps equipment and progress. CAMP → REVIVE restores health and returns you to the clearing.
-- Local JSON saves preserve health, position, day phase, kills, coins, potions, equipment, collected gem IDs, altar deposits and dragon victory. Manual save, 30-second autosave, loot collection, upgrades, death, application backgrounding and quit write progress. Save files live in `Application.persistentDataPath/forest-rider.json`; a backup and temporary file provide recovery copies. Enemy positions and dropped loot are transient. Uninstalling the app can remove saves.
+Higher skill levels improve power, reach or duration and reduce cooldowns. Charge has no damage immunity; dodge remains the evasion tool. Skills cannot damage the airborne dragon or bypass its stun-only vulnerability. Ordinary enemy stun/knockback effects do not alter the dragon's phase clock.
+
+Levels and cooldowns save locally. Cooldowns freeze in camp and while offline. Active buffs, rushes and combo state end on death/reload, so reloading cannot restore an active buff for free.
+
+## Combat and progression
+
+- Start with a level 1 sword, rider armor, donkey barding, three potions and one skill point.
+- Earn XP from kills, gems and contracts. Player level caps at **20**; each level awards a skill point and adds 3 maximum health. Weapon damage gains a small level bonus.
+- Wildlife includes bears, deer, moose, wolves and foxes. Deer/foxes flee until attacked; wolves flank; moose telegraph a one-second charge before rushing. Zombie spawns begin at night and disappear at dawn. A full day takes six real minutes.
+- **12%** of spawns are elites, marked with a golden diamond: 60% more health, 30% more damage and double kill XP/coins. Normal enemies also scale gently with player level.
+- A kill has a 65% loot chance (90% for elites). Ride over golden drops to receive potions, gear upgrades or coins. Gear caps at level 10; camp gear upgrades cost 40 × current level coins. Armor reduces incoming damage up to 65%; rider/donkey armor also increase maximum health. Potions restore 50 health.
+- **CAMP → JOURNAL** tracks four one-time contracts: defeat 5 animals, defeat 3 zombies, find 4 gems, defeat the dragon. Claim rewards explicitly. Standard contracts award 80 coins, one skill point, one potion and 60 XP. Dragon Slayer awards 200 coins, two points, one potion and 200 XP. Claims persist and cannot be repeated.
+- Death preserves gear, XP, skills and gems. **CAMP → REVIVE** returns you to the central clearing.
+
+Older saves retain their existing progress. XP/hunt counters begin tracking with this update; already-found gems and dragon victory still count toward their new contracts.
 
 ## Ten gems and the dragon
 
-- Find ten unique glowing turquoise gems around the forest. The HUD shows the nearest uncollected gem's distance and cardinal direction (north is forward in the normal camera). Ride over a gem to collect it. Each has a stable saved ID, so reloading never duplicates a pickup.
-- Ride within 4.5 metres of the central altar and use **OFFER GEMS / E**. You can deposit gems in batches. All ten light the altar and summon the dragon. Ordinary enemies despawn and stop spawning during the encounter.
-- **Aerial fireballs — 10 seconds:** the dragon circles above the altar and fires roughly every 1.4 seconds. Orange circles lock onto your position when each shot launches. After 1.2 seconds, the fireball hits a 2.1m-radius area for 22 base damage. Ride out or dodge; the shot does not keep tracking you.
-- **Dive warning — 1.5 seconds:** a red 3m-radius marker locks onto your position. Move out before the dragon commits.
-- **Dive — 0.8 seconds:** the dragon dives to the marked location and deals 36 base damage on impact. Each dive deals damage only once.
-- **Stunned — exactly 5 seconds:** the dragon is grounded, a green ring appears, and sword hits can damage it. Outside this window it is immune. The cycle repeats until its 650 health is depleted.
-- **DODGE / Shift:** 0.32-second forward dash and damage immunity, with a 1.6-second cooldown. Collision and terrain still apply, so dodge toward open space. Armor also reduces dragon damage.
-- Leaving the arena (32m from the altar) resets boss health and hazards. Return to restart. Death/revival and reloading restart an unlocked fight at full boss health; your ten deposited gems remain safe. Boss health and attack phase are transient.
-- Victory awards 500 coins and three potions and saves the dragon-defeated flag. The boss is a one-time progression encounter in the current save.
+Find ten unique glowing turquoise gems. The HUD shows the nearest remaining gem's distance and cardinal direction. Each gem has a saved ID, preventing duplication after reload. Deposit any carried gems within 4.5m of the central altar; you may deposit in batches. The tenth deposit summons the dragon and clears/suspends ordinary enemies.
 
-## Terrain
+The dragon has 650 health and repeats:
 
-The forest now uses Unity's built-in **Terrain**, **TerrainData**, **TerrainCollider**, **TerrainLayer** and billboard grass detail system. A deterministic 257 × 257 heightmap spans 180 × 180 metres with broad hills and a flat camp clearing; the playable area remains approximately 172 × 172 metres. Moss/grass, earth/leaf litter and stone textures are generated locally, with dirt trails, patchy earth and rock blended by path position, slope and elevation. These are original procedural textures, not downloaded photographic assets.
+1. **Aerial fireballs — 10 seconds.** Orange 2.1m-radius circles lock onto the rider when each shot launches. After 1.2s the impact deals 22 base damage. Move out or dodge; shots do not keep tracking.
+2. **Dive warning — 1.5 seconds.** A red 3m-radius marker locks in place.
+3. **Dive — .8 seconds.** The dragon dives to the marker and deals 36 base damage once on impact.
+4. **Stunned — exactly 5 seconds.** A green ring appears and sword/skill hits can damage the grounded dragon. It becomes immune again at takeoff.
 
-Grass is omitted from trails and steep slopes and renders within 38 metres to limit mobile cost. Terrain uses instanced rendering and a 128 × 128 detail map. Adjust constants and generation parameters in `Assets/Scripts/ForestTerrain.cs` to tune the landscape. The terrain is created at runtime: inspect it during Play Mode; terrain edits made then are not persisted.
+Iron Guard and armor reduce dragon damage; dodge grants brief immunity. Leaving the 32m altar arena resets boss health and attacks. Death/revival or reloading starts an unlocked fight at full health, preserving your deposited gems. Boss health/phase are transient.
 
-Trees and stones sit on the terrain. The rider and creatures use character controllers to follow slopes; spawns, loot, loaded saves and revival sample the actual ground height. The camera checks terrain/trunk obstruction and stays above the ground. Existing saves keep their X/Z positions and equipment and adapt to the new elevation on load.
+Victory saves permanently and awards 500 coins, three potions and 250 XP, in addition to the separately claimable Dragon Slayer contract. Ordinary wildlife resumes. The boss is a one-time progression encounter per save.
 
-In Play Mode, use **Forest Rider → Validate terrain (Play Mode)** to check height relief, layer weights, grass, the camp clearing and agreement between height samples and terrain physics. This validation has been added but cannot be executed without Unity.
+## Models, animations and audio
 
-## Build
+The donkey uses a free Quaternius rig with idle/walk/gallop/kick clips. The knight uses Dawid2K's free rig, adapted into a mounted bind pose with four original clips: mounted idle, riding, sword attack and guard. The rider follows the donkey's back bone and the sword follows its hand. Saddle/barding are lightweight original attachments.
 
-**Forest Rider → Build Android APK** generates `Builds/ForestRider.apk`, using IL2CPP, ARM64 and minimum Android API 26. Install the Android module first. Unity may download the target SDK required by your installed tooling. Use Build Settings to configure distribution signing and publish an AAB if desired.
+Enemy rigs retain their supplied animations where available; bear and moose remain static source meshes. FBX conversion scripts are in `Tools/`. Unity imports only the action clips used by the game, with keyframe reduction, and skips off-screen animation evaluation.
 
-**Forest Rider → Build iOS Xcode project** exports `Builds/iOS`. Finish signing and building on macOS with Xcode and an Apple developer provisioning profile.
+The project includes **19 original synthesized audio files**: day/night ambience, a quiet music loop, hooves, sword/combat/skill sounds, dragon attacks, gems, loot, healing and UI feedback. There are no third-party sample recordings. **CAMP → SETTINGS** has saved Master, Music and Effects sliders; camp pauses world audio while menu feedback remains audible.
 
-Batch example after installing Unity:
+## Graphics quality and mobile performance
 
-```sh
-Unity -batchmode -quit -projectPath "$PWD" -executeMethod DonkeyForest.Editor.GameBuild.Android -logFile build.log
-```
+**CAMP → SETTINGS → Low / Balanced / High** changes quality immediately and saves it. **Low is the default**, including older saves without this setting. The HUD shows the selected preset and a smoothed FPS reading.
 
-## Validation and limits
+| Setting | Low | Balanced | High |
+| --- | --- | --- | --- |
+| Frame-rate target | 30 FPS | 30 FPS | 60 FPS |
+| Mobile render resolution | 75% | 90% | 100% |
+| Maximum wildlife | 12 | 18 | 22 |
+| Camera far distance | 85m | 120m | 160m |
+| Grass distance / density | 16m / 16% | 27m / 40% | 38m / 65% |
+| Texture mip limit | Half-resolution mip | Full | Full |
+| Anti-aliasing | Off | 2× | 2× |
+| Skinning weights | 2 | 4 | 4 |
 
-The Unity editor is unavailable here. The three engine-independent NUnit tests for gem progression and dragon timing passed under .NET 8; all C# files passed C# 9 syntax parsing; model meshes, textures and animation clips passed Blender round-trip checks. No APK, device run, or compilation against Unity APIs has been verified here. Run the checklist in `TESTING.md` before using the game on a device. The visuals are intentionally prototype quality: a primitive rider/donkey and props, procedural terrain textures and mixed free model styles. Source animations are retained for deer, wolves, foxes, zombies and the dragon; bear and moose models are static. No music, hand-sculpted terrain or audio is included. The world is bounded to an approximately 172m square; at most 22 enemies are active. No ads, accounts, network play, analytics, or cloud saves.
+Real-time shadows and reflection probes are disabled; Low also disables HDR. Shared 8-sided pine/trunk meshes and 20-face rocks replace dense sphere props; the static forest is batched. Material/audio caches are reused, combat impact sounds are rate limited, animation lookups are cached, and HUD text refreshes at 5Hz. Lowering the enemy cap removes surplus wildlife without rewards. Rendering scale is changed only on mobile; Editor windows keep their size.
 
-## Automated checks
+These are performance settings and targets, **not measured device guarantees**. Read [Docs/PERFORMANCE.md](Docs/PERFORMANCE.md) for a low-end device test plan and remaining limits.
 
-`python3 Tools/check_project.py` checks repository structure, asset licensing records and model files. `blender -b --python Tools/verify_models.py` checks the converted FBX meshes, textures and animation clips. In Unity, open **Window → General → Test Runner → EditMode → Run All** for gem uniqueness/deposit tests and exact dragon phase timing/order tests. The same three NUnit test methods passed outside Unity under .NET 8. Running them through Unity Test Runner is still required to validate the project environment.
+## Terrain and saves
+
+Native Unity Terrain spans 180 × 180m with a 257 × 257 heightmap, broad hills, a level camp, winding earth trails, three blended surface layers and native billboard grass. The playable area is about 172m square. Ground textures/grass are generated locally. Terrain is created at startup; edits made to it in Play Mode are not persisted.
+
+Character controllers handle slope movement and collision. Spawns, loot, revival and restored positions sample terrain height; the camera checks terrain/trunk obstruction. Existing flat-world saves adapt to elevation on load.
+
+Saves live at `Application.persistentDataPath/forest-rider.json`, with backup/temporary recovery files. They preserve health, X/Z, time, equipment, inventory counters, gems, victory, XP, skill levels/cooldowns, contract claims, audio and quality. Autosave runs every 30s and after progress events/backgrounding/quit; camp also offers manual save. Enemy positions and uncollected drops are transient. Uninstalling the app can remove local saves.
+
+## Builds and checks
+
+- **Forest Rider → Build Android APK**: IL2CPP, **ARMv7 + ARM64**, OpenGL ES 3, minimum Android API 26 (Android 8). Output: `Builds/ForestRider.apk`. Install Android build modules first. Configure signing/AAB distribution in Unity as needed.
+- **Forest Rider → Build iOS Xcode project**: output `Builds/iOS`; finish signing/building on macOS with Xcode.
+- `python3 Tools/check_project.py`: repository, model integrity, licensing and audio checks.
+- `blender -b --python Tools/verify_models.py`: FBX mesh/texture/clip round-trip checks.
+- Unity **Window → General → Test Runner → EditMode → Run All**: nine gem/dragon/skill/progression tests.
+- In Play Mode: **Forest Rider → Validate terrain (Play Mode)**.
+
+The nine pure C# NUnit tests passed outside Unity under .NET 8, and C# 9 syntax checks passed. See [Docs/VALIDATION.md](Docs/VALIDATION.md). Unity API compilation, actual Unity imports, device playthroughs and hardware performance remain unverified. Use [TESTING.md](TESTING.md) before release.
+
+## Remaining work
+
+See [Docs/ROADMAP.md](Docs/ROADMAP.md). Priority gaps are Unity/device validation and balancing, more polished transitions/tutorials, and animations for the static bear/moose. Inventory/crafting, additional environments and bosses are optional future design expansions.
+
+The generated image in `Docs/forest-rider-concept.png` is concept artwork, not a gameplay screenshot.

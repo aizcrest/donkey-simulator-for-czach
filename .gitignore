@@ -9,3 +9,7 @@ UserSettings/
 *.sln
 *.user
 .DS_Store
+
+__pycache__/
+*.pyc
+TestResult.xml
