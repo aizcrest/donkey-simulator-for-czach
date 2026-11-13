@@ -2,6 +2,7 @@ using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 namespace DonkeyForest.Editor
 {
     [InitializeOnLoad] public static class GameBuild
@@ -11,14 +12,33 @@ namespace DonkeyForest.Editor
         [MenuItem("Forest Rider/Create or open game scene")]
         public static void OpenScene()
         {
-            if(EditorApplication.isPlayingOrWillChangePlaymode)return;
-            EnsureScene();
-            if(EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
-                EditorSceneManager.OpenScene(Scene,OpenSceneMode.Single);
+            if(!PrepareSceneForCommand())return;
+            EditorSceneManager.OpenScene(Scene,OpenSceneMode.Single);
         }
-        public static void EnsureScene()
+        public static void EnsureScene(){TryEnsureScene();}
+        static bool HasUntitledScene()
         {
-            if(EditorApplication.isPlayingOrWillChangePlaymode)return;
+            for(int i=0;i<SceneManager.sceneCount;i++)
+                if(string.IsNullOrEmpty(SceneManager.GetSceneAt(i).path))return true;
+            return false;
+        }
+        static bool PrepareSceneForCommand()
+        {
+            if(EditorApplication.isPlayingOrWillChangePlaymode)return false;
+            // Only explicit menu commands may prompt. Unity cannot create the missing
+            // game scene additively until every Untitled scene has a path on disk.
+            if(!System.IO.File.Exists(Scene))
+                for(int i=0;i<SceneManager.sceneCount;i++)
+                {
+                    var current=SceneManager.GetSceneAt(i);
+                    if(string.IsNullOrEmpty(current.path)&&!EditorSceneManager.SaveScene(current))return false;
+                }
+            if(!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())return false;
+            return TryEnsureScene();
+        }
+        static bool TryEnsureScene()
+        {
+            if(EditorApplication.isPlayingOrWillChangePlaymode)return false;
             PlayerSettings.companyName="Aizcrest";PlayerSettings.productName="Forest Rider";
             PlayerSettings.defaultInterfaceOrientation=UIOrientation.LandscapeLeft;
             PlayerSettings.allowedAutorotateToPortrait=false;PlayerSettings.allowedAutorotateToPortraitUpsideDown=false;
@@ -26,15 +46,27 @@ namespace DonkeyForest.Editor
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.iOS,"com.aizcrest.forestrider");
             EnsureLegacyInput();
             KeepRuntimeShaders();
+            // Delay-call startup is noninteractive and must preserve Untitled scenes,
+            // including a fresh template scene whose isDirty flag may still be false.
+            if(!System.IO.File.Exists(Scene)&&HasUntitledScene())return false;
             System.IO.Directory.CreateDirectory("Assets/Scenes");
             if(!System.IO.File.Exists(Scene))
             {
-                // Startup must not discard another open scene or the user's unsaved edits.
+                var previous=SceneManager.GetActiveScene();
                 var scene=EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Additive);
-                EditorSceneManager.SaveScene(scene,Scene);
-                EditorSceneManager.CloseScene(scene,true);
+                try
+                {
+                    if(!EditorSceneManager.SaveScene(scene,Scene))
+                    {Debug.LogError("Could not save the Forest scene. Check the project folder permissions.");return false;}
+                }
+                finally
+                {
+                    EditorSceneManager.CloseScene(scene,true);
+                    if(previous.IsValid()&&previous.isLoaded)SceneManager.SetActiveScene(previous);
+                }
             }
             EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(Scene,true)};
+            return true;
         }
         static void EnsureLegacyInput()
         {
@@ -71,7 +103,8 @@ namespace DonkeyForest.Editor
         [MenuItem("Forest Rider/Build Android APK")]
         public static void Android()
         {
-            EnsureScene();System.IO.Directory.CreateDirectory("Builds");
+            if(!PrepareSceneForCommand())return;
+            System.IO.Directory.CreateDirectory("Builds");
             PlayerSettings.Android.minSdkVersion=AndroidSdkVersions.AndroidApiLevel26;
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android,ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures=AndroidArchitecture.ARMv7|AndroidArchitecture.ARM64;
@@ -83,7 +116,7 @@ namespace DonkeyForest.Editor
         [MenuItem("Forest Rider/Build iOS Xcode project")]
         public static void IOS()
         {
-            EnsureScene();
+            if(!PrepareSceneForCommand())return;
             var report=BuildPipeline.BuildPlayer(new[]{Scene},"Builds/iOS",BuildTarget.iOS,BuildOptions.None);
             if(report.summary.result!=UnityEditor.Build.Reporting.BuildResult.Succeeded)throw new System.Exception("iOS export failed: "+report.summary.result);
         }

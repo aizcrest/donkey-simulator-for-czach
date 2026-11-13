@@ -127,7 +127,7 @@ Saves live at `Application.persistentDataPath/forest-rider.json`, with backup/te
 
 ## Builds and checks
 
-- **Forest Rider → Build Android APK**: IL2CPP, **ARMv7 + ARM64**, OpenGL ES 3, minimum Android API 26 (Android 8). Output: `Builds/ForestRider.apk`. Install Android build modules first. Configure signing/AAB distribution in Unity as needed.
+- **Forest Rider → Build Android APK**: IL2CPP, **ARMv7 + ARM64**, OpenGL ES 3, minimum Android API 26 (Android 8). Output: `Builds/ForestRider.apk`. Install Android build modules first. If prompted, save the open Untitled scene before the game scene is generated; Cancel stops the build. Configure signing/AAB distribution in Unity as needed.
 - **Forest Rider → Build iOS Xcode project**: output `Builds/iOS`; finish signing/building on macOS with Xcode.
 - `python3 Tools/check_project.py`: repository, model integrity, licensing and audio checks.
 - `blender -b --python Tools/verify_models.py`: FBX mesh/texture/clip round-trip checks.

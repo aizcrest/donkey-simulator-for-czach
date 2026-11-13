@@ -1,5 +1,11 @@
 # Validation
 
+## Untitled scene startup/build correction — 2026-11-14
+
+The reported stack trace confirmed that the startup delay callback tried to create Forest additively while an Untitled scene was open. Scene setup now checks all open scene paths before creating a missing Forest scene and quietly defers creation during startup. Explicit Open/Android/iOS commands save Untitled scenes first, honor cancellation, and stop when scene preparation fails. Temporary generated scenes are closed in a finally block, and the prior active scene is restored.
+
+Repository checks and C# 9 syntax parsing passed (31 files). A temporary standalone harness compiled the actual GameBuild source against simulated Editor APIs; nine scenarios passed: deferred startup, saving an Untitled scene before building/opening, cancellation, an already-existing Forest scene, save failure cleanup and active-scene preservation. This is control-flow verification, **not Unity API compilation or a Unity Editor test**. Unity scene dialogs, actual scene creation and Android builds remain unverified here.
+
 ## Model import-loop correction — 2026-11-14
 
 The user reported repeated changes to the Bear/Moose/Zombie/Rider FBXs and their matching `.fbm` PNGs. The custom model postprocessor synchronously loaded those textures and registered explicit artifact dependencies while importing the models. Removed those cross-asset lookups/dependencies from the callback (including the shader lookup), and bumped its version to force a fresh import. Explicit material binding now runs on shared, owned material copies when imported models spawn; it never modifies imported source materials. Baked enemies continue using their existing vertex colors.

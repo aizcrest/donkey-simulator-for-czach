@@ -97,3 +97,11 @@ Automated repository checks: `python3 Tools/check_project.py`. These validate re
 - Confirm Bear, Moose, Zombie and Rider and their `.fbm` textures finish importing without the infinite-loop error. Run **Window → General → Test Runner → EditMode → ModelImportTests**. This Unity-only test imports the four affected pairs twice and checks stable dependencies/source bytes.
 - Enter Play Mode and run **Forest Rider → Validate model presentation (Play Mode)**. Inspect bear/moose coat textures and separate brown antlers. Spawn several of each: they should share runtime material copies. Check that imported asset materials are not marked dirty after play and that exiting/re-entering Play Mode does not leak copies.
 - Build the Android APK and inspect the same models on device. The original PNGs remain under Resources, so the runtime material bindings are included in builds. No Unity import or Android build has been run in the Cloud workspace.
+
+## Scene setup with an Untitled scene
+
+- In a temporary checkout without `Assets/Scenes/Forest.unity`, open an Untitled template scene, then reload scripts. Startup must not throw, show a save dialog, close the scene or discard its objects. Repeat with both an untouched template and an edited Untitled scene.
+- Choose **Forest Rider → Create or open game scene**. Save the Untitled scene when prompted; Forest should be created and opened. Repeat in a temporary checkout, cancelling the save dialog: the current scene must remain and no Forest scene should be created.
+- Choose **Forest Rider → Build Android APK** with a missing Forest and an Untitled scene. Save it first; the generated Forest scene should be used for the build. Cancelling must not start a build. Repeat for iOS export.
+- With saved scenes open, create Forest and verify the existing scenes stay loaded with the same active scene. With Forest already on disk, startup should not create another scene or prompt to save an unrelated Untitled scene.
+- Check a failed Forest scene save stops the command and cleans up its temporary scene. Never test folder permission failures against your only copy of unsaved work.
