@@ -1,5 +1,11 @@
 # Validation
 
+## Reset progress — 2026-11-14
+
+Added Camp reset confirmation, fresh progress retaining difficulty/graphics/audio preferences, staged save replacement and removal of old recovery files. The live game resets in place: skills, enemies, loot, encounter hazards, gems and player position/timers are rebuilt or cleared without reloading the scene. This also supports Play Mode from Untitled scenes.
+
+All 20 standalone NUnit cases passed, including four new reset cases for fresh defaults/preferences, existing/missing primary saves, repeat reset, recovery cleanup and a staging failure. Repository/metadata checks and C# 9 syntax parsing passed (34 files). No Unity editor is installed: Unity JSON serialization, scene cleanup, confirmation layout and mobile file replacement remain unverified. The separate Untitled scene setup correction is included in this update.
+
 ## Untitled scene startup/build correction — 2026-11-14
 
 The reported stack trace confirmed that the startup delay callback tried to create Forest additively while an Untitled scene was open. Scene setup now checks all open scene paths before creating a missing Forest scene and quietly defers creation during startup. Explicit Open/Android/iOS commands save Untitled scenes first, honor cancellation, and stop when scene preparation fails. Temporary generated scenes are closed in a finally block, and the prior active scene is restored.

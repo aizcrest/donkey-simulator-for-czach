@@ -5,7 +5,8 @@ namespace DonkeyForest
     public sealed class CampAdditions:MonoBehaviour
     {
         ForestGame game;
-        GameObject skills,journal,audioPanel,difficultyPanel;
+        GameObject skills,journal,audioPanel,difficultyPanel,resetPanel;
+        Text resetMessage;
         Button difficultySelector;
         readonly Button[] difficultyButtons=new Button[3];
         Text skillSummary,journalSummary;
@@ -27,6 +28,11 @@ namespace DonkeyForest
             game.Button(camp,"SKILLS",new Vector2(0,1),new Vector2(90,-30),new Vector2(150,42),()=>Open(skills));
             game.Button(camp,"JOURNAL",new Vector2(.5f,1),new Vector2(-130,-30),new Vector2(160,42),()=>Open(journal));
             game.Button(camp,"SETTINGS",new Vector2(.5f,1),new Vector2(65,-30),new Vector2(150,42),()=>Open(audioPanel));
+            var resetButton=game.Button(camp,"RESET PROGRESS",new Vector2(.5f,.5f),new Vector2(0,-165),new Vector2(270,46),()=>{
+                resetMessage.text="Start a new adventure?\n\nThis clears equipment, coins, levels, skills, contracts,\ngems and dragon victory. This cannot be undone.\n\nDifficulty, graphics and audio settings are kept.";
+                Open(resetPanel);
+            });
+            resetButton.transform.SetAsFirstSibling();
             skills=Overlay(camp,"RIDER & DONKEY SKILLS");journal=Overlay(camp,"HUNT CONTRACTS");audioPanel=Overlay(camp,"AUDIO & GRAPHICS");
             skillSummary=game.Label(skills.transform,"",new Vector2(.5f,1),new Vector2(0,-83),new Vector2(850,45),22);
             journalSummary=game.Label(journal.transform,"",new Vector2(.5f,1),new Vector2(0,-83),new Vector2(850,45),22);
@@ -59,6 +65,12 @@ namespace DonkeyForest
                 qualityButtons[i]=game.Button(audioPanel.transform,name,new Vector2(.5f,.5f),new Vector2(-270+i*270,-115),new Vector2(250,55),()=>{game.data.quality=quality;MobilePerformance.Apply(game);game.Save(false);game.Show(name+" applied.");Refresh();});
             }
             game.Label(audioPanel.transform,"Low defaults to fewer enemies, less grass and 75% resolution.\nSettings save when you leave camp.",new Vector2(.5f,.5f),new Vector2(0,-170),new Vector2(830,60),19);
+            resetPanel=Overlay(camp,"RESET PROGRESS?");
+            resetMessage=game.Label(resetPanel.transform,"",new Vector2(.5f,.5f),new Vector2(0,45),new Vector2(810,250),24);
+            game.Button(resetPanel.transform,"RESET & START AGAIN",new Vector2(.5f,.5f),new Vector2(0,-130),new Vector2(360,65),()=>{
+                if(!game.ResetProgress())resetMessage.text="Could not reset progress.\nCheck that device storage is available, then try again.\nYour current adventure is still loaded.";
+            });
+            resetPanel.transform.Find("BACK").GetComponentInChildren<Text>().text="CANCEL";
             Close();Refresh();
         }
         GameObject Overlay(Transform camp,string title)
@@ -81,7 +93,7 @@ namespace DonkeyForest
             label.text=name+" "+Mathf.RoundToInt(initial*100)+"%";
         }
         void Open(GameObject panel){Close();panel.SetActive(true);Refresh();game.Audio.Play("ui");}
-        public void Close(){if(skills)skills.SetActive(false);if(journal)journal.SetActive(false);if(audioPanel)audioPanel.SetActive(false);if(difficultyPanel)difficultyPanel.SetActive(false);}
+        public void Close(){if(skills)skills.SetActive(false);if(journal)journal.SetActive(false);if(audioPanel)audioPanel.SetActive(false);if(difficultyPanel)difficultyPanel.SetActive(false);if(resetPanel)resetPanel.SetActive(false);}
         void Upgrade(SkillId id)
         {
             if(!game.Skills.Book.TryUpgrade(id,ref game.data.coins,ref game.data.journey.skillPoints)){game.Show("Need a skill point and enough coins; skills cap at level 5.");return;}

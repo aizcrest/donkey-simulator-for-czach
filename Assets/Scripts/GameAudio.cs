@@ -32,6 +32,7 @@ namespace DonkeyForest
             if(!moving){footClock=0;return;}
             footClock-=dt;if(footClock<=0){footClock=fast?.18f:.29f;Play("hoof",.25f);}
         }
+        public void ResetCombat(){effects.Stop();ui.Stop();footClock=0;lastImpact=-1;}
         public void ApplyVolumes()
         {
             if(!game)return;float master=game.data.masterVolume;

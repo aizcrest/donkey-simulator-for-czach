@@ -7,19 +7,6 @@ using UnityEngine.EventSystems;
 
 namespace DonkeyForest
 {
-    [Serializable] public class Progress
-    {
-        public int version = 1, kills, coins, sword = 1, armor = 1, barding = 1, potions = 3;
-        public float health = 100, time = 0.25f, x, z;
-        public int gemMask, gemsPlaced;
-        public bool dragonDefeated;
-        public SkillSave skills=new SkillSave();
-        public JourneySave journey=new JourneySave();
-        public float masterVolume=.75f,musicVolume=.2f,effectsVolume=.8f;
-        public int difficulty; // Normal is zero, including saves made before difficulty selection.
-        public int quality; // Low is the default on a fresh or older save.
-    }
-
     public sealed class ForestGame : MonoBehaviour
     {
         public static ForestGame Instance;
@@ -373,6 +360,31 @@ namespace DonkeyForest
             data.coins-=level*40;if(kind==0)data.sword++;else if(kind==1)data.armor++;else data.barding++;
             RefreshCamp();Save();
         }
+        public bool ResetProgress()
+        {
+            if(!Paused)return false;
+            var fresh=Progress.NewAdventure(data);
+            try{ProgressResetStore.Replace(SavePath,JsonUtility.ToJson(fresh,true));}
+            catch(Exception e){Debug.LogWarning("Progress reset failed: "+e.Message);return false;}
+            // Commit the new state only after the fresh save is installed successfully.
+            Skills.CancelEffects();
+            if(Encounter){Encounter.gameObject.SetActive(false);Destroy(Encounter.gameObject);}
+            foreach(var enemy in enemies)if(enemy){enemy.gameObject.SetActive(false);Destroy(enemy.gameObject);}
+            enemies.Clear();
+            foreach(var loot in FindObjectsByType<ForestLoot>(FindObjectsInactive.Include,FindObjectsSortMode.None))
+            {loot.gameObject.SetActive(false);Destroy(loot.gameObject);}
+            data=fresh;Skills.ResetProgress();Audio.ResetCombat();
+            controller.enabled=false;rider.position=Ground(Vector3.zero,.08f);rider.rotation=Quaternion.identity;controller.enabled=true;
+            moveInput=Vector2.zero;dodgeDirection=Vector3.zero;comboStep=0;
+            comboWindow=attackCooldown=swing=spawnClock=autoSave=dodgeCooldown=dodgeTime=0;
+            foreach(var stick in FindObjectsByType<MobileStick>(FindObjectsSortMode.None))stick.ResetStick();
+            MountedModel.Animate(false,false,0);
+            Encounter=new GameObject("Gems and summoning altar").AddComponent<DragonEncounter>();Encounter.Setup(this);
+            for(int i=0;i<MobilePerformance.InitialEnemies(data.quality);i++)SpawnEnemy(false);
+            sky.Tick();hudClock=0;ToggleMenu();
+            Show("New adventure started! Find the ten gems and challenge the dragon again.");
+            return true;
+        }
         public void SetDifficulty(int value)
         {
             if(!Paused)return;
@@ -454,7 +466,7 @@ namespace DonkeyForest
         public void OnPointerDown(PointerEventData e){if(pointer!=int.MinValue)return;pointer=e.pointerId;OnDrag(e);}
         public void OnDrag(PointerEventData e){if(e.pointerId!=pointer)return;Vector2 p;RectTransformUtility.ScreenPointToLocalPointInRectangle((RectTransform)transform,e.position,e.pressEventCamera,out p);game.moveInput=Vector2.ClampMagnitude(p/75,1);knob.anchoredPosition=game.moveInput*60;}
         public void OnPointerUp(PointerEventData e){if(e.pointerId!=pointer)return;ResetStick();}
-        void ResetStick(){pointer=int.MinValue;if(game)game.moveInput=Vector2.zero;if(knob)knob.anchoredPosition=Vector2.zero;}
+        public void ResetStick(){pointer=int.MinValue;if(game)game.moveInput=Vector2.zero;if(knob)knob.anchoredPosition=Vector2.zero;}
         void OnDisable(){ResetStick();}
     }
 }

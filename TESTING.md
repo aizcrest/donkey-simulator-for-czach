@@ -105,3 +105,12 @@ Automated repository checks: `python3 Tools/check_project.py`. These validate re
 - Choose **Forest Rider → Build Android APK** with a missing Forest and an Untitled scene. Save it first; the generated Forest scene should be used for the build. Cancelling must not start a build. Repeat for iOS export.
 - With saved scenes open, create Forest and verify the existing scenes stay loaded with the same active scene. With Forest already on disk, startup should not create another scene or prompt to save an unrelated Untitled scene.
 - Check a failed Forest scene save stops the command and cleans up its temporary scene. Never test folder permission failures against your only copy of unsaved work.
+
+## Reset progress
+
+- Open **CAMP → RESET PROGRESS**. Confirm the warning lists the cleared progression and retained settings. CANCEL or closing camp must preserve progress. The reset button must remain behind other camp panels.
+- Confirm the reset from an advanced save: coins/kills become zero, equipment returns to level 1, potions to 3, health to the fresh-save default, journey/skills to their starting values, time to daytime and position to the clearing. Difficulty, graphics and audio settings must stay selected.
+- Reset during a dragon fireball, stun window, rider skill, after death, and after dragon victory. No old boss, hazards, loot or buffs should survive. All ten gems must be collectible again and the altar must allow another dragon encounter after new deposits.
+- Restart the app after resetting, including immediately after confirmation. The new run must load. Old `.bak`/`.tmp` recovery candidates must be gone or replaced with new-run data. Test repeated resets and check stable terrain/player/material counts.
+- Check reset in both the generated Forest scene and Play Mode from an Untitled scene; no scene reload is needed. Test Android file replacement and a storage failure: an unsuccessful reset must show an error and leave the current adventure loaded.
+- Run `ProgressResetTests` in EditMode. The four reset cases passed in the standalone runner against a temporary filesystem; Unity JSON integration, runtime cleanup, confirmation UI and Android/iOS storage still need local testing.

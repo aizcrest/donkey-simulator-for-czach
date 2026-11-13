@@ -125,16 +125,22 @@ Character controllers handle slope movement and collision. Spawns, loot, revival
 
 Saves live at `Application.persistentDataPath/forest-rider.json`, with backup/temporary recovery files. They preserve health, X/Z, time, equipment, inventory counters, gems, victory, XP, skill levels/cooldowns, contract claims, audio, quality and difficulty. Autosave runs every 30s and after progress events/backgrounding/quit; camp also offers manual save. Enemy positions and uncollected drops are transient. Uninstalling the app can remove local saves.
 
+## Start again
+
+Use **CAMP → RESET PROGRESS → RESET & START AGAIN** to begin a new adventure. The confirmation explains what will be cleared; **CANCEL** leaves your adventure unchanged.
+
+Reset restores the original starting gear, health, three potions, level/skill defaults and daytime at the central clearing. It clears coins, kills, XP, contracts, skill cooldowns, gems, altar deposits and dragon victory. Existing enemies, loot and dragon attacks are removed, all ten gems return, and new wildlife spawns. Difficulty, graphics and audio preferences are kept. The new adventure is saved immediately; old recovery files are removed so they cannot restore the previous run. The reset cannot be undone through the game.
+
 ## Builds and checks
 
 - **Forest Rider → Build Android APK**: IL2CPP, **ARMv7 + ARM64**, OpenGL ES 3, minimum Android API 26 (Android 8). Output: `Builds/ForestRider.apk`. Install Android build modules first. If prompted, save the open Untitled scene before the game scene is generated; Cancel stops the build. Configure signing/AAB distribution in Unity as needed.
 - **Forest Rider → Build iOS Xcode project**: output `Builds/iOS`; finish signing/building on macOS with Xcode.
 - `python3 Tools/check_project.py`: repository, model integrity, licensing and audio checks.
 - `blender -b --python Tools/verify_models.py`: FBX mesh/texture/clip round-trip checks.
-- Unity **Window → General → Test Runner → EditMode → Run All**: 16 difficulty/gem/dragon/skill/progression test cases plus one Unity-only repeated-model-import regression.
+- Unity **Window → General → Test Runner → EditMode → Run All**: 20 difficulty/gem/dragon/skill/progression/save-reset test cases plus one Unity-only repeated-model-import regression.
 - In Play Mode: **Forest Rider → Validate terrain (Play Mode)**.
 
-All 16 pure C# NUnit test cases passed outside Unity under .NET 8, and C# 9 syntax checks passed. See [Docs/VALIDATION.md](Docs/VALIDATION.md). Unity API compilation, actual Unity imports, device playthroughs and hardware performance remain unverified. Use [TESTING.md](TESTING.md) before release.
+All 20 standalone C# NUnit test cases passed outside Unity under .NET 8, and C# 9 syntax checks passed. See [Docs/VALIDATION.md](Docs/VALIDATION.md). Unity API compilation, actual Unity imports, device playthroughs and hardware performance remain unverified. Use [TESTING.md](TESTING.md) before release.
 
 ## Remaining work
 

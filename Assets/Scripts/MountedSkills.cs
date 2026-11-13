@@ -50,6 +50,7 @@ namespace DonkeyForest
             if(game.Dead){Book.CancelEffects();effects.Clear();return;}
             Book.Tick(dt,!game.Paused);
         }
+        public void ResetProgress(){CancelEffects();Book=new SkillBook(game.data.skills);ChargeDirection=Vector3.zero;hitDragon=false;}
         public void CancelEffects(){Book.CancelEffects();effects.Clear();charged.Clear();}
         public void CheckCharge(Vector3 from,Vector3 to)
         {
