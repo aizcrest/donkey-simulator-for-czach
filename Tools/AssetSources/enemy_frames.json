@@ -1,0 +1,63 @@
+[
+  {
+    "kind": "Deer",
+    "vertices": 4276,
+    "triangles": 2096,
+    "clips": {
+      "idle": 6,
+      "move": 8,
+      "attack": 6,
+      "stun": 6
+    },
+    "bytes": 2710562
+  },
+  {
+    "kind": "Wolf",
+    "vertices": 3994,
+    "triangles": 1962,
+    "clips": {
+      "idle": 6,
+      "move": 8,
+      "attack": 6,
+      "stun": 6
+    },
+    "bytes": 2531858
+  },
+  {
+    "kind": "Fox",
+    "vertices": 3752,
+    "triangles": 1848,
+    "clips": {
+      "idle": 6,
+      "move": 8,
+      "attack": 6,
+      "stun": 6
+    },
+    "bytes": 2378514
+  },
+  {
+    "kind": "Zombie",
+    "vertices": 4826,
+    "triangles": 7822,
+    "clips": {
+      "idle": 6,
+      "move": 8,
+      "attack": 6,
+      "stun": 6
+    },
+    "bytes": 3124674
+  },
+  {
+    "kind": "Dragon",
+    "vertices": 2970,
+    "triangles": 1344,
+    "clips": {
+      "idle": 6,
+      "move": 8,
+      "attack": 6,
+      "stun": 6,
+      "fly": 8
+    },
+    "bytes": 2451625
+  }
+]

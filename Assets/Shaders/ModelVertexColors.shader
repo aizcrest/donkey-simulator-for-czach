@@ -16,6 +16,9 @@ Shader "Forest Rider/Model Vertex Colors"
         void surf(Input IN, inout SurfaceOutput o)
         {
             o.Albedo = IN.color.rgb * _Color.rgb;
+            #ifndef UNITY_COLORSPACE_GAMMA
+            o.Albedo = GammaToLinearSpace(IN.color.rgb) * _Color.rgb;
+            #endif
             o.Alpha = 1;
         }
         ENDCG

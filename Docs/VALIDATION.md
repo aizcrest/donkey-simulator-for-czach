@@ -1,5 +1,11 @@
 # Validation
 
+## Animated enemy visibility correction — 2026-11-13
+
+The user confirmed that only Bear and Moose were visible, and the Dragon was invisible too. Those two visible models are static; all five remaining types used the imported skinning path. Replaced that runtime path with precomputed ordinary-mesh frames derived from the same licensed assets. Bear/Moose rendering and all combat rules remain unchanged.
+
+Validated 138 exported poses across Deer, Wolf, Fox, Zombie and Dragon: nonempty indexed geometry, finite coordinates, unit normals, valid clip timing, normalized initial grounding and a dragon flight clip. Rendered the exported binary geometry/colors in Blender for inspection; [asset preview](baked-enemy-models.png) is not Unity gameplay. Repository and C# syntax checks passed. Actual Unity shader compilation/rendering, animation smoothness and device memory/performance remain unverified here.
+
 ## Replacement mounted models — 2026-11-13
 
 The user confirmed the imported player models and CPU-baked workaround still did not display. Replaced the active player presentation entirely with original segmented donkey/rider geometry, shared opaque materials, and transform-based animation. Removed the mounted CPU skinning component; enemy models and orbit controls remain unchanged.

@@ -62,3 +62,10 @@ Automated repository checks: `python3 Tools/check_project.py`. These validate re
 - Select every preset and verify the HUD's quality/FPS label, saved selection, frame-rate target, grass range/density, camera distance, texture mip limit and enemy cap. Mobile resolution should scale from the original render dimensions, not shrink again on repeated clicks. Run terrain validation at Low and High: generated textures must be readable and opt into mip limits so Unity 6 can re-upload them on a quality change.
 - Lower High → Low with more than 12 wildlife alive: surplus enemies are removed without kills/XP/loot. The dragon encounter should still have ordinary wildlife suspended.
 - Test on both a 32-bit Android installation and ARM64 hardware if available. Measure sustained FPS/memory/heat on a budget phone for at least 10 minutes; a 30 FPS setting alone is not evidence of actual performance. Follow `Docs/PERFORMANCE.md`.
+
+## Animated enemy visibility correction
+
+- In Play Mode run **Forest Rider → Validate model presentation (Play Mode)**. The five animated types must use ordinary MeshRenderers and have nonempty mesh frames; bear/moose keep their static source models.
+- Inspect Deer, Wolf, Fox and night Zombies up close, while moving/attacking/stunned, after leaving/re-entering view, and at all quality presets. Confirm their bodies and colors render with their health bars.
+- Summon the Dragon and inspect flight, attack/dive and stunned poses. Its existing 10-second aerial phase and 5-second vulnerability window must remain unchanged. Check pause, retreat, death and reload.
+- Run `python3 Tools/check_enemy_frames.py` to verify every exported pose, indices, normals and initial grounding. This does not replace Unity shader compilation or rendering tests.

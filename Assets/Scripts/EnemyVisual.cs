@@ -8,11 +8,20 @@ namespace DonkeyForest
         Animation[] animations;
         string state="";
         bool frozen;
+        BakedEnemyAnimation bakedAnimation;
         public GameObject Model { get; private set; }
         Dictionary<string,string>[] choices;
         static readonly string[] States={"idle","walk","move","attack","stun","fly","kick","guard"};
         public static EnemyVisual Create(string kind,Transform parent,float height)
         {
+            if(BakedEnemyAnimation.Supports(kind))
+            {
+                var root=new GameObject(kind+" visual");root.transform.SetParent(parent,false);
+                var bakedModel=new GameObject(kind+" baked model");bakedModel.transform.SetParent(root.transform,false);bakedModel.transform.localScale=Vector3.one*height;
+                var bakedVisual=root.AddComponent<EnemyVisual>();bakedVisual.Model=bakedModel;bakedVisual.animations=Array.Empty<Animation>();
+                bakedVisual.bakedAnimation=bakedModel.AddComponent<BakedEnemyAnimation>();bakedVisual.bakedAnimation.Setup(kind);
+                return bakedVisual;
+            }
             var source=Resources.Load<GameObject>("Enemies/"+kind);
             if(!source)throw new InvalidOperationException("Missing enemy model: "+kind+". Let Unity finish importing Assets/Resources/Enemies.");
             var pivot=new GameObject(kind+" visual").transform;pivot.SetParent(parent,false);
@@ -85,6 +94,7 @@ namespace DonkeyForest
         }
         public void Play(string desired)
         {
+            if(bakedAnimation){bakedAnimation.Play(desired);return;}
             if(state==desired)return;bool first=state=="";state=desired;
             for(int i=0;i<animations.Length;i++)
             {
