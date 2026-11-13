@@ -36,7 +36,7 @@ Automated repository checks: `python3 Tools/check_project.py`. These validate re
 - Open CAMP → ASSET CREDITS. Confirm creators, licenses and a link to individual model sources are visible.
 - Collect a gem, save, reload: it must stay collected and carried count must match. Deposit a partial set at the central altar, reload, verify altar slots and inventory. Find all ten; test repeated collection or repeated OFFER GEMS cannot duplicate progress.
 - Offer the tenth gem: exactly one dragon appears; ordinary enemies and their spawner stop. Check the dragon model/flight clip and wider camera on a phone.
-- Time the repeating cycle: 10 seconds of fireballs, 1.5s locked red warning, .8s dive, 5 seconds stunned. Aerial shots show orange 2.1m circles for 1.2s before damage. The target does not move after marking. Leftover shots must disappear before the dive warning.
+- On Normal, time the repeating cycle: 10 seconds of fireballs, 1.5s locked red warning, .8s dive, 5 seconds stunned. Aerial shots show orange 2.1m circles for 1.2s before damage. The target does not move after marking. Leftover shots must disappear before the dive warning.
 - Move outside orange/red circles and verify no damage. Remain inside each and verify a single damage event per impact; dodge through an impact to verify immunity. Check dodge cooldown and simultaneous joystick/dodge/attack touches.
 - Try hitting the airborne/diving dragon: no damage. During the green stun window, hit it in front of the donkey; verify boss health falls, then becomes immune again exactly at takeoff.
 - Open CAMP during each phase/projectile flight. Timers, damage, movement and animations must pause. Resume and verify the remaining timing is preserved.
@@ -79,3 +79,14 @@ Automated repository checks: `python3 Tools/check_project.py`. These validate re
 - Use all four skills: cyan spinning arcs, blue shield hoops, gold charge ribbons and orange rear kick arcs must be visible in day/night on Low/Balanced/High. Confirm kick effects face behind the donkey, cooldown wipes finish, and combat damage/timing are unchanged.
 - Pause/resume during Guard/Charge; die/revive during an active effect. Ensure no permanent or duplicate effects remain. Switch quality in camp during Guard and check the ribbon detail updates after resuming.
 - Profile repeated skill use on a low-end phone: renderer/material counts should remain stable. Check frame time, UI readability and transparent-effect overdraw; no device benchmarks have been performed in this workspace.
+
+## Difficulty selection
+
+- Start a fresh save and load an older save without `difficulty`: both should select Normal. Verify an out-of-range difficulty value falls back to Normal. Back up saves before editing them for a test.
+- Open **CAMP → SETTINGS → DIFFICULTY** and select each mode. Check labels, selection highlight and HUD on a landscape phone. Close/reopen the game and verify the selected mode persists. Change graphics quality and verify it does not change difficulty.
+- At the same player level, check normal and elite enemies on all modes: HP scales 1× / 1.5× / 2×; attack damage scales 1× / 1.35× / 1.75× before player armor/guard. Include zombie melee and moose charges. Injure an enemy, switch modes repeatedly, and verify its health bar percentage is preserved.
+- Fight the dragon in each mode: maximum HP is 650 / 975 / 1300. Fireball warning radius and damage radius must both be 2.1 / 2.7 / 3.3m, with 1.2 / .85 / .5 seconds from launch to impact. Check impacts just inside/outside the circle and dodge immunity. The flight phase is still ten seconds; the stun lasts 5 / 3.75 / 2.5 seconds, with vulnerability ending at takeoff.
+- Check dragon fireball and dive damage scale with difficulty; target-locking, phase cleanup, pause and retreat should still work. Check Extreme's readability and dodge window on a low-end device at Low quality.
+- While a fireball is in flight or the dragon is stunned, open camp and change modes. The old boss/hazards must disappear, exactly one full-health boss should replace it, and the new fight should stay paused until camp closes. Selecting the already-selected mode must not restart the fight.
+- Die/revive, save/reload mid-encounter, and change difficulty after victory: difficulty should persist, gem/equipment progress should remain, and a defeated dragon must not respawn or award duplicate rewards.
+- Run all 16 EditMode test cases. Standalone rule tests are automated here; Unity save loading, combat integration, UI and device playtesting still need local validation.

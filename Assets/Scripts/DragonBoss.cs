@@ -3,17 +3,19 @@ namespace DonkeyForest
 {
     public sealed class DragonBoss:MonoBehaviour
     {
-        const float MaxHealth=650;
+        const float BaseHealth=650;
+        float maxHealth;
+        DifficultyProfile difficulty;
         ForestGame game;
         DragonEncounter encounter;
         EnemyVisual visual;
         DragonPattern pattern;
         Transform hazards;
         Vector3 diveTarget,diveStart;
-        float health=MaxHealth,shotClock=1.2f,orbit;
+        float health,shotClock=1.2f,orbit;
         bool waiting;
         public string Status => waiting?"DRAGON — return within 32m of the altar (fight resets on retreat)":
-            $"DRAGON {Mathf.CeilToInt(health)}/{MaxHealth:0} • {(pattern.Phase==DragonPhase.Airborne?"FIREBALLS — avoid orange circles":pattern.Phase==DragonPhase.DiveWarning?"DIVE INCOMING — DODGE!":pattern.Phase==DragonPhase.Diving?"DIVE — move out!":"STUNNED — ATTACK NOW!")} • {pattern.Remaining:0.0}s";
+            $"DRAGON {Mathf.CeilToInt(health)}/{maxHealth:0} • {(pattern.Phase==DragonPhase.Airborne?"FIREBALLS — avoid orange circles":pattern.Phase==DragonPhase.DiveWarning?"DIVE INCOMING — DODGE!":pattern.Phase==DragonPhase.Diving?"DIVE — move out!":"STUNNED — ATTACK NOW!")} • {pattern.Remaining:0.0}s";
         public void Setup(ForestGame owner,DragonEncounter source)
         {
             game=owner;encounter=source;
@@ -24,8 +26,9 @@ namespace DonkeyForest
         void ResetPattern()
         {
             if(pattern!=null)pattern.Changed-=ChangePhase;
-            pattern=new DragonPattern();pattern.Changed+=ChangePhase;
-            health=MaxHealth;shotClock=1.2f;ClearHazards();visual.Play("fly");
+            difficulty=game.Difficulty;maxHealth=BaseHealth*difficulty.HealthMultiplier;
+            pattern=new DragonPattern(game.data.difficulty);pattern.Changed+=ChangePhase;
+            health=maxHealth;shotClock=1.2f;ClearHazards();visual.Play("fly");
         }
         void ClearHazards()
         {
@@ -50,7 +53,7 @@ namespace DonkeyForest
                 Vector3 desired=game.Ground(new Vector3(Mathf.Cos(orbit)*9,0,Mathf.Sin(orbit)*9),8);
                 visual.transform.position=Vector3.Lerp(visual.transform.position,desired,1-Mathf.Exp(-3*dt));
                 Face(game.rider.position);shotClock-=dt;
-                if(shotClock<=0){shotClock+=1.4f;if(pattern.Remaining>1.2)Fireball();}
+                if(shotClock<=0){shotClock+=1.4f;if(pattern.Remaining>difficulty.FireballTravelSeconds)Fireball();}
             }
             else if(pattern.Phase==DragonPhase.DiveWarning)Face(diveTarget);
             else if(pattern.Phase==DragonPhase.Diving)
@@ -76,10 +79,10 @@ namespace DonkeyForest
             else if(phase==DragonPhase.Stunned)
             {
                 game.Audio.Play("kick",.65f);visual.transform.position=diveTarget;visual.transform.rotation=Quaternion.Euler(0,visual.transform.eulerAngles.y,0);
-                if(Inside(game.rider.position,diveTarget,3))game.Damage(36);
+                if(Inside(game.rider.position,diveTarget,3))game.Damage(36*difficulty.DamageMultiplier);
                 ClearHazards();visual.Play("stun");
                 encounter.Ring(hazards,diveTarget,3.4f,new Color(.3f,1,.2f));
-                game.Show("Dragon stunned for 5 seconds — get close and ATTACK!");
+                game.Show($"Dragon stunned for {difficulty.DragonStunSeconds:0.##} seconds — get close and ATTACK!");
             }
             else
             {
@@ -91,7 +94,7 @@ namespace DonkeyForest
         {
             game.Audio.Play("fireball",.45f);
             var obj=new GameObject("Dragon fireball");obj.transform.SetParent(hazards,false);
-            obj.AddComponent<DragonFireball>().Setup(game,encounter,visual.transform.position+Vector3.down*.5f,game.Ground(game.rider.position,.1f));
+            obj.AddComponent<DragonFireball>().Setup(game,encounter,visual.transform.position+Vector3.down*.5f,game.Ground(game.rider.position,.1f),difficulty);
         }
         public Vector3 Position=>visual.transform.position;
         public void Hit(float damage)=>HitArea(damage,game.rider.position,game.rider.forward,4,-.15f);
@@ -110,10 +113,11 @@ namespace DonkeyForest
     {
         ForestGame game;Vector3 start,target;Transform ball;LineRenderer warning;
         float age;bool impacted;
-        public void Setup(ForestGame owner,DragonEncounter encounter,Vector3 origin,Vector3 destination)
+        DifficultyProfile difficulty;
+        public void Setup(ForestGame owner,DragonEncounter encounter,Vector3 origin,Vector3 destination,DifficultyProfile settings)
         {
-            game=owner;start=origin;target=destination;
-            warning=encounter.Ring(transform,target,2.1f,new Color(1,.46f,.04f));
+            game=owner;start=origin;target=destination;difficulty=settings;
+            warning=encounter.Ring(transform,target,difficulty.FireballRadius,new Color(1,.46f,.04f));
             ball=game.Shape("Fire",PrimitiveType.Sphere,transform,start,Vector3.one*.7f,game.Glow(new Color(1,.3f,.02f))).transform;
         }
         void Update()
@@ -122,18 +126,18 @@ namespace DonkeyForest
             age+=Time.deltaTime;
             if(!impacted)
             {
-                ball.position=Vector3.Lerp(start,target,Mathf.Clamp01(age/1.2f));
+                ball.position=Vector3.Lerp(start,target,Mathf.Clamp01(age/difficulty.FireballTravelSeconds));
                 warning.widthMultiplier=.13f*(1+Mathf.Sin(age*18)*.2f);
-                if(age>=1.2f)
+                if(age>=difficulty.FireballTravelSeconds)
                 {
                     impacted=true;warning.gameObject.SetActive(false);
-                    if(DragonBoss.Inside(game.rider.position,target,2.1f))game.Damage(22);
+                    if(DragonBoss.Inside(game.rider.position,target,difficulty.FireballRadius))game.Damage(22*difficulty.DamageMultiplier);
                 }
             }
             else
             {
-                ball.localScale=new Vector3(4.2f,.2f,4.2f)*Mathf.Max(0,1-(age-1.2f)/.3f);
-                if(age>=1.5f)Destroy(gameObject);
+                ball.localScale=new Vector3(difficulty.FireballRadius*2,.2f,difficulty.FireballRadius*2)*Mathf.Max(0,1-(age-difficulty.FireballTravelSeconds)/.3f);
+                if(age>=difficulty.FireballTravelSeconds+.3f)Destroy(gameObject);
             }
         }
     }

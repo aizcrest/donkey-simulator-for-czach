@@ -101,7 +101,7 @@ namespace DonkeyForest
             game.enemies.Clear();
             Boss=new GameObject("Forest dragon").AddComponent<DragonBoss>();
             Boss.transform.SetParent(transform,false);Boss.Setup(game,this);
-            game.Show("Dragon summoned! Ride out of orange circles. DODGE its dive, then attack during the 5-second stun.");
+            game.Show($"{game.Difficulty.Name} dragon summoned! Dodge its fireballs and dive; attack during the {game.Difficulty.DragonStunSeconds:0.##}-second stun.");
         }
         void CancelBoss()
         {

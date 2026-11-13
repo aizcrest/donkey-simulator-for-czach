@@ -55,7 +55,7 @@ Older saves retain their existing progress. XP/hunt counters begin tracking with
 
 Find ten unique glowing turquoise gems. The HUD shows the nearest remaining gem's distance and cardinal direction. Each gem has a saved ID, preventing duplication after reload. Deposit any carried gems within 4.5m of the central altar; you may deposit in batches. The tenth deposit summons the dragon and clears/suspends ordinary enemies.
 
-The dragon has 650 health and repeats:
+On **Normal**, the dragon has 650 health and repeats this cycle (Hard/Extreme values are listed under Difficulty below):
 
 1. **Aerial fireballs — 10 seconds.** Orange 2.1m-radius circles lock onto the rider when each shot launches. After 1.2s the impact deals 22 base damage. Move out or dodge; shots do not keep tracking.
 2. **Dive warning — 1.5 seconds.** A red 3m-radius marker locks in place.
@@ -82,6 +82,22 @@ The saved six-minute day/night cycle now drives a skybox with blue daylight, war
 
 Whirlwind draws spinning sword arcs, Iron Guard forms rotating shield hoops, Charge leaves speed ribbons and Rear Kick sends expanding arcs behind the donkey. Renderers/materials are reused and effects pause in camp and clear on death/revival. Low uses two 16-segment ribbons per active skill; Balanced/High use three with 24/32 segments. The unlit effect shader works without HDR, bloom or added lights. Actual appearance and cost still need Unity/device verification.
 
+## Difficulty
+
+Choose **CAMP → SETTINGS → DIFFICULTY → Normal / Hard / Extreme**. Normal preserves the original balance and remains the default for new and older saves. The selection saves immediately and appears in the HUD, independently of graphics quality.
+
+| Combat setting | Normal | Hard | Extreme |
+| --- | --- | --- | --- |
+| Monster and dragon HP | 1× | 1.5× | 2× |
+| Monster and dragon damage | 1× | 1.35× | 1.75× |
+| Dragon fireball blast radius | 2.1m | 2.7m | 3.3m |
+| Fireball travel / dodge-warning time | 1.2s | 0.85s | 0.5s |
+| Dragon stun window | 5s | 3.75s | 2.5s |
+
+Extreme fireballs travel 2.4× as fast as Normal over the same distance. Warning circles and impact effects match each mode's damage radius. The aerial phase remains 10 seconds, followed by the original dive warning and dive, then the selected stun duration. Higher difficulty multiplies the existing enemy level/elite scaling; rewards and progression costs remain the same.
+
+Existing wildlife keeps its health percentage when you change modes. Changing difficulty during an active dragon encounter clears its hazards and restarts the fight at full health under the new rules. Gems, equipment, progression and dragon victory remain saved; changing difficulty does not summon a defeated dragon again.
+
 ## Graphics quality and mobile performance
 
 **CAMP → SETTINGS → Low / Balanced / High** changes quality immediately and saves it. **Low is the default**, including older saves without this setting. The HUD shows the selected preset and a smoothed FPS reading.
@@ -107,7 +123,7 @@ Native Unity Terrain spans 180 × 180m with a 257 × 257 heightmap, broad hills,
 
 Character controllers handle slope movement and collision. Spawns, loot, revival and restored positions sample terrain height; the camera checks terrain/trunk obstruction. Existing flat-world saves adapt to elevation on load.
 
-Saves live at `Application.persistentDataPath/forest-rider.json`, with backup/temporary recovery files. They preserve health, X/Z, time, equipment, inventory counters, gems, victory, XP, skill levels/cooldowns, contract claims, audio and quality. Autosave runs every 30s and after progress events/backgrounding/quit; camp also offers manual save. Enemy positions and uncollected drops are transient. Uninstalling the app can remove local saves.
+Saves live at `Application.persistentDataPath/forest-rider.json`, with backup/temporary recovery files. They preserve health, X/Z, time, equipment, inventory counters, gems, victory, XP, skill levels/cooldowns, contract claims, audio, quality and difficulty. Autosave runs every 30s and after progress events/backgrounding/quit; camp also offers manual save. Enemy positions and uncollected drops are transient. Uninstalling the app can remove local saves.
 
 ## Builds and checks
 
@@ -115,10 +131,10 @@ Saves live at `Application.persistentDataPath/forest-rider.json`, with backup/te
 - **Forest Rider → Build iOS Xcode project**: output `Builds/iOS`; finish signing/building on macOS with Xcode.
 - `python3 Tools/check_project.py`: repository, model integrity, licensing and audio checks.
 - `blender -b --python Tools/verify_models.py`: FBX mesh/texture/clip round-trip checks.
-- Unity **Window → General → Test Runner → EditMode → Run All**: nine gem/dragon/skill/progression tests.
+- Unity **Window → General → Test Runner → EditMode → Run All**: 16 difficulty/gem/dragon/skill/progression test cases.
 - In Play Mode: **Forest Rider → Validate terrain (Play Mode)**.
 
-The nine pure C# NUnit tests passed outside Unity under .NET 8, and C# 9 syntax checks passed. See [Docs/VALIDATION.md](Docs/VALIDATION.md). Unity API compilation, actual Unity imports, device playthroughs and hardware performance remain unverified. Use [TESTING.md](TESTING.md) before release.
+All 16 pure C# NUnit test cases passed outside Unity under .NET 8, and C# 9 syntax checks passed. See [Docs/VALIDATION.md](Docs/VALIDATION.md). Unity API compilation, actual Unity imports, device playthroughs and hardware performance remain unverified. Use [TESTING.md](TESTING.md) before release.
 
 ## Remaining work
 

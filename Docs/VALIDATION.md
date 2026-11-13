@@ -1,5 +1,11 @@
 # Validation
 
+## Difficulty modes — 2026-11-13
+
+Added saved Normal/Hard/Extreme selection, shared combat profiles, health/damage scaling for wildlife and the dragon, matched fireball warning/damage radii and travel times, and per-mode stun durations. Normal retains the original values. Existing enemies preserve health percentage on a mode change; an active boss restarts with old hazards removed.
+
+Repository/metadata checks and C# 9 syntax parsing passed (29 files). All 16 standalone NUnit rule cases passed, including original Normal timing, mode ordering, repeated per-mode dragon cycles, Extreme overshoot, invalid mode fallback and injured/dead enemy health rescaling. Reviewed runtime call sites for damage, phase timing, telegraphs, save normalization and settings wiring. No Unity editor is installed: Unity API compilation, save migration through JsonUtility, settings layout, runtime combat integration and device balance remain unverified. Follow [TESTING.md](../TESTING.md).
+
 ## Touch artwork, sky and skill effects — 2026-11-13
 
 Added ten original UI textures plus a packed cloud/star lookup, runtime sprites and cooldown overlays, a saved-clock skybox and reused skill ribbons. Inspected the generated texture contact sheet. Repository/metadata checks and C# 9 syntax parsing passed (27 files, zero syntax errors). Image dimensions/alpha channels and deterministic texture regeneration were checked. Existing nine standalone gameplay-rule tests passed.

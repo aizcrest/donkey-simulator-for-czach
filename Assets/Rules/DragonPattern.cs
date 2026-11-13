@@ -5,10 +5,12 @@ namespace DonkeyForest
     /// <summary>Engine-independent encounter clock, advanced only during active gameplay.</summary>
     public sealed class DragonPattern
     {
-        public const double AirSeconds=10, WarningSeconds=1.5, DiveSeconds=.8, StunSeconds=5;
+        public const double AirSeconds=10, WarningSeconds=1.5, DiveSeconds=.8;
+        public double StunDuration { get; }
+        public DragonPattern(int difficulty=0){StunDuration=DifficultyRules.Get(difficulty).DragonStunSeconds;}
         public DragonPhase Phase { get; private set; } = DragonPhase.Airborne;
         public double Elapsed { get; private set; }
-        public double Duration => Phase==DragonPhase.Airborne?AirSeconds:Phase==DragonPhase.DiveWarning?WarningSeconds:Phase==DragonPhase.Diving?DiveSeconds:StunSeconds;
+        public double Duration => Phase==DragonPhase.Airborne?AirSeconds:Phase==DragonPhase.DiveWarning?WarningSeconds:Phase==DragonPhase.Diving?DiveSeconds:StunDuration;
         public double Remaining => Math.Max(0,Duration-Elapsed);
         public bool Vulnerable => Phase==DragonPhase.Stunned;
         public event Action<DragonPhase> Changed;

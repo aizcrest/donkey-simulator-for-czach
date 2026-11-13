@@ -16,6 +16,7 @@ namespace DonkeyForest
         public SkillSave skills=new SkillSave();
         public JourneySave journey=new JourneySave();
         public float masterVolume=.75f,musicVolume=.2f,effectsVolume=.8f;
+        public int difficulty; // Normal is zero, including saves made before difficulty selection.
         public int quality; // Low is the default on a fresh or older save.
     }
 
@@ -31,6 +32,7 @@ namespace DonkeyForest
         public GameAudio Audio { get; private set; }
         public CampAdditions Additions { get; private set; }
         public PlayerMountVisual MountedModel { get; private set; }
+        public DifficultyProfile Difficulty=>DifficultyRules.Get(data.difficulty);
         public Camera View=>view;
         public TouchControlSkin Controls { get; private set; }
         DayNightSky sky;
@@ -73,6 +75,7 @@ namespace DonkeyForest
             SkillRules.Normalize(data.skills);JourneyRules.Normalize(data.journey);data.health=Mathf.Clamp(data.health,0,MaxHealth);
             data.masterVolume=SafeVolume(data.masterVolume,.75f);data.musicVolume=SafeVolume(data.musicVolume,.2f);data.effectsVolume=SafeVolume(data.effectsVolume,.8f);
             data.quality=Mathf.Clamp(data.quality,0,2);
+            data.difficulty=DifficultyRules.Normalize(data.difficulty);
             Audio=gameObject.AddComponent<GameAudio>();Audio.Setup(this);
             BuildWorld(); BuildRider();
             Skills=gameObject.AddComponent<MountedSkills>();Skills.Setup(this);
@@ -219,7 +222,7 @@ namespace DonkeyForest
             if(hudClock<=0)
             {
             hudClock=.2f;
-            status.text=$"FOREST RIDER • {(Night?"NIGHT — ZOMBIES":"DAY — FOREST HUNT")} • {(data.quality==0?"LOW":data.quality==1?"BALANCED":"HIGH")} / {Mathf.RoundToInt(1/frameTime)} FPS\nHealth {Mathf.CeilToInt(data.health)} / {MaxHealth:0}    Coins {data.coins}    Kills {data.kills}    Lv.{data.journey.level}\nSword {data.sword}  •  Armor {data.armor}  •  Donkey gear {data.barding}  •  Potions {data.potions}";
+            status.text=$"FOREST RIDER • {(Night?"NIGHT — ZOMBIES":"DAY — FOREST HUNT")} • {(data.quality==0?"LOW":data.quality==1?"BALANCED":"HIGH")} / {Mathf.RoundToInt(1/frameTime)} FPS • {Difficulty.Name.ToUpperInvariant()}\nHealth {Mathf.CeilToInt(data.health)} / {MaxHealth:0}    Coins {data.coins}    Kills {data.kills}    Lv.{data.journey.level}\nSword {data.sword}  •  Armor {data.armor}  •  Donkey gear {data.barding}  •  Potions {data.potions}";
             objective.text=Encounter.Objective+$" • Dodge {(dodgeCooldown<=0?"READY":dodgeCooldown.ToString("0.0")+"s")}";
             Additions.Refresh();
             }
@@ -369,6 +372,17 @@ namespace DonkeyForest
             if(data.coins<level*40){Show("You need more coins.");return;}
             data.coins-=level*40;if(kind==0)data.sword++;else if(kind==1)data.armor++;else data.barding++;
             RefreshCamp();Save();
+        }
+        public void SetDifficulty(int value)
+        {
+            if(!Paused)return;
+            value=DifficultyRules.Normalize(value);if(value==data.difficulty)return;
+            bool restart=Encounter&&Encounter.Active;
+            data.difficulty=value;
+            foreach(var enemy in enemies)if(enemy)enemy.ApplyDifficulty();
+            if(restart)Encounter.RestartBoss();
+            Show(Difficulty.Name+" difficulty applied."+(restart?" Dragon fight restarted at full health.":""));
+            Save(false);
         }
         void Revive(){if(!Dead){Show("You can revive after falling in battle.");return;}data.health=MaxHealth;controller.enabled=false;rider.position=Ground(Vector3.zero,.08f);controller.enabled=true;foreach(var e in enemies.ToArray())if(e)Destroy(e.gameObject);enemies.Clear();dodgeTime=0;dodgeCooldown=0;comboStep=0;comboWindow=0;Skills.CancelEffects();Encounter.RestartBoss();Save();ToggleMenu();}
         Font font;

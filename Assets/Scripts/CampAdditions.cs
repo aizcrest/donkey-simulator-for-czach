@@ -5,7 +5,9 @@ namespace DonkeyForest
     public sealed class CampAdditions:MonoBehaviour
     {
         ForestGame game;
-        GameObject skills,journal,audioPanel;
+        GameObject skills,journal,audioPanel,difficultyPanel;
+        Button difficultySelector;
+        readonly Button[] difficultyButtons=new Button[3];
         Text skillSummary,journalSummary;
         readonly Image[] cooldowns=new Image[4];
         readonly string[] icons={"whirlwind","guard","charge","kick"};
@@ -38,6 +40,16 @@ namespace DonkeyForest
                 contracts[i]=game.Button(journal.transform,"",new Vector2(.5f,.5f),new Vector2(315,y),new Vector2(210,65),()=>Claim(quest));
                 contracts[i].GetComponentInChildren<Text>().fontSize=18;
             }
+            difficultyPanel=Overlay(camp,"DIFFICULTY");
+            difficultySelector=game.Button(audioPanel.transform,"DIFFICULTY",new Vector2(.5f,.5f),new Vector2(0,170),new Vector2(340,46),()=>Open(difficultyPanel));
+            for(int i=0;i<3;i++)
+            {
+                int mode=i;var profile=DifficultyRules.Get(mode);float y=125-i*105;
+                difficultyButtons[i]=game.Button(difficultyPanel.transform,profile.Name.ToUpperInvariant(),new Vector2(.5f,.5f),new Vector2(-295,y),new Vector2(230,65),()=>{game.SetDifficulty(mode);Refresh();});
+                string details=$"Monsters + dragon: {profile.HealthMultiplier:0.##}× HP / {profile.DamageMultiplier:0.##}× damage\nFireball radius {profile.FireballRadius:0.#}m • flight {profile.FireballTravelSeconds:0.##}s\nDragon stunned for {profile.DragonStunSeconds:0.##}s";
+                game.Label(difficultyPanel.transform,details,new Vector2(.5f,.5f),new Vector2(120,y),new Vector2(560,95),20);
+            }
+            game.Label(difficultyPanel.transform,"Normal keeps the original balance. Changes save immediately.\nChanging difficulty restarts an active dragon fight at full health.",new Vector2(.5f,.5f),new Vector2(0,-165),new Vector2(840,55),18);
             AudioSlider("Master",105,game.data.masterVolume,value=>game.data.masterVolume=value);
             AudioSlider("Music",40,game.data.musicVolume,value=>game.data.musicVolume=value);
             AudioSlider("Effects",-25,game.data.effectsVolume,value=>game.data.effectsVolume=value);
@@ -69,7 +81,7 @@ namespace DonkeyForest
             label.text=name+" "+Mathf.RoundToInt(initial*100)+"%";
         }
         void Open(GameObject panel){Close();panel.SetActive(true);Refresh();game.Audio.Play("ui");}
-        public void Close(){if(skills)skills.SetActive(false);if(journal)journal.SetActive(false);if(audioPanel)audioPanel.SetActive(false);}
+        public void Close(){if(skills)skills.SetActive(false);if(journal)journal.SetActive(false);if(audioPanel)audioPanel.SetActive(false);if(difficultyPanel)difficultyPanel.SetActive(false);}
         void Upgrade(SkillId id)
         {
             if(!game.Skills.Book.TryUpgrade(id,ref game.data.coins,ref game.data.journey.skillPoints)){game.Show("Need a skill point and enough coins; skills cap at level 5.");return;}
@@ -94,11 +106,17 @@ namespace DonkeyForest
                 hotbar[i].interactable=!game.Paused&&!game.Dead&&remaining<=0 && !(id==SkillId.Charge&&game.IsDodging);
             }
             if(!game.Paused)return;
+            difficultySelector.GetComponentInChildren<Text>().text="DIFFICULTY: "+game.Difficulty.Name.ToUpperInvariant();
             string xp=journey.level>=JourneyRules.MaxLevel?"MAX LEVEL":$"XP {journey.xp}/{JourneyRules.Needed(journey.level)}";
             skillSummary.text=$"Level {journey.level} • {xp} • Skill points {journey.skillPoints} • Coins {game.data.coins}";
             journalSummary.text=$"Level {journey.level} • {xp} • Claim each completed contract once";
             for(int i=0;i<3;i++)
             {
+                bool modeSelected=i==game.data.difficulty;
+                difficultyButtons[i].GetComponentInChildren<Text>().text=DifficultyRules.Get(i).Name.ToUpperInvariant()+(modeSelected?" ✓":"");
+                difficultyButtons[i].interactable=!modeSelected;
+                difficultyButtons[i].GetComponent<Image>().color=modeSelected?new Color(.75f,1,.75f):Color.white;
+                var modeColors=difficultyButtons[i].colors;modeColors.disabledColor=Color.white;difficultyButtons[i].colors=modeColors;
                 qualityButtons[i].GetComponentInChildren<Text>().text=(i==0?"LOW • 30 FPS":i==1?"BALANCED • 30 FPS":"HIGH • 60 FPS")+(i==game.data.quality?" ✓":"");
                 bool selected=i==game.data.quality;
                 qualityButtons[i].interactable=!selected;

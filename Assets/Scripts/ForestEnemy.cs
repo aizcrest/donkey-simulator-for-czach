@@ -5,6 +5,7 @@ namespace DonkeyForest
     {
         public string kind;
         ForestGame game;
+        float baseHealth,baseDamage;
         float health,maxHealth,cooldown,wanderTime,speed,damage,attackReach;
         Vector3 wander;
         Transform healthBar;
@@ -26,6 +27,7 @@ namespace DonkeyForest
             float height=kind=="Moose"?3:kind=="Zombie"?1.9f:kind=="Deer"?2:kind=="Bear"?1.65f:kind=="Wolf"?1.1f:.85f;
             maxHealth*= (1+(game.data.journey.level-1)*.025f)*(Elite?1.6f:1);health=maxHealth;
             damage*=(1+(game.data.journey.level-1)*.02f)*(Elite?1.3f:1);
+            baseHealth=maxHealth;baseDamage=damage;ApplyDifficulty();
             attackReach=kind=="Moose"?2.6f:2.2f;
             visual=EnemyVisual.Create(kind,transform,height);
             controller=gameObject.AddComponent<CharacterController>();
@@ -34,6 +36,13 @@ namespace DonkeyForest
             healthBar=game.Shape(kind+" health",PrimitiveType.Cube,transform,new Vector3(0,height+.3f,0),new Vector3(1,.08f,.08f),game.Mat(new Color(.8f,.22f,.15f))).transform;
             healthRenderer=healthBar.GetComponent<Renderer>();
             if(Elite)game.Shape("Elite marker",PrimitiveType.Cube,transform,new Vector3(0,height+.6f,0),Vector3.one*.18f,game.Glow(new Color(1,.75f,.1f))).transform.localRotation=Quaternion.Euler(0,45,45);
+        }
+        public void ApplyDifficulty()
+        {
+            float nextMax=baseHealth*game.Difficulty.HealthMultiplier;
+            health=DifficultyRules.RescaleHealth(health,maxHealth,nextMax);
+            maxHealth=nextMax;damage=baseDamage*game.Difficulty.DamageMultiplier;
+            if(healthBar)healthBar.localScale=new Vector3(Mathf.Max(0,health/maxHealth),.08f,.08f);
         }
         void Update()
         {
