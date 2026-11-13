@@ -90,3 +90,10 @@ Automated repository checks: `python3 Tools/check_project.py`. These validate re
 - While a fireball is in flight or the dragon is stunned, open camp and change modes. The old boss/hazards must disappear, exactly one full-health boss should replace it, and the new fight should stay paused until camp closes. Selecting the already-selected mode must not restart the fight.
 - Die/revive, save/reload mid-encounter, and change difficulty after victory: difficulty should persist, gem/equipment progress should remain, and a defeated dragon must not respawn or award duplicate rewards.
 - Run all 16 EditMode test cases. Standalone rule tests are automated here; Unity save loading, combat integration, UI and device playtesting still need local validation.
+
+## Import-loop recovery and regression
+
+- Close Unity, pull the latest repository, then reopen with 6000.4.11f1 and let its one-time reimport finish. The model postprocessor version changed; no manual deletion of assets or saves is needed.
+- Confirm Bear, Moose, Zombie and Rider and their `.fbm` textures finish importing without the infinite-loop error. Run **Window → General → Test Runner → EditMode → ModelImportTests**. This Unity-only test imports the four affected pairs twice and checks stable dependencies/source bytes.
+- Enter Play Mode and run **Forest Rider → Validate model presentation (Play Mode)**. Inspect bear/moose coat textures and separate brown antlers. Spawn several of each: they should share runtime material copies. Check that imported asset materials are not marked dirty after play and that exiting/re-entering Play Mode does not leak copies.
+- Build the Android APK and inspect the same models on device. The original PNGs remain under Resources, so the runtime material bindings are included in builds. No Unity import or Android build has been run in the Cloud workspace.

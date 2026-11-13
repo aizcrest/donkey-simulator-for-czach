@@ -1,5 +1,11 @@
 # Validation
 
+## Model import-loop correction — 2026-11-14
+
+The user reported repeated changes to the Bear/Moose/Zombie/Rider FBXs and their matching `.fbm` PNGs. The custom model postprocessor synchronously loaded those textures and registered explicit artifact dependencies while importing the models. Removed those cross-asset lookups/dependencies from the callback (including the shader lookup), and bumped its version to force a fresh import. Explicit material binding now runs on shared, owned material copies when imported models spawn; it never modifies imported source materials. Baked enemies continue using their existing vertex colors.
+
+Repository/asset/metadata checks and C# 9 syntax parsing passed (31 files). Model and texture source files were not changed. Added a Unity-only EditMode integration test that imports all four affected pairs twice, verifies stable dependency hashes and verifies unchanged PNG bytes. **That integration test and Unity import recovery have not run here because no Unity editor is installed.** The cause is inferred from the reported dependency pairs and importer code; local Unity confirmation is still required.
+
 ## Difficulty modes — 2026-11-13
 
 Added saved Normal/Hard/Extreme selection, shared combat profiles, health/damage scaling for wildlife and the dragon, matched fireball warning/damage radii and travel times, and per-mode stun durations. Normal retains the original values. Existing enemies preserve health percentage on a mode change; an active boss restarts with old hazards removed.

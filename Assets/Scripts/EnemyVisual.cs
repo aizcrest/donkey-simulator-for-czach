@@ -31,6 +31,7 @@ namespace DonkeyForest
             foreach(var collider in model.GetComponentsInChildren<Collider>()){collider.enabled=false;Destroy(collider);}
             var visual=pivot.gameObject.AddComponent<EnemyVisual>();
             visual.Model=model;
+            ImportedModelMaterials.Apply(model,kind);
             visual.animations=model.GetComponentsInChildren<Animation>();
             visual.choices=new Dictionary<string,string>[visual.animations.Length];
             for(int i=0;i<visual.animations.Length;i++)

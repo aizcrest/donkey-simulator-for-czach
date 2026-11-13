@@ -356,7 +356,7 @@ namespace DonkeyForest
         void OnApplicationQuit(){Save(false);}
         void OnDestroy()
         {
-            BakedEnemyAnimation.ReleaseAll();
+            BakedEnemyAnimation.ReleaseAll();ImportedModelMaterials.ReleaseAll();
             propMeshes.Dispose();foreach(var m in mats)if(m)Destroy(m);
             if(view){view.enabled=false;var listener=view.GetComponent<AudioListener>();if(listener)listener.enabled=false;Destroy(view.gameObject);}
             foreach(var previous in previousCameras)if(previous)previous.enabled=true;
