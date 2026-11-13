@@ -11,7 +11,7 @@ namespace DonkeyForest.Editor
         {
             var game=ForestGame.Instance;
             Require(EditorApplication.isPlaying&&game,"Enter Play Mode before reporting mounted rendering.");
-            var presentation=game.rider.GetComponent<MountedMeshPresentation>();
+            var presentation=game.rider.GetComponent<PlayerMountVisual>();
             Require(presentation,"Mounted mesh presentation component is missing.");
             Debug.Log(presentation.Diagnostics(game.View));
         }
@@ -19,8 +19,8 @@ namespace DonkeyForest.Editor
         public static void Validate()
         {
             Require(EditorApplication.isPlaying, "Enter Play Mode before validating imported models.");
-            string[] kinds={"Bear","Deer","Moose","Wolf","Fox","Zombie","Dragon","Donkey","Rider"};
-            float[] heights={1.65f,2,3,1.1f,.85f,1.9f,3.5f,1.9f,1.75f};
+            string[] kinds={"Bear","Deer","Moose","Wolf","Fox","Zombie","Dragon"};
+            float[] heights={1.65f,2,3,1.1f,.85f,1.9f,3.5f};
             for(int i=0;i<kinds.Length;i++)
             {
                 var root=new GameObject("Temporary model validation");
@@ -59,7 +59,7 @@ namespace DonkeyForest.Editor
                 }
                 finally{root.SetActive(false);UnityEngine.Object.Destroy(root);}
             }
-            Debug.Log("All nine models passed fitted height/grounding, animation extent and material checks. Inspect the mounted rider and moving actors in the Game view too.");
+            Debug.Log("All seven enemy models passed fitted height/grounding, animation extent and material checks. Inspect the mounted rider and moving actors in the Game view too.");
         }
         static void Require(bool condition,string message)
         {

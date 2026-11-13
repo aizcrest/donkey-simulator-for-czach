@@ -4,6 +4,7 @@ import json
 import re
 import wave
 import array
+import math
 from pathlib import Path
 root=Path(__file__).resolve().parents[1]
 manifest=json.loads((root/'Packages/manifest.json').read_text())
@@ -52,4 +53,22 @@ for path in audio:
         samples=array.array('h',frames);assert max(abs(x) for x in samples)>1000, path
         assert samples[0]==0 and samples[-1]==0, path
 assert (root/'Assets/Scripts/MobilePerformance.cs').is_file()
+mounted=json.loads((root/'Assets/Resources/MountedModels.json').read_text())['nodes']
+joints=set();triangles=0;groups=set()
+for node in mounted:
+    assert not node['parent'] or node['parent'] in joints, node
+    for field in ['position','rotation','scale','color']:
+        assert len(node[field])==3 and all(math.isfinite(x) for x in node[field]), node
+    assert all(x>0 for x in node['scale']), node
+    if not node['shape']:
+        assert node['name'] not in joints
+        joints.add(node['name'])
+    else:
+        assert node['shape'] in ['round','box']
+        assert all(0<=x<=1 for x in node['color'])
+        triangles+=80 if node['shape']=='round' else 12
+        groups.add((node['parent'],tuple(node['color'])))
+assert {'Body','Neck','Tail','Head','Rider','RightArm','LeftArm','Sword','FL','FR','RL','RR','FLKnee','FRKnee','RLKnee','RRKnee'}<=joints
+assert triangles<6000 and len(groups)<50, (triangles,len(groups))
+print(f'Original mounted model hierarchy passed: {triangles} triangles, {len(groups)} material/joint groups.')
 print('Project, FBX integrity, credits, mono audio and metadata checks passed. Unity compilation still required.')

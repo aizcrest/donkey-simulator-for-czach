@@ -1,5 +1,11 @@
 # Validation
 
+## Replacement mounted models — 2026-11-13
+
+The user confirmed the imported player models and CPU-baked workaround still did not display. Replaced the active player presentation entirely with original segmented donkey/rider geometry, shared opaque materials, and transform-based animation. Removed the mounted CPU skinning component; enemy models and orbit controls remain unchanged.
+
+The replacement layout was generated and rendered in Blender: ground clearance about 0.02m, total height about 2.77m, 4,796 triangles before grouping. The [asset preview](replacement-mounted-models.png) uses the same model layout as the game and was visually inspected; it is **not a Unity gameplay screenshot**. Repository/model-data checks and C# syntax parsing passed. Unity compilation, animation appearance and physical-phone performance still require testing locally.
+
 ## Mounted renderer workaround and orbit camera — 2026-11-13
 
 The user's follow-up screenshot confirms that the previous sizing correction did **not** resolve the missing rider/donkey. The exact Unity-side cause remains unconfirmed. The reported duplicate AudioListener warning also indicates competing scene setup; startup now disables other display-zero scene cameras and active listeners while the game runs.

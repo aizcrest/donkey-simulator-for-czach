@@ -1,7 +1,7 @@
 # Unity and device acceptance checks
 
 - Camera: hold the right mouse button and drag, or swipe an empty area on the right half of a phone screen. Check a full yaw rotation, pitch limits, camera-relative movement, tree/hill obstruction, boss framing, camp pause and focus loss. A touch that begins on joystick/attack/skills must not rotate the view; a separate right-side touch should rotate while riding.
-- Mounted visibility: confirm actual donkey/rider bodies render during idle, walking, attacks and guard at all three quality levels. Use **Forest Rider → Report mounted rendering (Play Mode)** if either disappears. Profile the player-only CPU pose refresh on a low-end phone.
+- Mounted visibility: confirm actual donkey/rider bodies render during idle, walking, attacks and guard at all three quality levels. Use **Forest Rider → Report mounted rendering (Play Mode)** if either disappears. Confirm the player has ordinary MeshRenderers and no SkinnedMeshRenderer or CPU pose-baking component. Profile joint animation on a low-end phone.
 - Start Play in both the generated Forest scene and a scene with a default Main Camera. Verify one active game camera/listener, no duplicate-listener warning after startup and working orbit controls.
 - Open with Unity 6000.4.11f1. Confirm no Console compilation errors, and generated Forest scene is enabled in **File → Build Profiles → Scene List**. Follow `Docs/UNITY6.md` when upgrading an existing checkout.
 - Confirm **Active Input Handling = Input Manager (Old)**. If the setup script changed it, save and restart the Editor once before testing. Verify WASD/arrows, mouse UI clicks and simultaneous joystick/button touches. The project has no Input System package dependency.
@@ -30,7 +30,7 @@ Automated repository checks: `python3 Tools/check_project.py`. These validate re
 
 ## Free enemy models and gem/dragon progression
 
-- Run **Forest Rider → Validate model presentation (Play Mode)** at both Low and High quality. It loads all nine imported models at a translated/rotated origin, checks initial height and grounding, samples their clips for collapsed/buried geometry, and verifies color textures and the deer's vertex-color shader.
+- Run **Forest Rider → Validate model presentation (Play Mode)** at both Low and High quality. It loads all seven imported enemy models at a translated/rotated origin, checks initial height and grounding, samples their clips for collapsed/buried geometry, and verifies color textures and the deer's vertex-color shader.
 - Confirm donkey, rider and sword are visible at the start and after riding/attacking. Check feet on flat ground and slopes. Watch for the rider/mount snapping to a different scale when animation starts. The follow camera should clear to the day/night fog color, with no default gray skybox band.
 - Let all FBX imports finish and enter Play Mode. Verify Bear, Deer, Moose, Wolf, Fox and Zombie render at sensible ground height, face their movement direction and have correct materials. Check movement/attack clips where available; Bear/Moose are static source meshes.
 - Open CAMP → ASSET CREDITS. Confirm creators, licenses and a link to individual model sources are visible.
@@ -47,7 +47,7 @@ Automated repository checks: `python3 Tools/check_project.py`. These validate re
 ## Mounted skills, presentation and progression
 
 - Run all **nine** EditMode tests. These same nine tests passed under standalone .NET 8; Unity Test Runner still needs to be run.
-- Check the new knight/donkey models, sitting pose, saddle alignment, sword/hand attachment, idle/walk/gallop/kick and mounted attack/guard animations in Unity. Check both full and reduced skinning settings, shadows/materials, and animation pause/resume. In-engine visual polish remains unverified.
+- Check the replacement segmented knight/donkey, seated pose, visible long ears/legs/helmet, saddle, sword, idle/walk/gallop/kick and attack/guard animations. Confirm pause/death freezes the pose, all quality presets retain both bodies, and camera orbit works around them. In-engine appearance remains unverified here.
 - Use Whirlwind surrounded by animals; check radial damage. Stand behind/front of an animal while using Rear Kick and verify rear-only hits, knockback and stun. Charge into several enemies; each should be hit once, and trunks/bounds must still stop movement. Charge cannot activate during dodge; dodge cannot activate during charge.
 - Guard an identical enemy/dragon hit with and without Iron Guard and compare damage. Verify guard lasts its displayed duration and is not invulnerability. Skill cooldowns/active durations must freeze in camp and on death active effects must end. Save/reload during cooldown: levels and remaining cooldown survive, active buffs do not.
 - Hit the dragon with every damaging skill during flight/dive: no damage. During its five-second stun, skill/sword hits work; stun/knockback must never change the boss cycle.

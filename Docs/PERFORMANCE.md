@@ -25,4 +25,4 @@ The startup terrain is still generated synchronously, the world uses one native 
 
 Unity 6.4 migration: generated terrain/grass textures opt into mip limits and retain about 267 KiB of readable pixel/mip data so runtime quality changes can re-upload them. This small CPU allocation is intentional; imported model textures retain their normal importer settings. Re-profile the new editor/player version on target phones.
 
-Mounted rendering compatibility: only the rider and donkey use CPU-baked mesh poses (15/24/30 Hz across the presets) to bypass imported skinned-mesh culling. This adds CPU work and transient pose updates; profile it on budget hardware before making performance claims. Wildlife retains the original rendering path.
+Replacement player presentation: ordinary low-poly meshes grouped by joint/material replace the failed FBX player assets and CPU pose-baking workaround. Only joint transforms animate each frame; geometry is combined once at startup and reused across all graphics presets. Device profiling is still required.

@@ -1,0 +1,2179 @@
+{
+  "nodes": [
+    {
+      "name": "Body",
+      "parent": "",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "shape": "",
+      "color": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Donkey barrel",
+      "parent": "Body",
+      "position": [
+        0,
+        1.05,
+        -0.05
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.82,
+        0.83,
+        1.65
+      ],
+      "shape": "round",
+      "color": [
+        0.38,
+        0.4,
+        0.39
+      ]
+    },
+    {
+      "name": "Chest",
+      "parent": "Body",
+      "position": [
+        0,
+        1.13,
+        0.51
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.67,
+        0.85,
+        0.57
+      ],
+      "shape": "round",
+      "color": [
+        0.65,
+        0.66,
+        0.59
+      ]
+    },
+    {
+      "name": "Rump",
+      "parent": "Body",
+      "position": [
+        0,
+        1.1,
+        -0.62
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.76,
+        0.73,
+        0.62
+      ],
+      "shape": "round",
+      "color": [
+        0.38,
+        0.4,
+        0.39
+      ]
+    },
+    {
+      "name": "Neck",
+      "parent": "Body",
+      "position": [
+        0,
+        1.28,
+        0.59
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "shape": "",
+      "color": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Raised neck",
+      "parent": "Neck",
+      "position": [
+        0,
+        0.21,
+        0.05
+      ],
+      "rotation": [
+        18,
+        0,
+        0
+      ],
+      "scale": [
+        0.43,
+        0.85,
+        0.47
+      ],
+      "shape": "round",
+      "color": [
+        0.38,
+        0.4,
+        0.39
+      ]
+    },
+    {
+      "name": "Head",
+      "parent": "Neck",
+      "position": [
+        0,
+        0.53,
+        0.28
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "shape": "",
+      "color": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Long donkey head",
+      "parent": "Head",
+      "position": [
+        0,
+        0,
+        0.12
+      ],
+      "rotation": [
+        12,
+        0,
+        0
+      ],
+      "scale": [
+        0.42,
+        0.48,
+        0.72
+      ],
+      "shape": "round",
+      "color": [
+        0.38,
+        0.4,
+        0.39
+      ]
+    },
+    {
+      "name": "Cream muzzle",
+      "parent": "Head",
+      "position": [
+        0,
+        -0.13,
+        0.44
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.4,
+        0.29,
+        0.34
+      ],
+      "shape": "round",
+      "color": [
+        0.65,
+        0.66,
+        0.59
+      ]
+    },
+    {
+      "name": "Nostril",
+      "parent": "Head",
+      "position": [
+        -0.12,
+        -0.1,
+        0.6
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.065,
+        0.045,
+        0.025
+      ],
+      "shape": "round",
+      "color": [
+        0.12,
+        0.14,
+        0.14
+      ]
+    },
+    {
+      "name": "Eye",
+      "parent": "Head",
+      "position": [
+        -0.207,
+        0.09,
+        0.19
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.035,
+        0.085,
+        0.09
+      ],
+      "shape": "round",
+      "color": [
+        0.12,
+        0.14,
+        0.14
+      ]
+    },
+    {
+      "name": "Eye glint",
+      "parent": "Head",
+      "position": [
+        -0.225,
+        0.11,
+        0.2
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.014,
+        0.022,
+        0.025
+      ],
+      "shape": "round",
+      "color": [
+        0.65,
+        0.73,
+        0.76
+      ]
+    },
+    {
+      "name": "Long ear",
+      "parent": "Head",
+      "position": [
+        -0.15,
+        0.48,
+        -0.02
+      ],
+      "rotation": [
+        0,
+        0,
+        12
+      ],
+      "scale": [
+        0.15,
+        0.66,
+        0.17
+      ],
+      "shape": "round",
+      "color": [
+        0.38,
+        0.4,
+        0.39
+      ]
+    },
+    {
+      "name": "Ear inner",
+      "parent": "Head",
+      "position": [
+        -0.15,
+        0.48,
+        0.055
+      ],
+      "rotation": [
+        0,
+        0,
+        12
+      ],
+      "scale": [
+        0.07,
+        0.46,
+        0.025
+      ],
+      "shape": "round",
+      "color": [
+        0.27,
+        0.12,
+        0.06
+      ]
+    },
+    {
+      "name": "Bridle cheek strap",
+      "parent": "Head",
+      "position": [
+        -0.212,
+        -0.02,
+        0.13
+      ],
+      "rotation": [
+        12,
+        0,
+        0
+      ],
+      "scale": [
+        0.035,
+        0.48,
+        0.045
+      ],
+      "shape": "box",
+      "color": [
+        0.27,
+        0.12,
+        0.06
+      ]
+    },
+    {
+      "name": "Nostril",
+      "parent": "Head",
+      "position": [
+        0.12,
+        -0.1,
+        0.6
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.065,
+        0.045,
+        0.025
+      ],
+      "shape": "round",
+      "color": [
+        0.12,
+        0.14,
+        0.14
+      ]
+    },
+    {
+      "name": "Eye",
+      "parent": "Head",
+      "position": [
+        0.207,
+        0.09,
+        0.19
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.035,
+        0.085,
+        0.09
+      ],
+      "shape": "round",
+      "color": [
+        0.12,
+        0.14,
+        0.14
+      ]
+    },
+    {
+      "name": "Eye glint",
+      "parent": "Head",
+      "position": [
+        0.225,
+        0.11,
+        0.2
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.014,
+        0.022,
+        0.025
+      ],
+      "shape": "round",
+      "color": [
+        0.65,
+        0.73,
+        0.76
+      ]
+    },
+    {
+      "name": "Long ear",
+      "parent": "Head",
+      "position": [
+        0.15,
+        0.48,
+        -0.02
+      ],
+      "rotation": [
+        0,
+        0,
+        -12
+      ],
+      "scale": [
+        0.15,
+        0.66,
+        0.17
+      ],
+      "shape": "round",
+      "color": [
+        0.38,
+        0.4,
+        0.39
+      ]
+    },
+    {
+      "name": "Ear inner",
+      "parent": "Head",
+      "position": [
+        0.15,
+        0.48,
+        0.055
+      ],
+      "rotation": [
+        0,
+        0,
+        -12
+      ],
+      "scale": [
+        0.07,
+        0.46,
+        0.025
+      ],
+      "shape": "round",
+      "color": [
+        0.27,
+        0.12,
+        0.06
+      ]
+    },
+    {
+      "name": "Bridle cheek strap",
+      "parent": "Head",
+      "position": [
+        0.212,
+        -0.02,
+        0.13
+      ],
+      "rotation": [
+        12,
+        0,
+        0
+      ],
+      "scale": [
+        0.035,
+        0.48,
+        0.045
+      ],
+      "shape": "box",
+      "color": [
+        0.27,
+        0.12,
+        0.06
+      ]
+    },
+    {
+      "name": "Mane",
+      "parent": "Neck",
+      "position": [
+        0,
+        0.23,
+        -0.22
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.14,
+        0.68,
+        0.12
+      ],
+      "shape": "round",
+      "color": [
+        0.12,
+        0.14,
+        0.14
+      ]
+    },
+    {
+      "name": "Tail",
+      "parent": "Body",
+      "position": [
+        0,
+        1.27,
+        -0.8
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "shape": "",
+      "color": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Tail shaft",
+      "parent": "Tail",
+      "position": [
+        0,
+        -0.2,
+        -0.12
+      ],
+      "rotation": [
+        25,
+        0,
+        0
+      ],
+      "scale": [
+        0.09,
+        0.57,
+        0.09
+      ],
+      "shape": "round",
+      "color": [
+        0.38,
+        0.4,
+        0.39
+      ]
+    },
+    {
+      "name": "Tail tuft",
+      "parent": "Tail",
+      "position": [
+        0,
+        -0.45,
+        -0.24
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.17,
+        0.26,
+        0.17
+      ],
+      "shape": "round",
+      "color": [
+        0.12,
+        0.14,
+        0.14
+      ]
+    },
+    {
+      "name": "FL",
+      "parent": "Body",
+      "position": [
+        -0.26,
+        0.9,
+        0.54
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "shape": "",
+      "color": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Upper FL",
+      "parent": "FL",
+      "position": [
+        0,
+        -0.2,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.22,
+        0.46,
+        0.24
+      ],
+      "shape": "round",
+      "color": [
+        0.38,
+        0.4,
+        0.39
+      ]
+    },
+    {
+      "name": "FLKnee",
+      "parent": "FL",
+      "position": [
+        0,
+        -0.4,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "shape": "",
+      "color": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Shin FL",
+      "parent": "FLKnee",
+      "position": [
+        0,
+        -0.2,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.14,
+        0.44,
+        0.15
+      ],
+      "shape": "round",
+      "color": [
+        0.65,
+        0.66,
+        0.59
+      ]
+    },
+    {
+      "name": "Hoof FL",
+      "parent": "FLKnee",
+      "position": [
+        0,
+        -0.4,
+        0.04
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.21,
+        0.16,
+        0.28
+      ],
+      "shape": "round",
+      "color": [
+        0.15,
+        0.12,
+        0.1
+      ]
+    },
+    {
+      "name": "FR",
+      "parent": "Body",
+      "position": [
+        0.26,
+        0.9,
+        0.54
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "shape": "",
+      "color": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Upper FR",
+      "parent": "FR",
+      "position": [
+        0,
+        -0.2,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.22,
+        0.46,
+        0.24
+      ],
+      "shape": "round",
+      "color": [
+        0.38,
+        0.4,
+        0.39
+      ]
+    },
+    {
+      "name": "FRKnee",
+      "parent": "FR",
+      "position": [
+        0,
+        -0.4,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "shape": "",
+      "color": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Shin FR",
+      "parent": "FRKnee",
+      "position": [
+        0,
+        -0.2,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.14,
+        0.44,
+        0.15
+      ],
+      "shape": "round",
+      "color": [
+        0.65,
+        0.66,
+        0.59
+      ]
+    },
+    {
+      "name": "Hoof FR",
+      "parent": "FRKnee",
+      "position": [
+        0,
+        -0.4,
+        0.04
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.21,
+        0.16,
+        0.28
+      ],
+      "shape": "round",
+      "color": [
+        0.15,
+        0.12,
+        0.1
+      ]
+    },
+    {
+      "name": "RL",
+      "parent": "Body",
+      "position": [
+        -0.26,
+        0.9,
+        -0.58
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "shape": "",
+      "color": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Upper RL",
+      "parent": "RL",
+      "position": [
+        0,
+        -0.2,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.22,
+        0.46,
+        0.24
+      ],
+      "shape": "round",
+      "color": [
+        0.38,
+        0.4,
+        0.39
+      ]
+    },
+    {
+      "name": "RLKnee",
+      "parent": "RL",
+      "position": [
+        0,
+        -0.4,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "shape": "",
+      "color": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Shin RL",
+      "parent": "RLKnee",
+      "position": [
+        0,
+        -0.2,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.14,
+        0.44,
+        0.15
+      ],
+      "shape": "round",
+      "color": [
+        0.65,
+        0.66,
+        0.59
+      ]
+    },
+    {
+      "name": "Hoof RL",
+      "parent": "RLKnee",
+      "position": [
+        0,
+        -0.4,
+        0.04
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.21,
+        0.16,
+        0.28
+      ],
+      "shape": "round",
+      "color": [
+        0.15,
+        0.12,
+        0.1
+      ]
+    },
+    {
+      "name": "RR",
+      "parent": "Body",
+      "position": [
+        0.26,
+        0.9,
+        -0.58
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "shape": "",
+      "color": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Upper RR",
+      "parent": "RR",
+      "position": [
+        0,
+        -0.2,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.22,
+        0.46,
+        0.24
+      ],
+      "shape": "round",
+      "color": [
+        0.38,
+        0.4,
+        0.39
+      ]
+    },
+    {
+      "name": "RRKnee",
+      "parent": "RR",
+      "position": [
+        0,
+        -0.4,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "shape": "",
+      "color": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Shin RR",
+      "parent": "RRKnee",
+      "position": [
+        0,
+        -0.2,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.14,
+        0.44,
+        0.15
+      ],
+      "shape": "round",
+      "color": [
+        0.65,
+        0.66,
+        0.59
+      ]
+    },
+    {
+      "name": "Hoof RR",
+      "parent": "RRKnee",
+      "position": [
+        0,
+        -0.4,
+        0.04
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.21,
+        0.16,
+        0.28
+      ],
+      "shape": "round",
+      "color": [
+        0.15,
+        0.12,
+        0.1
+      ]
+    },
+    {
+      "name": "Blanket",
+      "parent": "Body",
+      "position": [
+        0,
+        1.44,
+        -0.14
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.75,
+        0.11,
+        0.85
+      ],
+      "shape": "box",
+      "color": [
+        0.12,
+        0.25,
+        0.38
+      ]
+    },
+    {
+      "name": "Saddle",
+      "parent": "Body",
+      "position": [
+        0,
+        1.51,
+        -0.15
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.57,
+        0.13,
+        0.64
+      ],
+      "shape": "round",
+      "color": [
+        0.27,
+        0.12,
+        0.06
+      ]
+    },
+    {
+      "name": "Barding",
+      "parent": "Body",
+      "position": [
+        -0.4,
+        1.13,
+        -0.13
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.08,
+        0.46,
+        0.8
+      ],
+      "shape": "box",
+      "color": [
+        0.36,
+        0.46,
+        0.53
+      ]
+    },
+    {
+      "name": "Rivet",
+      "parent": "Body",
+      "position": [
+        -0.45,
+        1.29,
+        -0.41
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.04,
+        0.04,
+        0.04
+      ],
+      "shape": "round",
+      "color": [
+        0.65,
+        0.73,
+        0.76
+      ]
+    },
+    {
+      "name": "Rivet",
+      "parent": "Body",
+      "position": [
+        -0.45,
+        1.29,
+        -0.13
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.04,
+        0.04,
+        0.04
+      ],
+      "shape": "round",
+      "color": [
+        0.65,
+        0.73,
+        0.76
+      ]
+    },
+    {
+      "name": "Rivet",
+      "parent": "Body",
+      "position": [
+        -0.45,
+        1.29,
+        0.15
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.04,
+        0.04,
+        0.04
+      ],
+      "shape": "round",
+      "color": [
+        0.65,
+        0.73,
+        0.76
+      ]
+    },
+    {
+      "name": "Barding",
+      "parent": "Body",
+      "position": [
+        0.4,
+        1.13,
+        -0.13
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.08,
+        0.46,
+        0.8
+      ],
+      "shape": "box",
+      "color": [
+        0.36,
+        0.46,
+        0.53
+      ]
+    },
+    {
+      "name": "Rivet",
+      "parent": "Body",
+      "position": [
+        0.45,
+        1.29,
+        -0.41
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.04,
+        0.04,
+        0.04
+      ],
+      "shape": "round",
+      "color": [
+        0.65,
+        0.73,
+        0.76
+      ]
+    },
+    {
+      "name": "Rivet",
+      "parent": "Body",
+      "position": [
+        0.45,
+        1.29,
+        -0.13
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.04,
+        0.04,
+        0.04
+      ],
+      "shape": "round",
+      "color": [
+        0.65,
+        0.73,
+        0.76
+      ]
+    },
+    {
+      "name": "Rivet",
+      "parent": "Body",
+      "position": [
+        0.45,
+        1.29,
+        0.15
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.04,
+        0.04,
+        0.04
+      ],
+      "shape": "round",
+      "color": [
+        0.65,
+        0.73,
+        0.76
+      ]
+    },
+    {
+      "name": "Rider",
+      "parent": "Body",
+      "position": [
+        0,
+        1.49,
+        -0.12
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "shape": "",
+      "color": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Armored torso",
+      "parent": "Rider",
+      "position": [
+        0,
+        0.36,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.55,
+        0.65,
+        0.38
+      ],
+      "shape": "round",
+      "color": [
+        0.36,
+        0.46,
+        0.53
+      ]
+    },
+    {
+      "name": "Breastplate",
+      "parent": "Rider",
+      "position": [
+        0,
+        0.38,
+        0.18
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.065
+      ],
+      "shape": "round",
+      "color": [
+        0.65,
+        0.73,
+        0.76
+      ]
+    },
+    {
+      "name": "Belt",
+      "parent": "Rider",
+      "position": [
+        0,
+        0.09,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.53,
+        0.1,
+        0.38
+      ],
+      "shape": "box",
+      "color": [
+        0.27,
+        0.12,
+        0.06
+      ]
+    },
+    {
+      "name": "Buckle",
+      "parent": "Rider",
+      "position": [
+        0,
+        0.09,
+        0.21
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.11,
+        0.09,
+        0.04
+      ],
+      "shape": "box",
+      "color": [
+        0.74,
+        0.55,
+        0.18
+      ]
+    },
+    {
+      "name": "Cape",
+      "parent": "Rider",
+      "position": [
+        0,
+        0.28,
+        -0.25
+      ],
+      "rotation": [
+        -10,
+        0,
+        0
+      ],
+      "scale": [
+        0.48,
+        0.8,
+        0.08
+      ],
+      "shape": "box",
+      "color": [
+        0.12,
+        0.25,
+        0.38
+      ]
+    },
+    {
+      "name": "Neck",
+      "parent": "Rider",
+      "position": [
+        0,
+        0.73,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.18,
+        0.18,
+        0.18
+      ],
+      "shape": "round",
+      "color": [
+        0.72,
+        0.49,
+        0.32
+      ]
+    },
+    {
+      "name": "Helmet",
+      "parent": "Rider",
+      "position": [
+        0,
+        0.94,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.43,
+        0.46,
+        0.43
+      ],
+      "shape": "round",
+      "color": [
+        0.36,
+        0.46,
+        0.53
+      ]
+    },
+    {
+      "name": "Visor",
+      "parent": "Rider",
+      "position": [
+        0,
+        0.91,
+        0.205
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.35,
+        0.12,
+        0.055
+      ],
+      "shape": "box",
+      "color": [
+        0.12,
+        0.14,
+        0.14
+      ]
+    },
+    {
+      "name": "Helmet nose guard",
+      "parent": "Rider",
+      "position": [
+        0,
+        0.88,
+        0.245
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.055,
+        0.24,
+        0.04
+      ],
+      "shape": "box",
+      "color": [
+        0.65,
+        0.73,
+        0.76
+      ]
+    },
+    {
+      "name": "Helmet crest",
+      "parent": "Rider",
+      "position": [
+        0,
+        1.19,
+        -0.02
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.1,
+        0.18,
+        0.35
+      ],
+      "shape": "round",
+      "color": [
+        0.12,
+        0.25,
+        0.38
+      ]
+    },
+    {
+      "name": "Rider thigh",
+      "parent": "Rider",
+      "position": [
+        -0.27,
+        -0.04,
+        0.12
+      ],
+      "rotation": [
+        65,
+        0,
+        -25
+      ],
+      "scale": [
+        0.21,
+        0.46,
+        0.23
+      ],
+      "shape": "round",
+      "color": [
+        0.12,
+        0.25,
+        0.38
+      ]
+    },
+    {
+      "name": "Greave",
+      "parent": "Rider",
+      "position": [
+        -0.4,
+        -0.37,
+        0.27
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.21,
+        0.47,
+        0.23
+      ],
+      "shape": "round",
+      "color": [
+        0.36,
+        0.46,
+        0.53
+      ]
+    },
+    {
+      "name": "Boot",
+      "parent": "Rider",
+      "position": [
+        -0.4,
+        -0.65,
+        0.36
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.24,
+        0.17,
+        0.38
+      ],
+      "shape": "round",
+      "color": [
+        0.27,
+        0.12,
+        0.06
+      ]
+    },
+    {
+      "name": "LeftArm",
+      "parent": "Rider",
+      "position": [
+        -0.29,
+        0.57,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "shape": "",
+      "color": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Pauldron",
+      "parent": "LeftArm",
+      "position": [
+        -0.04,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.29,
+        0.25,
+        0.31
+      ],
+      "shape": "round",
+      "color": [
+        0.65,
+        0.73,
+        0.76
+      ]
+    },
+    {
+      "name": "Upper arm",
+      "parent": "LeftArm",
+      "position": [
+        -0.04,
+        -0.16,
+        0.05
+      ],
+      "rotation": [
+        -18,
+        0,
+        0
+      ],
+      "scale": [
+        0.16,
+        0.34,
+        0.19
+      ],
+      "shape": "round",
+      "color": [
+        0.36,
+        0.46,
+        0.53
+      ]
+    },
+    {
+      "name": "Forearm",
+      "parent": "LeftArm",
+      "position": [
+        -0.04,
+        -0.31,
+        0.2
+      ],
+      "rotation": [
+        -65,
+        0,
+        0
+      ],
+      "scale": [
+        0.16,
+        0.34,
+        0.18
+      ],
+      "shape": "round",
+      "color": [
+        0.36,
+        0.46,
+        0.53
+      ]
+    },
+    {
+      "name": "Glove",
+      "parent": "LeftArm",
+      "position": [
+        -0.04,
+        -0.38,
+        0.35
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.17,
+        0.18,
+        0.17
+      ],
+      "shape": "round",
+      "color": [
+        0.27,
+        0.12,
+        0.06
+      ]
+    },
+    {
+      "name": "Rider thigh",
+      "parent": "Rider",
+      "position": [
+        0.27,
+        -0.04,
+        0.12
+      ],
+      "rotation": [
+        65,
+        0,
+        25
+      ],
+      "scale": [
+        0.21,
+        0.46,
+        0.23
+      ],
+      "shape": "round",
+      "color": [
+        0.12,
+        0.25,
+        0.38
+      ]
+    },
+    {
+      "name": "Greave",
+      "parent": "Rider",
+      "position": [
+        0.4,
+        -0.37,
+        0.27
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.21,
+        0.47,
+        0.23
+      ],
+      "shape": "round",
+      "color": [
+        0.36,
+        0.46,
+        0.53
+      ]
+    },
+    {
+      "name": "Boot",
+      "parent": "Rider",
+      "position": [
+        0.4,
+        -0.65,
+        0.36
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.24,
+        0.17,
+        0.38
+      ],
+      "shape": "round",
+      "color": [
+        0.27,
+        0.12,
+        0.06
+      ]
+    },
+    {
+      "name": "RightArm",
+      "parent": "Rider",
+      "position": [
+        0.29,
+        0.57,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "shape": "",
+      "color": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Pauldron",
+      "parent": "RightArm",
+      "position": [
+        0.04,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.29,
+        0.25,
+        0.31
+      ],
+      "shape": "round",
+      "color": [
+        0.65,
+        0.73,
+        0.76
+      ]
+    },
+    {
+      "name": "Upper arm",
+      "parent": "RightArm",
+      "position": [
+        0.04,
+        -0.16,
+        0.05
+      ],
+      "rotation": [
+        -18,
+        0,
+        0
+      ],
+      "scale": [
+        0.16,
+        0.34,
+        0.19
+      ],
+      "shape": "round",
+      "color": [
+        0.36,
+        0.46,
+        0.53
+      ]
+    },
+    {
+      "name": "Forearm",
+      "parent": "RightArm",
+      "position": [
+        0.04,
+        -0.31,
+        0.2
+      ],
+      "rotation": [
+        -65,
+        0,
+        0
+      ],
+      "scale": [
+        0.16,
+        0.34,
+        0.18
+      ],
+      "shape": "round",
+      "color": [
+        0.36,
+        0.46,
+        0.53
+      ]
+    },
+    {
+      "name": "Glove",
+      "parent": "RightArm",
+      "position": [
+        0.04,
+        -0.38,
+        0.35
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.17,
+        0.18,
+        0.17
+      ],
+      "shape": "round",
+      "color": [
+        0.27,
+        0.12,
+        0.06
+      ]
+    },
+    {
+      "name": "Sword",
+      "parent": "RightArm",
+      "position": [
+        0.04,
+        -0.38,
+        0.43
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "shape": "",
+      "color": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "name": "Sword grip",
+      "parent": "Sword",
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.075,
+        0.075,
+        0.22
+      ],
+      "shape": "box",
+      "color": [
+        0.27,
+        0.12,
+        0.06
+      ]
+    },
+    {
+      "name": "Sword guard",
+      "parent": "Sword",
+      "position": [
+        0,
+        0,
+        0.14
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.32,
+        0.07,
+        0.07
+      ],
+      "shape": "box",
+      "color": [
+        0.65,
+        0.73,
+        0.76
+      ]
+    },
+    {
+      "name": "Sword blade",
+      "parent": "Sword",
+      "position": [
+        0,
+        0,
+        0.59
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.085,
+        0.045,
+        0.85
+      ],
+      "shape": "box",
+      "color": [
+        0.65,
+        0.73,
+        0.76
+      ]
+    },
+    {
+      "name": "Sword point",
+      "parent": "Sword",
+      "position": [
+        0,
+        0,
+        1.05
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        0.085,
+        0.045,
+        0.18
+      ],
+      "shape": "round",
+      "color": [
+        0.65,
+        0.73,
+        0.76
+      ]
+    }
+  ]
+}
