@@ -1,11 +1,13 @@
 using UnityEditor;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 namespace DonkeyForest.Editor
 {
     /// <summary>Import converted free models with their original animation clips.</summary>
     public sealed class EnemyModelImporter : AssetPostprocessor
     {
+        public override uint GetVersion()=>2;
         void OnPreprocessModel()
         {
             if(!assetPath.StartsWith("Assets/Resources/Enemies/"))return;
@@ -16,6 +18,35 @@ namespace DonkeyForest.Editor
             importer.animationCompression=ModelImporterAnimationCompression.KeyframeReduction;
             importer.materialImportMode=ModelImporterMaterialImportMode.ImportStandard;
             importer.materialSearch=ModelImporterMaterialSearch.RecursiveUp;
+        }
+        void OnPostprocessMaterial(Material material)
+        {
+            if(!assetPath.StartsWith("Assets/Resources/Enemies/"))return;
+            string kind=Path.GetFileNameWithoutExtension(assetPath);
+            if(kind=="Deer")
+            {
+                // This source stores its coat/eye colors on vertices, which Standard ignores.
+                const string shaderPath="Assets/Shaders/ModelVertexColors.shader";
+                context.DependsOnArtifact(shaderPath);
+                var shader=AssetDatabase.LoadAssetAtPath<Shader>(shaderPath);
+                if(!shader)throw new System.InvalidOperationException("Missing model vertex-color shader: "+shaderPath);
+                material.shader=shader;material.color=Color.white;
+            }
+            string texture=kind=="Bear"?"Bear_Tex_Bear.png":
+                kind=="Moose"&&!material.name.ToLowerInvariant().Contains("antler")?"Moose_Elk_BaseColor.png":
+                kind=="Zombie"?"Zombie_Zombie_Atlas.png":
+                kind=="Rider"?"Rider_sonic-robo-blast-2-v22-32x.png":null;
+            if(texture!=null)
+            {
+                string path="Assets/Resources/Enemies/"+kind+".fbm/"+texture;
+                context.DependsOnArtifact(path);
+                var diffuse=AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                if(!diffuse)throw new System.InvalidOperationException("Missing model color texture: "+path);
+                material.mainTexture=diffuse;material.color=Color.white;
+            }
+            if(material.HasProperty("_Metallic"))material.SetFloat("_Metallic",0);
+            if(material.HasProperty("_Glossiness"))material.SetFloat("_Glossiness",.1f);
+            material.enableInstancing=true;
         }
         void OnPreprocessAnimation()
         {

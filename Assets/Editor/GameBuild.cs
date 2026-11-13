@@ -56,7 +56,7 @@ namespace DonkeyForest.Editor
             var settings=new SerializedObject(assets[0]);
             var shaders=settings.FindProperty("m_AlwaysIncludedShaders");
             if(shaders==null)return;
-            foreach(string name in new[]{"Standard","Nature/Terrain/Standard","Hidden/TerrainEngine/Details/BillboardWavingDoublePass","UI/Default"})
+            foreach(string name in new[]{"Standard","Forest Rider/Model Vertex Colors","Nature/Terrain/Standard","Hidden/TerrainEngine/Details/BillboardWavingDoublePass","UI/Default"})
             {
                 var shader=Shader.Find(name);
                 if(!shader){Debug.LogWarning("Required runtime shader was not found: "+name);continue;}

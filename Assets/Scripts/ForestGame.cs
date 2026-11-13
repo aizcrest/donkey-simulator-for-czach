@@ -137,6 +137,7 @@ namespace DonkeyForest
             RenderSettings.ambientMode=UnityEngine.Rendering.AmbientMode.Flat;
             RenderSettings.fog=true;RenderSettings.fogMode=FogMode.ExponentialSquared;RenderSettings.fogDensity=.014f;
             var cameraObject = new GameObject("Follow Camera");view=cameraObject.AddComponent<Camera>();cameraObject.AddComponent<AudioListener>();view.farClipPlane=160;view.fieldOfView=58;
+            view.clearFlags=CameraClearFlags.SolidColor;
             StaticBatchingUtility.Combine(world.gameObject);
             Physics.SyncTransforms();
             UnityEngine.Random.InitState(Environment.TickCount);

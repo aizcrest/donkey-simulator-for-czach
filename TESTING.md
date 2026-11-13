@@ -27,6 +27,8 @@ Automated repository checks: `python3 Tools/check_project.py`. These validate re
 
 ## Free enemy models and gem/dragon progression
 
+- Run **Forest Rider → Validate model presentation (Play Mode)** at both Low and High quality. It loads all nine imported models at a translated/rotated origin, checks initial height and grounding, samples their clips for collapsed/buried geometry, and verifies color textures and the deer's vertex-color shader.
+- Confirm donkey, rider and sword are visible at the start and after riding/attacking. Check feet on flat ground and slopes. Watch for the rider/mount snapping to a different scale when animation starts. The follow camera should clear to the day/night fog color, with no default gray skybox band.
 - Let all FBX imports finish and enter Play Mode. Verify Bear, Deer, Moose, Wolf, Fox and Zombie render at sensible ground height, face their movement direction and have correct materials. Check movement/attack clips where available; Bear/Moose are static source meshes.
 - Open CAMP → ASSET CREDITS. Confirm creators, licenses and a link to individual model sources are visible.
 - Collect a gem, save, reload: it must stay collected and carried count must match. Deposit a partial set at the central altar, reload, verify altar slots and inventory. Find all ten; test repeated collection or repeated OFFER GEMS cannot duplicate progress.

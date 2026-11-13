@@ -1,5 +1,13 @@
 # Validation
 
+## Model presentation correction — 2026-11-13
+
+The user's first gameplay screenshot showed visible saddle/barding but no recognizable rider or donkey, pale wildlife and a gray horizon. Blender inspection confirmed the model geometry is present, the deer has vertex colors that Standard does not render, and the bear/moose/zombie/rider include separate color textures.
+
+Model placement now samples the starting animation and measures posed mesh geometry in local space, rather than using potentially stale/animation-expanded renderer bounds. Scale/ground offset are applied on an unanimated parent. The importer explicitly binds bundled color textures, uses a vertex-color shader for Deer and increments its version to trigger reimport. The camera explicitly clears to its fog-colored background.
+
+Repository checks and C# syntax parsing passed. Added **Forest Rider → Validate model presentation (Play Mode)** for actual imported geometry, clip bounds and materials. **Unity import, shader compilation, that validator, and the visual result have not been run in this workspace**; the original source FBX files are unchanged. The fixes do not replace the prototype forest props or UI with finished artwork.
+
 ## Terrain compilation correction — 2026-11-13
 
 The user's Unity compiler reported CS0117 for `DetailScatterMode.InstanceCount`. The documented Unity 6.4 member is [`DetailScatterMode.InstanceCountMode`](https://docs.unity3d.com/6000.4/Documentation/ScriptReference/DetailScatterMode.html). Corrected both the runtime terrain generator and the editor terrain validator. Checked all uses of this enum against the documented members; repository checks and C# syntax parsing passed. Full Unity compilation and Play Mode remain unverified here.
