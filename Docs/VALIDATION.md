@@ -1,5 +1,13 @@
 # Validation
 
+## Mounted renderer workaround and orbit camera — 2026-11-13
+
+The user's follow-up screenshot confirms that the previous sizing correction did **not** resolve the missing rider/donkey. The exact Unity-side cause remains unconfirmed. The reported duplicate AudioListener warning also indicates competing scene setup; startup now disables other display-zero scene cameras and active listeners while the game runs.
+
+The rider/donkey now use a player-only CPU pose-baking compatibility path with ordinary MeshRenderers, bypassing imported skinned-renderer culling. Legacy animations continue evaluating; mesh poses refresh at 15/24/30 Hz on Low/Balanced/High. Wildlife retains its existing renderer. This adds CPU work that must be profiled on target phones. **Forest Rider → Report mounted rendering (Play Mode)** reports actual mesh counts, bounds and camera-frustum checks if visibility remains wrong.
+
+Added mouse right-drag and empty-right-side touch orbit with bounded pitch, retained terrain/tree camera obstruction and boss distance. Gestures beginning over UI are excluded, and joystick/attack touches can run independently. Repository checks and C# syntax checks passed. **Unity rendering, camera gestures, listener behavior and device performance have not been tested here.**
+
 ## Model presentation correction — 2026-11-13
 
 The user's first gameplay screenshot showed visible saddle/barding but no recognizable rider or donkey, pale wildlife and a gray horizon. Blender inspection confirmed the model geometry is present, the deer has vertex colors that Standard does not render, and the bear/moose/zombie/rider include separate color textures.

@@ -13,6 +13,7 @@ For an existing checkout, close Unity, preserve any local edits, and run `git pu
 | Action | Mobile | Keyboard |
 | --- | --- | --- |
 | Ride | Left joystick | WASD / arrows |
+| Rotate camera | Drag an empty area on the right half | Hold right mouse button and drag |
 | Sword attack / three-hit combo | ATTACK | Space |
 | Dodge | DODGE | Shift |
 | Potion | HEAL | H |
@@ -69,7 +70,7 @@ Victory saves permanently and awards 500 coins, three potions and 250 XP, in add
 
 The donkey uses a free Quaternius rig with idle/walk/gallop/kick clips. The knight uses Dawid2K's free rig, adapted into a mounted bind pose with four original clips: mounted idle, riding, sword attack and guard. The rider follows the donkey's back bone and the sword follows its hand. Saddle/barding are lightweight original attachments.
 
-Enemy rigs retain their supplied animations where available; bear and moose remain static source meshes. FBX conversion scripts are in `Tools/`. Unity imports only the action clips used by the game, with keyframe reduction, and skips off-screen animation evaluation.
+Enemy rigs retain their supplied animations where available; bear and moose remain static source meshes. FBX conversion scripts are in `Tools/`. Unity imports only the action clips used by the game, with keyframe reduction. Wildlife skips off-screen animation evaluation. The rider/donkey use a compatibility path that draws CPU-baked poses with ordinary mesh renderers at 15/24/30 Hz on Low/Balanced/High; their bone animations keep running. This path still needs visibility and phone-performance verification in Unity.
 
 The project includes **19 original synthesized audio files**: day/night ambience, a quiet music loop, hooves, sword/combat/skill sounds, dragon attacks, gems, loot, healing and UI feedback. There are no third-party sample recordings. **CAMP → SETTINGS** has saved Master, Music and Effects sliders; camp pauses world audio while menu feedback remains audible.
 

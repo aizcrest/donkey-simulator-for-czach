@@ -36,6 +36,7 @@ namespace DonkeyForest
             game.Shape("Blade tip",PrimitiveType.Cube,blade,new Vector3(0,0,1.06f),new Vector3(.055f,.04f,.14f),steel).transform.localRotation=Quaternion.Euler(0,0,45);
             game.Shape("Crossguard",PrimitiveType.Cube,blade,new Vector3(0,0,.08f),new Vector3(.32f,.08f,.08f),steel);
             game.Shape("Grip",PrimitiveType.Cylinder,blade,new Vector3(0,0,-.04f),new Vector3(.075f,.12f,.075f),leather).transform.localRotation=Quaternion.Euler(90,0,0);
+            gameObject.AddComponent<MountedMeshPresentation>().Setup(game,mount,knight);
         }
         static Transform Find(Transform root,string bone)
         {

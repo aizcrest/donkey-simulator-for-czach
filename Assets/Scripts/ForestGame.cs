@@ -42,6 +42,9 @@ namespace DonkeyForest
         public Vector2 moveInput;
         CharacterController controller;
         Camera view;
+        OrbitCameraInput orbitCamera;
+        readonly List<Camera> previousCameras=new List<Camera>();
+        readonly List<AudioListener> previousListeners=new List<AudioListener>();
         Light sun;
         Text status, message, inventory, objective;
         GameObject menu, creditsPanel;
@@ -136,8 +139,15 @@ namespace DonkeyForest
             // Unity 6 no longer bakes an ambient probe automatically for a new scene.
             RenderSettings.ambientMode=UnityEngine.Rendering.AmbientMode.Flat;
             RenderSettings.fog=true;RenderSettings.fogMode=FogMode.ExponentialSquared;RenderSettings.fogDensity=.014f;
-            var cameraObject = new GameObject("Follow Camera");view=cameraObject.AddComponent<Camera>();cameraObject.AddComponent<AudioListener>();view.farClipPlane=160;view.fieldOfView=58;
+            // Play may start in a template scene with its own Main Camera and listener.
+            foreach(var existing in FindObjectsByType<Camera>(FindObjectsSortMode.None))
+                if(existing.enabled&&existing.targetTexture==null&&existing.targetDisplay==0)
+                {previousCameras.Add(existing);existing.enabled=false;}
+            foreach(var existing in FindObjectsByType<AudioListener>(FindObjectsSortMode.None))
+                if(existing.enabled){previousListeners.Add(existing);existing.enabled=false;}
+            var cameraObject = new GameObject("Follow Camera");cameraObject.tag="MainCamera";view=cameraObject.AddComponent<Camera>();cameraObject.AddComponent<AudioListener>();view.farClipPlane=160;view.fieldOfView=58;
             view.clearFlags=CameraClearFlags.SolidColor;
+            orbitCamera=gameObject.AddComponent<OrbitCameraInput>();orbitCamera.Setup(this);
             StaticBatchingUtility.Combine(world.gameObject);
             Physics.SyncTransforms();
             UnityEngine.Random.InitState(Environment.TickCount);
@@ -218,8 +228,9 @@ namespace DonkeyForest
         void LateUpdate()
         {
             if(!rider)return;
+            orbitCamera.ReadInput();
             Vector3 look = rider.position + Vector3.up * 1.6f;
-            Vector3 target = rider.position + (Encounter && Encounter.Active?new Vector3(0,12,-16):new Vector3(0,7,-9));
+            Vector3 target = look + orbitCamera.Offset(Encounter && Encounter.Active?19:10.5f);
             target.y = Mathf.Max(target.y, Ground(target).y + 2);
             var sight = target - look;
             int mask = (1 << ForestTerrain.GroundLayer) | (1 << ForestTerrain.SceneryLayer);
@@ -340,7 +351,14 @@ namespace DonkeyForest
         }
         void OnApplicationPause(bool pause){if(pause)Save(false);}
         void OnApplicationQuit(){Save(false);}
-        void OnDestroy(){propMeshes.Dispose();foreach(var m in mats)if(m)Destroy(m);if(Instance==this)Instance=null;}
+        void OnDestroy()
+        {
+            propMeshes.Dispose();foreach(var m in mats)if(m)Destroy(m);
+            if(view){view.enabled=false;var listener=view.GetComponent<AudioListener>();if(listener)listener.enabled=false;Destroy(view.gameObject);}
+            foreach(var previous in previousCameras)if(previous)previous.enabled=true;
+            foreach(var previous in previousListeners)if(previous)previous.enabled=true;
+            if(Instance==this)Instance=null;
+        }
         void ToggleMenu(){Paused=!Paused;menu.SetActive(Paused);if(creditsPanel)creditsPanel.SetActive(false);moveInput=Vector2.zero;if(Additions)Additions.Close();RefreshCamp();Audio.Play("ui");if(!Paused)Save(false);}
         void RefreshCamp(){inventory.text=$"CAMP & EQUIPMENT\nCoins: {data.coins}\nSword Lv.{data.sword}   Rider armor Lv.{data.armor}   Donkey armor Lv.{data.barding}\nUpgrades cost 40 × current level. Maximum level 10.\nLocal autosave every 30 seconds. One save per device.";}
         void Upgrade(int kind)
@@ -389,6 +407,7 @@ namespace DonkeyForest
             var knob=Panel("Thumb",joystick,new Vector2(.5f,.5f),Vector2.zero,new Vector2(65,65),new Color(.7f,.78f,.6f,.9f));
             var stick=joystick.gameObject.AddComponent<MobileStick>();stick.knob=knob;stick.game=this;
             Label(parent,"Drag to ride",Vector2.zero,new Vector2(135,30),new Vector2(230,30),19);
+            Label(parent,"Swipe empty right side to look • Mouse: hold right button",new Vector2(.5f,0),new Vector2(0,16),new Vector2(660,28),16);
             var panel=Panel("Camp",parent,new Vector2(.5f,.5f),Vector2.zero,new Vector2(880,530),new Color(.06f,.1f,.09f,.98f));menu=panel.gameObject;
             inventory=Label(panel,"",new Vector2(.5f,1),new Vector2(0,-132),new Vector2(840,145),22);
             Button(panel,"Sword",new Vector2(.5f,.5f),new Vector2(-270,0),new Vector2(240,65),()=>Upgrade(0));

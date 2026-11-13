@@ -24,3 +24,5 @@ Use 33.3ms/frame as Low's target budget. If it misses: inspect actual CPU/GPU ti
 The startup terrain is still generated synchronously, the world uses one native Terrain tile, and models use the built-in Standard shader. Those costs must be profiled before calling the game ready for very limited hardware. There is no automatic device benchmark, adaptive resolution or thermal scaling yet.
 
 Unity 6.4 migration: generated terrain/grass textures opt into mip limits and retain about 267 KiB of readable pixel/mip data so runtime quality changes can re-upload them. This small CPU allocation is intentional; imported model textures retain their normal importer settings. Re-profile the new editor/player version on target phones.
+
+Mounted rendering compatibility: only the rider and donkey use CPU-baked mesh poses (15/24/30 Hz across the presets) to bypass imported skinned-mesh culling. This adds CPU work and transient pose updates; profile it on budget hardware before making performance claims. Wildlife retains the original rendering path.

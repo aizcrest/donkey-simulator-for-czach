@@ -6,6 +6,15 @@ namespace DonkeyForest.Editor
 {
     public static class ModelValidation
     {
+        [MenuItem("Forest Rider/Report mounted rendering (Play Mode)")]
+        public static void ReportMounted()
+        {
+            var game=ForestGame.Instance;
+            Require(EditorApplication.isPlaying&&game,"Enter Play Mode before reporting mounted rendering.");
+            var presentation=game.rider.GetComponent<MountedMeshPresentation>();
+            Require(presentation,"Mounted mesh presentation component is missing.");
+            Debug.Log(presentation.Diagnostics(game.View));
+        }
         [MenuItem("Forest Rider/Validate model presentation (Play Mode)")]
         public static void Validate()
         {

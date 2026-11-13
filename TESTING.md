@@ -1,5 +1,8 @@
 # Unity and device acceptance checks
 
+- Camera: hold the right mouse button and drag, or swipe an empty area on the right half of a phone screen. Check a full yaw rotation, pitch limits, camera-relative movement, tree/hill obstruction, boss framing, camp pause and focus loss. A touch that begins on joystick/attack/skills must not rotate the view; a separate right-side touch should rotate while riding.
+- Mounted visibility: confirm actual donkey/rider bodies render during idle, walking, attacks and guard at all three quality levels. Use **Forest Rider → Report mounted rendering (Play Mode)** if either disappears. Profile the player-only CPU pose refresh on a low-end phone.
+- Start Play in both the generated Forest scene and a scene with a default Main Camera. Verify one active game camera/listener, no duplicate-listener warning after startup and working orbit controls.
 - Open with Unity 6000.4.11f1. Confirm no Console compilation errors, and generated Forest scene is enabled in **File → Build Profiles → Scene List**. Follow `Docs/UNITY6.md` when upgrading an existing checkout.
 - Confirm **Active Input Handling = Input Manager (Old)**. If the setup script changed it, save and restart the Editor once before testing. Verify WASD/arrows, mouse UI clicks and simultaneous joystick/button touches. The project has no Input System package dependency.
 - Confirm the Built-in Render Pipeline is active (no render pipeline asset assigned in Graphics or Quality settings). Check daylight/night ambient lighting and generated terrain without baking lighting.
