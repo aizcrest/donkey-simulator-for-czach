@@ -11,11 +11,11 @@ namespace DonkeyForest
         public Vector3 ChargeDirection { get; private set; }
         readonly HashSet<ForestEnemy> charged=new HashSet<ForestEnemy>();
         bool hitDragon;
-        LineRenderer guardRing;
+        SkillVisualEffects effects;
         public void Setup(ForestGame owner)
         {
             game=owner;Book=new SkillBook(game.data.skills);
-            guardRing=Ring("Iron Guard",game.rider,Vector3.up,1.25f,new Color(.2f,.6f,1));guardRing.gameObject.SetActive(false);
+            effects=gameObject.AddComponent<SkillVisualEffects>();effects.Setup(game);
         }
         public void Use(SkillId id)
         {
@@ -23,11 +23,12 @@ namespace DonkeyForest
             if(id==SkillId.Charge&&game.IsDodging){game.Show("Finish dodging before charging.");return;}
             if(!Book.TryUse(id,true))return;
             int level=Book.Level(id);
-            if(id==SkillId.Guard){guardRing.gameObject.SetActive(true);game.Audio.Play("guard");}
+            effects.Play(id,SkillRules.Duration(id,level),SkillRules.Radius(id,level));
+            if(id==SkillId.Guard){game.Audio.Play("guard");}
             else if(id==SkillId.Charge)
             {
                 ChargeDirection=game.rider.forward;charged.Clear();hitDragon=false;
-                Pulse(game.rider.position,1.6f,new Color(1,.7f,.2f));game.Audio.Play("charge");
+                game.Audio.Play("charge");
             }
             else
             {
@@ -40,18 +41,16 @@ namespace DonkeyForest
                     enemy.SkillHit(SkillRules.Damage(id,level,game.WeaponDamage),id==SkillId.Kick?1.5f+.25f*(level-1):.35f,id==SkillId.Kick?push.normalized*(2+.25f*(level-1)):Vector3.zero);
                 }
                 if(game.Encounter.Boss)game.Encounter.Boss.HitArea(SkillRules.Damage(id,level,game.WeaponDamage),game.rider.position,facing,radius,dot);
-                Pulse(game.rider.position+(id==SkillId.Kick?-game.rider.forward*1.5f:Vector3.zero),radius,id==SkillId.Kick?new Color(1,.7f,.2f):new Color(.3f,.9f,1));
                 game.Audio.Play(id==SkillId.Kick?"kick":"whirlwind");
             }
             game.Show(SkillRules.Name(id)+"!");game.Save(false);
         }
         public void Tick(float dt)
         {
-            if(game.Dead){Book.CancelEffects();guardRing.gameObject.SetActive(false);return;}
+            if(game.Dead){Book.CancelEffects();effects.Clear();return;}
             Book.Tick(dt,!game.Paused);
-            guardRing.gameObject.SetActive(Book.Active(SkillId.Guard)>0);
         }
-        public void CancelEffects(){Book.CancelEffects();guardRing.gameObject.SetActive(false);charged.Clear();}
+        public void CancelEffects(){Book.CancelEffects();effects.Clear();charged.Clear();}
         public void CheckCharge(Vector3 from,Vector3 to)
         {
             int level=Book.Level(SkillId.Charge);
@@ -79,29 +78,6 @@ namespace DonkeyForest
         {
             Vector3 delta=point-origin;if(Mathf.Abs(delta.y)>2.5f)return false;delta.y=0;
             return delta.sqrMagnitude<=radius*radius && (delta.sqrMagnitude<.01f||Vector3.Dot(facing,delta.normalized)>=minDot);
-        }
-        LineRenderer Ring(string label,Transform parent,Vector3 offset,float radius,Color color)
-        {
-            var obj=new GameObject(label);obj.transform.SetParent(parent,false);obj.transform.localPosition=offset;
-            var line=obj.AddComponent<LineRenderer>();line.useWorldSpace=false;line.loop=true;line.positionCount=48;
-            line.startWidth=line.endWidth=.09f;line.sharedMaterial=game.Glow(color);
-            for(int i=0;i<48;i++){float a=i*Mathf.PI*2/48;line.SetPosition(i,new Vector3(Mathf.Cos(a)*radius,0,Mathf.Sin(a)*radius));}
-            return line;
-        }
-        void Pulse(Vector3 center,float radius,Color color)
-        {
-            var line=Ring("Skill pulse",null,game.Ground(center,.18f),radius,color);
-            line.gameObject.AddComponent<SkillPulse>();
-        }
-    }
-    public sealed class SkillPulse:MonoBehaviour
-    {
-        float age;
-        void Update()
-        {
-            var game=ForestGame.Instance;if(!game||game.Dead){Destroy(gameObject);return;}if(game.Paused)return;
-            age+=Time.deltaTime;transform.localScale=Vector3.one*(.75f+age);
-            if(age>.45f)Destroy(gameObject);
         }
     }
 }

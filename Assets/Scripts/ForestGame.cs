@@ -32,6 +32,8 @@ namespace DonkeyForest
         public CampAdditions Additions { get; private set; }
         public PlayerMountVisual MountedModel { get; private set; }
         public Camera View=>view;
+        public TouchControlSkin Controls { get; private set; }
+        DayNightSky sky;
         public bool IsDodging=>dodgeTime>0;
         public float WeaponDamage=>(17+data.sword*8)*(1+(data.journey.level-1)*.01f);
         public Vector3 Ground(Vector3 position, float clearance = 0) => Landscape.Ground(position, clearance);
@@ -74,6 +76,7 @@ namespace DonkeyForest
             Audio=gameObject.AddComponent<GameAudio>();Audio.Setup(this);
             BuildWorld(); BuildRider();
             Skills=gameObject.AddComponent<MountedSkills>();Skills.Setup(this);
+            Controls=gameObject.AddComponent<TouchControlSkin>();
             BuildUI();
             MobilePerformance.Apply(this);
             Encounter=new GameObject("Gems and summoning altar").AddComponent<DragonEncounter>();
@@ -146,7 +149,7 @@ namespace DonkeyForest
             foreach(var existing in FindObjectsByType<AudioListener>(FindObjectsSortMode.None))
                 if(existing.enabled){previousListeners.Add(existing);existing.enabled=false;}
             var cameraObject = new GameObject("Follow Camera");cameraObject.tag="MainCamera";view=cameraObject.AddComponent<Camera>();cameraObject.AddComponent<AudioListener>();view.farClipPlane=160;view.fieldOfView=58;
-            view.clearFlags=CameraClearFlags.SolidColor;
+            sky=gameObject.AddComponent<DayNightSky>();sky.Setup(this,sun);
             orbitCamera=gameObject.AddComponent<OrbitCameraInput>();orbitCamera.Setup(this);
             StaticBatchingUtility.Combine(world.gameObject);
             Physics.SyncTransforms();
@@ -210,10 +213,7 @@ namespace DonkeyForest
                 autoSave+=dt;if(autoSave>30){autoSave=0;Save(false);}
                 attackCooldown-=dt;swing=Mathf.Max(0,swing-dt);
             }
-            float daylight=Night?.12f:Mathf.Clamp01(Mathf.Sin((data.time-.22f)/.54f*Mathf.PI));
-            sun.intensity=Mathf.Lerp(.12f,1.1f,daylight);sun.transform.rotation=Quaternion.Euler(data.time*360-90,35,0);
-            RenderSettings.ambientLight=Color.Lerp(new Color(.18f,.22f,.34f),new Color(.65f,.68f,.57f),daylight);
-            RenderSettings.fogColor=Color.Lerp(new Color(.055f,.075f,.13f),new Color(.48f,.59f,.5f),daylight);view.backgroundColor=RenderSettings.fogColor;
+            sky.Tick();
             frameTime=Mathf.Lerp(frameTime,Mathf.Max(.001f,Time.unscaledDeltaTime),.05f);
             hudClock-=Time.unscaledDeltaTime;
             if(hudClock<=0)
@@ -385,7 +385,7 @@ namespace DonkeyForest
         }
         public Button Button(Transform parent,string text,Vector2 anchor,Vector2 pos,Vector2 size,UnityEngine.Events.UnityAction click)
         {
-            var rect=Panel(text,parent,anchor,pos,size,new Color(.18f,.25f,.23f,.95f));var b=rect.gameObject.AddComponent<Button>();b.targetGraphic=rect.GetComponent<Image>();b.onClick.AddListener(click);Label(rect,text,new Vector2(.5f,.5f),Vector2.zero,size,22);return b;
+            var rect=Panel(text,parent,anchor,pos,size,new Color(.18f,.25f,.23f,.95f));var b=rect.gameObject.AddComponent<Button>();b.targetGraphic=rect.GetComponent<Image>();b.onClick.AddListener(click);Label(rect,text,new Vector2(.5f,.5f),Vector2.zero,size,22);Controls.Button(b);return b;
         }
         void BuildUI()
         {
@@ -400,12 +400,13 @@ namespace DonkeyForest
             objective=Label(parent,"",new Vector2(.5f,1),new Vector2(0,-150),new Vector2(1120,70),20);
             message=Label(parent,"",new Vector2(.5f,.5f),new Vector2(0,125),new Vector2(950,80),25);
             Button(parent,"CAMP",new Vector2(1,1),new Vector2(-85,-55),new Vector2(140,60),ToggleMenu);
-            Button(parent,"ATTACK",new Vector2(1,0),new Vector2(-110,115),new Vector2(180,110),Attack);
-            Button(parent,"DODGE",new Vector2(1,0),new Vector2(-300,180),new Vector2(150,70),Dodge);
+            Controls.Icon(Button(parent,"ATTACK",new Vector2(1,0),new Vector2(-110,115),new Vector2(180,110),Attack),"attack");
+            Controls.Icon(Button(parent,"DODGE",new Vector2(1,0),new Vector2(-300,180),new Vector2(150,70),Dodge),"dodge");
             Button(parent,"OFFER GEMS",new Vector2(0,1),new Vector2(120,-230),new Vector2(200,60),()=>Encounter.OfferGems());
-            Button(parent,"HEAL",new Vector2(1,0),new Vector2(-280,80),new Vector2(120,70),Heal);
+            Controls.Icon(Button(parent,"HEAL",new Vector2(1,0),new Vector2(-280,80),new Vector2(120,70),Heal),"heal");
             var joystick=Panel("Movement",parent,Vector2.zero,new Vector2(135,135),new Vector2(190,190),new Color(.12f,.18f,.16f,.7f));
             var knob=Panel("Thumb",joystick,new Vector2(.5f,.5f),Vector2.zero,new Vector2(65,65),new Color(.7f,.78f,.6f,.9f));
+            Controls.Stick(joystick.GetComponent<Image>(),false);Controls.Stick(knob.GetComponent<Image>(),true);
             var stick=joystick.gameObject.AddComponent<MobileStick>();stick.knob=knob;stick.game=this;
             Label(parent,"Drag to ride",Vector2.zero,new Vector2(135,30),new Vector2(230,30),19);
             Label(parent,"Swipe empty right side to look • Mouse: hold right button",new Vector2(.5f,0),new Vector2(0,16),new Vector2(660,28),16);

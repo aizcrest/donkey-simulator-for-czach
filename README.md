@@ -74,6 +74,14 @@ The earlier Quaternius donkey and Dawid2K knight FBXs remain as reference assets
 
 The project includes **19 original synthesized audio files**: day/night ambience, a quiet music loop, hooves, sword/combat/skill sounds, dragon attacks, gems, loot, healing and UI feedback. There are no third-party sample recordings. **CAMP → SETTINGS** has saved Master, Music and Effects sliders; camp pauses world audio while menu feedback remains audible.
 
+## Touch controls, sky and skill effects
+
+Touch buttons use original leather/brass textures, a round joystick, action icons, press feedback and skill cooldown wipes. Sprite backgrounds are nine-sliced; labels and hit areas retain their existing layout. Regenerate the artwork with `python3 Tools/generate_touch_art.py` (Pillow and NumPy).
+
+The saved six-minute day/night cycle now drives a skybox with blue daylight, warm dawn/dusk, a moving sun and moon, drifting clouds and stars. Ambient light, directional light and fog blend with the sky. Camp pauses the clock; loading restores the saved sky phase. The sky uses one small lookup texture and no realtime reflection updates.
+
+Whirlwind draws spinning sword arcs, Iron Guard forms rotating shield hoops, Charge leaves speed ribbons and Rear Kick sends expanding arcs behind the donkey. Renderers/materials are reused and effects pause in camp and clear on death/revival. Low uses two 16-segment ribbons per active skill; Balanced/High use three with 24/32 segments. The unlit effect shader works without HDR, bloom or added lights. Actual appearance and cost still need Unity/device verification.
+
 ## Graphics quality and mobile performance
 
 **CAMP → SETTINGS → Low / Balanced / High** changes quality immediately and saves it. **Low is the default**, including older saves without this setting. The HUD shows the selected preset and a smoothed FPS reading.

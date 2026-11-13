@@ -1,5 +1,11 @@
 # Validation
 
+## Touch artwork, sky and skill effects — 2026-11-13
+
+Added ten original UI textures plus a packed cloud/star lookup, runtime sprites and cooldown overlays, a saved-clock skybox and reused skill ribbons. Inspected the generated texture contact sheet. Repository/metadata checks and C# 9 syntax parsing passed (27 files, zero syntax errors). Image dimensions/alpha channels and deterministic texture regeneration were checked. Existing nine standalone gameplay-rule tests passed.
+
+The shaders are retained by the build setup and all effects scale with the existing quality setting. No Unity editor is installed here: shader/API compilation, Unity texture import, Play Mode appearance, touch interaction, Android builds and phone performance remain unverified. See the new acceptance steps in [TESTING.md](../TESTING.md).
+
 ## Animated enemy visibility correction — 2026-11-13
 
 The user confirmed that only Bear and Moose were visible, and the Dragon was invisible too. Those two visible models are static; all five remaining types used the imported skinning path. Replaced that runtime path with precomputed ordinary-mesh frames derived from the same licensed assets. Bear/Moose rendering and all combat rules remain unchanged.

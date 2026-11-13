@@ -7,6 +7,9 @@ namespace DonkeyForest
         ForestGame game;
         GameObject skills,journal,audioPanel;
         Text skillSummary,journalSummary;
+        readonly Image[] cooldowns=new Image[4];
+        readonly string[] icons={"whirlwind","guard","charge","kick"};
+        readonly string[] shortNames={"Whirlwind","Iron Guard","Charge","Rear Kick"};
         readonly Button[] hotbar=new Button[4],upgrades=new Button[4],contracts=new Button[4],qualityButtons=new Button[3];
         readonly Text[] skillDetails=new Text[4],questDetails=new Text[4];
         readonly string[] descriptions={"Rider • spin attack around you", "Rider • reduce damage for 4–5 seconds", "Donkey • rush, hit once per enemy and stun", "Donkey • kick behind you, knock back and stun"};
@@ -17,7 +20,7 @@ namespace DonkeyForest
             {
                 var id=(SkillId)i;
                 hotbar[i]=game.Button(hud,"",new Vector2(.5f,0),new Vector2(-220+i*140,62),new Vector2(130,80),()=>game.Skills.Use(id));
-                hotbar[i].GetComponentInChildren<Text>().fontSize=18;
+                cooldowns[i]=game.Controls.Icon(hotbar[i],icons[i],true);
             }
             game.Button(camp,"SKILLS",new Vector2(0,1),new Vector2(90,-30),new Vector2(150,42),()=>Open(skills));
             game.Button(camp,"JOURNAL",new Vector2(.5f,1),new Vector2(-130,-30),new Vector2(160,42),()=>Open(journal));
@@ -86,7 +89,8 @@ namespace DonkeyForest
             for(int i=0;i<4;i++)
             {
                 var id=(SkillId)i;int level=book.Level(id);float remaining=book.Remaining(id);bool active=book.Active(id)>0;
-                hotbar[i].GetComponentInChildren<Text>().text=$"{i+1}: {SkillRules.Name(id)}\nLv.{level} • {(active?"ACTIVE":remaining>0?remaining.ToString("0.0")+"s":"READY")}";
+                hotbar[i].GetComponentInChildren<Text>().text=$"{i+1}: {shortNames[i]}\nLv.{level} • {(active?"ACTIVE":remaining>0?remaining.ToString("0.0")+"s":"READY")}";
+                cooldowns[i].fillAmount=Mathf.Clamp01(remaining/SkillRules.Cooldown(id,level));
                 hotbar[i].interactable=!game.Paused&&!game.Dead&&remaining<=0 && !(id==SkillId.Charge&&game.IsDodging);
             }
             if(!game.Paused)return;
@@ -98,7 +102,7 @@ namespace DonkeyForest
                 qualityButtons[i].GetComponentInChildren<Text>().text=(i==0?"LOW • 30 FPS":i==1?"BALANCED • 30 FPS":"HIGH • 60 FPS")+(i==game.data.quality?" ✓":"");
                 bool selected=i==game.data.quality;
                 qualityButtons[i].interactable=!selected;
-                qualityButtons[i].GetComponent<Image>().color=selected?new Color(.25f,.5f,.32f):new Color(.18f,.25f,.23f);
+                qualityButtons[i].GetComponent<Image>().color=selected?new Color(.75f,1,.75f):Color.white;
                 var colors=qualityButtons[i].colors;colors.disabledColor=Color.white;qualityButtons[i].colors=colors;
             }
             for(int i=0;i<4;i++)

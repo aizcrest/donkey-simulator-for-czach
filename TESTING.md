@@ -31,7 +31,7 @@ Automated repository checks: `python3 Tools/check_project.py`. These validate re
 ## Free enemy models and gem/dragon progression
 
 - Run **Forest Rider → Validate model presentation (Play Mode)** at both Low and High quality. It loads all seven imported enemy models at a translated/rotated origin, checks initial height and grounding, samples their clips for collapsed/buried geometry, and verifies color textures and the deer's vertex-color shader.
-- Confirm donkey, rider and sword are visible at the start and after riding/attacking. Check feet on flat ground and slopes. Watch for the rider/mount snapping to a different scale when animation starts. The follow camera should clear to the day/night fog color, with no default gray skybox band.
+- Confirm donkey, rider and sword are visible at the start and after riding/attacking. Check feet on flat ground and slopes. Watch for the rider/mount snapping to a different scale when animation starts. The follow camera should show the new day/night sky with a matching fog horizon, with no default gray skybox band.
 - Let all FBX imports finish and enter Play Mode. Verify Bear, Deer, Moose, Wolf, Fox and Zombie render at sensible ground height, face their movement direction and have correct materials. Check movement/attack clips where available; Bear/Moose are static source meshes.
 - Open CAMP → ASSET CREDITS. Confirm creators, licenses and a link to individual model sources are visible.
 - Collect a gem, save, reload: it must stay collected and carried count must match. Deposit a partial set at the central altar, reload, verify altar slots and inventory. Find all ten; test repeated collection or repeated OFFER GEMS cannot duplicate progress.
@@ -69,3 +69,13 @@ Automated repository checks: `python3 Tools/check_project.py`. These validate re
 - Inspect Deer, Wolf, Fox and night Zombies up close, while moving/attacking/stunned, after leaving/re-entering view, and at all quality presets. Confirm their bodies and colors render with their health bars.
 - Summon the Dragon and inspect flight, attack/dive and stunned poses. Its existing 10-second aerial phase and 5-second vulnerability window must remain unchanged. Check pause, retreat, death and reload.
 - Run `python3 Tools/check_enemy_frames.py` to verify every exported pose, indices, normals and initial grounding. This does not replace Unity shader compilation or rendering tests.
+
+## Textured controls, day/night sky and animated skills
+
+- After import, check Console for shader/API errors, then test both Play Mode and an Android build. Confirm no pink/black sky or skill ribbons; the build setup retains both runtime shaders.
+- Check all action icons, round joystick/knob, textured menu buttons, pressed feedback and skill cooldown wipes at narrow/wide landscape sizes and on a device with a notch. Hold movement and use a skill with a second finger; confirm buttons do not rotate the camera.
+- Orbit upward to see the sky. In Play Mode, select the Forest Rider object and adjust Data → Time to 0, .22, .25, .49, .74 and .78 to inspect midnight, dawn, noon and dusk. Let the clock cross 1 to 0: clouds and lighting should wrap without a jump. These debug time edits affect the next save.
+- Wait for a normal cycle and check sun/moon movement, drifting clouds, night stars, matching fog and readable ground/enemies. Pause in CAMP and confirm the sky freezes; save/reload and confirm the phase returns.
+- Use all four skills: cyan spinning arcs, blue shield hoops, gold charge ribbons and orange rear kick arcs must be visible in day/night on Low/Balanced/High. Confirm kick effects face behind the donkey, cooldown wipes finish, and combat damage/timing are unchanged.
+- Pause/resume during Guard/Charge; die/revive during an active effect. Ensure no permanent or duplicate effects remain. Switch quality in camp during Guard and check the ribbon detail updates after resuming.
+- Profile repeated skill use on a low-end phone: renderer/material counts should remain stable. Check frame time, UI readability and transparent-effect overdraw; no device benchmarks have been performed in this workspace.
