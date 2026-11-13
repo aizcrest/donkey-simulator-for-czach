@@ -9,7 +9,10 @@ root=Path(__file__).resolve().parents[1]
 manifest=json.loads((root/'Packages/manifest.json').read_text())
 assert manifest['dependencies']['com.unity.ugui']=='2.0.0'
 assert manifest['dependencies']['com.unity.test-framework']=='1.6.0'
-assert manifest['dependencies']['com.unity.modules.inputlegacy']=='1.0.0'
+# Engine assembly names do not necessarily identify installable UPM packages.
+# These two entries caused a confirmed package-resolution failure in Unity 6.4.
+for unavailable in ('com.unity.modules.inputlegacy','com.unity.modules.textrendering'):
+    assert unavailable not in manifest['dependencies'], f'Not a supported UPM package: {unavailable}'
 version=(root/'ProjectSettings/ProjectVersion.txt').read_text()
 assert 'm_EditorVersion: 6000.4.11f1\n' in version
 assert 'm_EditorVersionWithRevision: 6000.4.11f1 (b0a1d6caadd2)' in version

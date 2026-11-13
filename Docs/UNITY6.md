@@ -15,7 +15,7 @@ The project now targets **6000.4.11f1**, revision **b0a1d6caadd2**, verified aga
 
 - Editor version and revision are pinned to 6000.4.11f1.
 - uGUI **2.0.0** and Test Framework **1.6.0** match the core packages documented for Unity 6.4. The editor supplies these core packages; Unity creates/updates its dependency lock file on first resolution.
-- The legacy input module is explicit in the manifest. `InputManager.asset` includes Horizontal, Vertical, Submit and Cancel bindings. The setup script selects **Input Manager (Old)** for keyboard, pointer and touch input. If it changes a previous configuration, save and restart the editor when its Console message says so. This avoids depending on a Unity 6 template's input default.
+- Legacy input and text rendering use engine-provided APIs. `com.unity.modules.inputlegacy` and `com.unity.modules.textrendering` are not supported UPM package IDs and must not be added to the manifest. `InputManager.asset` includes Horizontal, Vertical, Submit and Cancel bindings. The setup script selects **Input Manager (Old)** for keyboard, pointer and touch input. If it changes a previous configuration, save and restart the editor when its Console message says so. This avoids depending on a Unity 6 template's input default.
 - Runtime object searches use `FindAnyObjectByType`. Build settings use `NamedBuildTarget`. Audio preloading is configured through `AudioImporterSampleSettings`.
 - The Built-in renderer remains in use for Standard materials, native terrain and grass. Runtime day/night lighting explicitly uses flat ambient lighting, so it does not rely on automatic ambient-probe baking removed in Unity 6.
 - Generated surface/grass textures explicitly opt into mipmap limits and retain a small readable copy (about 267 KiB total including mips). Unity 6 needs that copy to upload the appropriate resolution when the player changes quality. Grass density explicitly uses instance counts.
@@ -25,6 +25,7 @@ The game keeps its company/product identifiers, mobile application IDs and JSON 
 
 ## Troubleshooting
 
+- **Package not found: `com.unity.modules.inputlegacy` or `com.unity.modules.textrendering`:** quit Unity, pull the latest `main`, and reopen the project. The manifest fix removes both unsupported package IDs. Unity will resolve dependencies again with the corrected manifest; reinstalling the editor is not necessary for this error.
 - **Input exception or unresponsive controls:** open **Edit → Project Settings → Player → Other Settings → Configuration → Active Input Handling**, select **Input Manager (Old)**, then restart the editor. Do not select the new Input System alone for this version of the game.
 - **Pink materials:** check **Project Settings → Graphics** and every relevant **Quality** level. Render Pipeline Asset should be **None**. Open the repository itself in Hub; do not copy it into a URP/HDRP template or run a render-pipeline conversion.
 - **Package/import cache errors after switching editors:** close Unity and rename the project's generated `Library` folder to `Library.backup` outside the repository, then reopen. Unity rebuilds the cache; keep `Assets`, `Packages` and `ProjectSettings`. If the error persists, record the first Console error.

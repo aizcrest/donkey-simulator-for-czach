@@ -1,12 +1,16 @@
 # Validation
 
+## Package-resolution correction — 2026-11-13
+
+The user's Unity Package Manager error confirmed that `com.unity.modules.inputlegacy` and `com.unity.modules.textrendering` cannot be resolved. These are engine assembly concepts, not supported UPM package IDs. Removed both from the manifest and corrected the repository check that previously required the invalid input entry. The remaining module IDs were checked against [Unity 6.4's built-in package list](https://docs.unity3d.com/6000.4/Documentation/Manual/pack-build.html). Repository/asset checks passed; a fresh Unity package-resolution/import run still needs to be performed locally. The earlier static checks did not detect this package-resolution problem.
+
 ## Unity 6000.4.11f1 migration — 2026-11-13
 
 - Confirmed the requested editor release and revision `b0a1d6caadd2` using Unity's release API; checked the Unity 6.4 core-package and migration documentation.
 - Updated repository/package/metadata and FBX/audio integrity checks: **passed**.
 - Re-ran C# 9 syntax parsing over all **20 C# files: zero syntax errors**. This does not compile against Unity APIs.
 - Recompiled and ran the engine-independent tests using NUnitLite 3.13.3 on .NET 8.0.15: **9 passed, 0 failed**. This is not a run of Unity's newly selected Test Framework 1.6.0.
-- Reviewed the input module/bindings, current build/audio APIs, explicit ambient lighting, and Unity 6 texture mipmap behavior. The Play Mode terrain validator now checks texture readability/mipmap opt-in, grass scatter mode and ambient mode as well as terrain data; it still needs to be run in Unity.
+- Reviewed the input bindings, current build/audio APIs, explicit ambient lighting, and Unity 6 texture mipmap behavior. The Play Mode terrain validator now checks texture readability/mipmap opt-in, grass scatter mode and ambient mode as well as terrain data; it still needs to be run in Unity. The original input package assumption was incorrect; see the correction above.
 
 **Not run:** Unity 6000.4.11f1 import/API compilation, package resolution, Editor Test Runner, Play Mode, Android/iOS builds or device profiling. No Unity editor is installed in this workspace. Use [UNITY6.md](UNITY6.md) and [TESTING.md](../TESTING.md) for those checks.
 
