@@ -57,7 +57,7 @@ namespace DonkeyForest
         string SavePath => Path.Combine(Application.persistentDataPath, "forest-rider.json");
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        static void Boot() { if (!FindObjectOfType<ForestGame>()) new GameObject("Forest Rider").AddComponent<ForestGame>(); }
+        static void Boot() { if (!FindAnyObjectByType<ForestGame>()) new GameObject("Forest Rider").AddComponent<ForestGame>(); }
         void Awake()
         {
             Instance = this;
@@ -133,6 +133,8 @@ namespace DonkeyForest
                 stone.transform.rotation = Quaternion.Euler(UnityEngine.Random.Range(-12,12),UnityEngine.Random.Range(0,360),UnityEngine.Random.Range(-12,12));
             }
             var lamp=new GameObject("Sun");sun=lamp.AddComponent<Light>();sun.type=LightType.Directional;sun.shadows=LightShadows.None;
+            // Unity 6 no longer bakes an ambient probe automatically for a new scene.
+            RenderSettings.ambientMode=UnityEngine.Rendering.AmbientMode.Flat;
             RenderSettings.fog=true;RenderSettings.fogMode=FogMode.ExponentialSquared;RenderSettings.fogDensity=.014f;
             var cameraObject = new GameObject("Follow Camera");view=cameraObject.AddComponent<Camera>();cameraObject.AddComponent<AudioListener>();view.farClipPlane=160;view.fieldOfView=58;
             StaticBatchingUtility.Combine(world.gameObject);
@@ -370,7 +372,7 @@ namespace DonkeyForest
             font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             var root=new GameObject("Mobile HUD",typeof(Canvas),typeof(CanvasScaler),typeof(GraphicRaycaster));root.GetComponent<Canvas>().renderMode=RenderMode.ScreenSpaceOverlay;
             var scaler=root.GetComponent<CanvasScaler>();scaler.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;scaler.referenceResolution=new Vector2(1280,720);scaler.matchWidthOrHeight=.5f;
-            if(!FindObjectOfType<EventSystem>())new GameObject("EventSystem",typeof(EventSystem),typeof(StandaloneInputModule));
+            if(!FindAnyObjectByType<EventSystem>())new GameObject("EventSystem",typeof(EventSystem),typeof(StandaloneInputModule));
             var safe=new GameObject("Safe Area",typeof(RectTransform),typeof(SafeArea));safe.transform.SetParent(root.transform,false);
             var sr=safe.GetComponent<RectTransform>();sr.offsetMin=sr.offsetMax=Vector2.zero;
             var parent=safe.transform;

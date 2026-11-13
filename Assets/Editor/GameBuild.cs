@@ -1,4 +1,5 @@
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 namespace DonkeyForest.Editor
@@ -8,21 +9,43 @@ namespace DonkeyForest.Editor
         const string Scene="Assets/Scenes/Forest.unity";
         static GameBuild(){EditorApplication.delayCall+=EnsureScene;}
         [MenuItem("Forest Rider/Create or open game scene")]
+        public static void OpenScene()
+        {
+            if(EditorApplication.isPlayingOrWillChangePlaymode)return;
+            EnsureScene();
+            if(EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                EditorSceneManager.OpenScene(Scene,OpenSceneMode.Single);
+        }
         public static void EnsureScene()
         {
+            if(EditorApplication.isPlayingOrWillChangePlaymode)return;
             PlayerSettings.companyName="Aizcrest";PlayerSettings.productName="Forest Rider";
             PlayerSettings.defaultInterfaceOrientation=UIOrientation.LandscapeLeft;
             PlayerSettings.allowedAutorotateToPortrait=false;PlayerSettings.allowedAutorotateToPortraitUpsideDown=false;
-            PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.Android,"com.aizcrest.forestrider");
-            PlayerSettings.SetApplicationIdentifier(BuildTargetGroup.iOS,"com.aizcrest.forestrider");
+            PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android,"com.aizcrest.forestrider");
+            PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.iOS,"com.aizcrest.forestrider");
+            EnsureLegacyInput();
             KeepRuntimeShaders();
             System.IO.Directory.CreateDirectory("Assets/Scenes");
             if(!System.IO.File.Exists(Scene))
             {
-                var scene=EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Single);
+                // Startup must not discard another open scene or the user's unsaved edits.
+                var scene=EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Additive);
                 EditorSceneManager.SaveScene(scene,Scene);
+                EditorSceneManager.CloseScene(scene,true);
             }
             EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(Scene,true)};
+        }
+        static void EnsureLegacyInput()
+        {
+            var assets=AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/ProjectSettings.asset");
+            if(assets.Length==0)return;
+            var settings=new SerializedObject(assets[0]);
+            var input=settings.FindProperty("activeInputHandler");
+            if(input==null || input.intValue==0)return;
+            // The game and StandaloneInputModule use the legacy input backend on all platforms.
+            input.intValue=0;settings.ApplyModifiedPropertiesWithoutUndo();
+            Debug.LogWarning("Forest Rider enabled Input Manager (Old). Save your work and restart the Editor before entering Play Mode.");
         }
         // Runtime-created terrain has no renderer in the saved scene for the build scanner.
         // Retain the terrain and grass shaders explicitly so player builds render them too.
@@ -50,7 +73,7 @@ namespace DonkeyForest.Editor
         {
             EnsureScene();System.IO.Directory.CreateDirectory("Builds");
             PlayerSettings.Android.minSdkVersion=AndroidSdkVersions.AndroidApiLevel26;
-            PlayerSettings.SetScriptingBackend(BuildTargetGroup.Android,ScriptingImplementation.IL2CPP);
+            PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android,ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures=AndroidArchitecture.ARMv7|AndroidArchitecture.ARM64;
             PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android,false);
             PlayerSettings.SetGraphicsAPIs(BuildTarget.Android,new[]{UnityEngine.Rendering.GraphicsDeviceType.OpenGLES3});

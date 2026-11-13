@@ -22,3 +22,5 @@ Test a representative 2GB/3GB RAM budget phone, a mid-range phone and a recent p
 Use 33.3ms/frame as Low's target budget. If it misses: inspect actual CPU/GPU timing first, then reduce grass/draw distance or render scale. If startup is the issue, bake/generate terrain ahead of time or distribute generation over loading frames. If skinning/memory dominates, reduce visible rigs/clip keys before adding more visual effects.
 
 The startup terrain is still generated synchronously, the world uses one native Terrain tile, and models use the built-in Standard shader. Those costs must be profiled before calling the game ready for very limited hardware. There is no automatic device benchmark, adaptive resolution or thermal scaling yet.
+
+Unity 6.4 migration: generated terrain/grass textures opt into mip limits and retain about 267 KiB of readable pixel/mip data so runtime quality changes can re-upload them. This small CPU allocation is intentional; imported model textures retain their normal importer settings. Re-profile the new editor/player version on target phones.

@@ -1,12 +1,14 @@
 # Forest Rider
 
-Unity **2022.3.62f1** C# mobile PvE game: ride an armored donkey through a hilly forest, fight wildlife and nighttime zombies, train rider/mount skills, and gather ten gems to summon a dragon. Free-use knight, donkey and enemy models are included; [THIRD_PARTY.md](THIRD_PARTY.md) records licenses and adaptations. No paid asset packages are needed.
+Unity **6000.4.11f1 (Unity 6.4)** C# mobile PvE game: ride an armored donkey through a hilly forest, fight wildlife and nighttime zombies, train rider/mount skills, and gather ten gems to summon a dragon. Free-use knight, donkey and enemy models are included; [THIRD_PARTY.md](THIRD_PARTY.md) records licenses and adaptations. No paid asset packages are needed. Unity Personal is sufficient.
 
 ## Open and play
 
-1. Install Unity 2022.3.62f1 through Unity Hub, with Android Build Support (SDK, NDK, OpenJDK) and/or iOS Build Support.
-2. Add this folder as a project. Let package, FBX, animation and audio imports finish.
+1. Install [Unity 6000.4.11f1](https://unity.com/releases/editor/whats-new/6000.4.11f1) through Unity Hub. Add Android Build Support (SDK, NDK, OpenJDK) and/or iOS Build Support if building for a phone.
+2. Add this repository folder as a project and select **6000.4.11f1** in Hub. Let package, FBX, animation and audio imports finish.
 3. Open **Forest Rider → Create or open game scene**, then press Play. The world is generated at runtime.
+
+For an existing checkout, close Unity, preserve any local edits, and run `git pull --ff-only origin main` before opening it in the new editor. The first Unity 6 import can take longer. See [Docs/UNITY6.md](Docs/UNITY6.md) for migration details and troubleshooting. The project uses the **Built-in Render Pipeline** and **Input Manager (Old)**; the setup script selects the input backend and logs a restart message only if it had to change it.
 
 | Action | Mobile | Keyboard |
 | --- | --- | --- |

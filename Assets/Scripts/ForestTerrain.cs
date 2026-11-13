@@ -116,7 +116,8 @@ namespace DonkeyForest
         TerrainLayer Layer(string label, Color low, Color high, int style, float tile)
         {
             const int resolution = 128;
-            var texture = new Texture2D(resolution, resolution, TextureFormat.RGBA32, true)
+            var texture = new Texture2D(resolution, resolution, TextureFormat.RGBA32, -1, false, false,
+                new MipmapLimitDescriptor(true, null))
             {
                 name = label, wrapMode = TextureWrapMode.Repeat,
                 filterMode = FilterMode.Trilinear, anisoLevel = 2
@@ -135,7 +136,9 @@ namespace DonkeyForest
                     if (style == 2 && grain < .25f) c *= .73f;
                     pixels[y * resolution + x] = c;
                 }
-            texture.SetPixels(pixels);texture.Apply(true, true);generated.Add(texture);
+            // Unity 6 needs explicit opt-in and a CPU copy to re-upload on quality changes.
+            // Three 128px maps plus the grass tuft use about 267 KiB of readable RGBA mips.
+            texture.SetPixels(pixels);texture.Apply(true, false);generated.Add(texture);
             var layer = new TerrainLayer
             {
                 name = label, diffuseTexture = texture,
@@ -164,7 +167,8 @@ namespace DonkeyForest
         }
         void AddGrass(TerrainData data)
         {
-            var texture = new Texture2D(32, 64, TextureFormat.RGBA32, true)
+            var texture = new Texture2D(32, 64, TextureFormat.RGBA32, -1, false, false,
+                new MipmapLimitDescriptor(true, null))
             {
                 name = "Original grass tuft", wrapMode = TextureWrapMode.Clamp,
                 filterMode = FilterMode.Bilinear
@@ -185,7 +189,8 @@ namespace DonkeyForest
                     var color = Color.Lerp(new Color(.21f,.29f,.08f),new Color(.65f,.72f,.31f),v);
                     color.a = alpha;pixels[y * 32 + x] = color;
                 }
-            texture.SetPixels(pixels);texture.Apply(true, true);generated.Add(texture);
+            texture.SetPixels(pixels);texture.Apply(true, false);generated.Add(texture);
+            data.SetDetailScatterMode(DetailScatterMode.InstanceCount);
             data.SetDetailResolution(128,16);
             data.detailPrototypes = new[]
             {

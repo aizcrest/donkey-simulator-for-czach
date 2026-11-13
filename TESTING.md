@@ -1,6 +1,8 @@
 # Unity and device acceptance checks
 
-- Open with Unity 2022.3.62f1. Confirm no Console compilation errors, and generated Forest scene is enabled in Build Settings.
+- Open with Unity 6000.4.11f1. Confirm no Console compilation errors, and generated Forest scene is enabled in **File → Build Profiles → Scene List**. Follow `Docs/UNITY6.md` when upgrading an existing checkout.
+- Confirm **Active Input Handling = Input Manager (Old)**. If the setup script changed it, save and restart the Editor once before testing. Verify WASD/arrows, mouse UI clicks and simultaneous joystick/button touches. The project has no Input System package dependency.
+- Confirm the Built-in Render Pipeline is active (no render pipeline asset assigned in Graphics or Quality settings). Check daylight/night ambient lighting and generated terrain without baking lighting.
 - Play: confirm a rider on a donkey, trees, animals and HUD appear. Ride using WASD, then the touch stick on a landscape device. Check collision with tree trunks and world boundaries.
 - Fight a bear with Space/ATTACK. Check attack direction, cooldown, damage, death reward, and golden loot collection. Fight deer; verify they flee before being hit and retaliate afterward.
 - Collect gear and potions; confirm stats change, health cannot exceed maximum and potions cannot be used after death.
@@ -52,6 +54,6 @@ Automated repository checks: `python3 Tools/check_project.py`. These validate re
 ## Graphics selection and low-end acceptance
 
 - CAMP → SETTINGS must expose **Low / Balanced / High** with the active selection marked. Low is the first-run and old-save default.
-- Select every preset and verify the HUD's quality/FPS label, saved selection, frame-rate target, grass range/density, camera distance, texture mip limit and enemy cap. Mobile resolution should scale from the original render dimensions, not shrink again on repeated clicks.
+- Select every preset and verify the HUD's quality/FPS label, saved selection, frame-rate target, grass range/density, camera distance, texture mip limit and enemy cap. Mobile resolution should scale from the original render dimensions, not shrink again on repeated clicks. Run terrain validation at Low and High: generated textures must be readable and opt into mip limits so Unity 6 can re-upload them on a quality change.
 - Lower High → Low with more than 12 wildlife alive: surplus enemies are removed without kills/XP/loot. The dragon encounter should still have ordinary wildlife suspended.
 - Test on both a 32-bit Android installation and ARM64 hardware if available. Measure sustained FPS/memory/heat on a budget phone for at least 10 minutes; a 30 FPS setting alone is not evidence of actual performance. Follow `Docs/PERFORMANCE.md`.

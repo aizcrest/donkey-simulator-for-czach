@@ -7,8 +7,14 @@ import array
 from pathlib import Path
 root=Path(__file__).resolve().parents[1]
 manifest=json.loads((root/'Packages/manifest.json').read_text())
-assert 'com.unity.ugui' in manifest['dependencies']
-assert '2022.3.62f1' in (root/'ProjectSettings/ProjectVersion.txt').read_text()
+assert manifest['dependencies']['com.unity.ugui']=='2.0.0'
+assert manifest['dependencies']['com.unity.test-framework']=='1.6.0'
+assert manifest['dependencies']['com.unity.modules.inputlegacy']=='1.0.0'
+version=(root/'ProjectSettings/ProjectVersion.txt').read_text()
+assert 'm_EditorVersion: 6000.4.11f1\n' in version
+assert 'm_EditorVersionWithRevision: 6000.4.11f1 (b0a1d6caadd2)' in version
+input_settings=(root/'ProjectSettings/InputManager.asset').read_text()
+assert set(re.findall(r'^    m_Name: (.+)$', input_settings, re.M))=={'Horizontal','Vertical','Submit','Cancel'}
 for path in (root/'Assets').rglob('*.cs'):
     source=path.read_text()
     # Strip comments and string literals before checking delimiter balance.

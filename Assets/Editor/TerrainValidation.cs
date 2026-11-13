@@ -18,6 +18,11 @@ namespace DonkeyForest.Editor
             Require(data.heightmapResolution == 257 && data.size == new Vector3(180,24,180), "Unexpected terrain dimensions.");
             Require(data.terrainLayers.Length == 3, "Expected moss, earth and stone terrain layers.");
             Require(data.detailPrototypes.Length > 0, "Missing grass prototype.");
+            Require(data.detailScatterMode == DetailScatterMode.InstanceCount, "Grass map must use instance counts.");
+            foreach(var layer in data.terrainLayers) ValidateTexture(layer.diffuseTexture);
+            ValidateTexture(data.detailPrototypes[0].prototypeTexture);
+            Require(RenderSettings.ambientMode == UnityEngine.Rendering.AmbientMode.Flat,
+                "Runtime day/night lighting needs flat ambient lighting.");
             float min = float.MaxValue, max = float.MinValue;
             foreach (float value in data.GetHeights(0,0,257,257))
             {
@@ -56,6 +61,11 @@ namespace DonkeyForest.Editor
         static void Require(bool condition,string message)
         {
             if(!condition) throw new InvalidOperationException(message);
+        }
+        static void ValidateTexture(Texture2D texture)
+        {
+            Require(texture && texture.isReadable && !texture.ignoreMipmapLimit,
+                "Generated textures must opt into mip limits and remain readable for quality switching in Unity 6.");
         }
     }
 }

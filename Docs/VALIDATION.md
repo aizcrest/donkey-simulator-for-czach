@@ -1,4 +1,16 @@
-# Validation — 2026-11-12
+# Validation
+
+## Unity 6000.4.11f1 migration — 2026-11-13
+
+- Confirmed the requested editor release and revision `b0a1d6caadd2` using Unity's release API; checked the Unity 6.4 core-package and migration documentation.
+- Updated repository/package/metadata and FBX/audio integrity checks: **passed**.
+- Re-ran C# 9 syntax parsing over all **20 C# files: zero syntax errors**. This does not compile against Unity APIs.
+- Recompiled and ran the engine-independent tests using NUnitLite 3.13.3 on .NET 8.0.15: **9 passed, 0 failed**. This is not a run of Unity's newly selected Test Framework 1.6.0.
+- Reviewed the input module/bindings, current build/audio APIs, explicit ambient lighting, and Unity 6 texture mipmap behavior. The Play Mode terrain validator now checks texture readability/mipmap opt-in, grass scatter mode and ambient mode as well as terrain data; it still needs to be run in Unity.
+
+**Not run:** Unity 6000.4.11f1 import/API compilation, package resolution, Editor Test Runner, Play Mode, Android/iOS builds or device profiling. No Unity editor is installed in this workspace. Use [UNITY6.md](UNITY6.md) and [TESTING.md](../TESTING.md) for those checks.
+
+## Previous asset and gameplay-rule validation — 2026-11-12
 
 Passed checks:
 
@@ -10,4 +22,4 @@ Passed checks:
 
 Performance measures are implemented (default Low/30 FPS target, native quality selection, shared low-poly props/static batching, fewer wildlife/grass, reduced rendering/texture/skinning costs, cached/cullable animation, streamed/compressed audio, throttled HUD). **No phone FPS, memory, heat, load-time or battery benchmark has been performed.** The settings are not a device-performance guarantee.
 
-Still unverified: full Unity API compilation; Unity asset/audio import and visual appearance; Unity Test Runner execution; actual combat/skills/dragon playthrough; mobile UI/safe areas; graphics switching and save migration on device; ARMv7/ARM64/iOS builds and hardware behavior. Follow `TESTING.md` and `Docs/PERFORMANCE.md` in Unity 2022.3.62f1 before release.
+Still unverified: full Unity API compilation; Unity asset/audio import and visual appearance; Unity Test Runner execution; actual combat/skills/dragon playthrough; mobile UI/safe areas; graphics switching and save migration on device; ARMv7/ARM64/iOS builds and hardware behavior. Follow `TESTING.md` and `Docs/PERFORMANCE.md` in Unity 6000.4.11f1 before release.
