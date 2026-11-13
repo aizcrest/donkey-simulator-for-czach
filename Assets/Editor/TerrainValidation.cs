@@ -18,7 +18,7 @@ namespace DonkeyForest.Editor
             Require(data.heightmapResolution == 257 && data.size == new Vector3(180,24,180), "Unexpected terrain dimensions.");
             Require(data.terrainLayers.Length == 3, "Expected moss, earth and stone terrain layers.");
             Require(data.detailPrototypes.Length > 0, "Missing grass prototype.");
-            Require(data.detailScatterMode == DetailScatterMode.InstanceCount, "Grass map must use instance counts.");
+            Require(data.detailScatterMode == DetailScatterMode.InstanceCountMode, "Grass map must use instance counts.");
             foreach(var layer in data.terrainLayers) ValidateTexture(layer.diffuseTexture);
             ValidateTexture(data.detailPrototypes[0].prototypeTexture);
             Require(RenderSettings.ambientMode == UnityEngine.Rendering.AmbientMode.Flat,

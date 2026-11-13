@@ -1,5 +1,9 @@
 # Validation
 
+## Terrain compilation correction — 2026-11-13
+
+The user's Unity compiler reported CS0117 for `DetailScatterMode.InstanceCount`. The documented Unity 6.4 member is [`DetailScatterMode.InstanceCountMode`](https://docs.unity3d.com/6000.4/Documentation/ScriptReference/DetailScatterMode.html). Corrected both the runtime terrain generator and the editor terrain validator. Checked all uses of this enum against the documented members; repository checks and C# syntax parsing passed. Full Unity compilation and Play Mode remain unverified here.
+
 ## Package-resolution correction — 2026-11-13
 
 The user's Unity Package Manager error confirmed that `com.unity.modules.inputlegacy` and `com.unity.modules.textrendering` cannot be resolved. These are engine assembly concepts, not supported UPM package IDs. Removed both from the manifest and corrected the repository check that previously required the invalid input entry. The remaining module IDs were checked against [Unity 6.4's built-in package list](https://docs.unity3d.com/6000.4/Documentation/Manual/pack-build.html). Repository/asset checks passed; a fresh Unity package-resolution/import run still needs to be performed locally. The earlier static checks did not detect this package-resolution problem.

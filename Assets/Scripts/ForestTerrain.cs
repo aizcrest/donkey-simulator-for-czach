@@ -190,7 +190,7 @@ namespace DonkeyForest
                     color.a = alpha;pixels[y * 32 + x] = color;
                 }
             texture.SetPixels(pixels);texture.Apply(true, false);generated.Add(texture);
-            data.SetDetailScatterMode(DetailScatterMode.InstanceCount);
+            data.SetDetailScatterMode(DetailScatterMode.InstanceCountMode);
             data.SetDetailResolution(128,16);
             data.detailPrototypes = new[]
             {
