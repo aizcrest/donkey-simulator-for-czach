@@ -52,7 +52,7 @@ namespace DonkeyForest
         string SavePath => Path.Combine(Application.persistentDataPath, "forest-rider.json");
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        static void Boot() { if (!FindAnyObjectByType<ForestGame>()) new GameObject("Czach’s Donkey Journey").AddComponent<ForestGame>(); }
+        static void Boot() { if (!FindAnyObjectByType<ForestGame>()) new GameObject("Czach’s Donkey Journey launch").AddComponent<LaunchSplash>(); }
         void Awake()
         {
             Instance=this;Paused=true;

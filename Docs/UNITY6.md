@@ -9,7 +9,7 @@ The project now targets **6000.4.11f1**, revision **b0a1d6caadd2**, verified aga
 3. In Unity Hub, choose **6000.4.11f1** for this project. Install it from the [official release page](https://unity.com/releases/editor/whats-new/6000.4.11f1) if it is missing. Use this version's mobile build modules rather than the old editor's SDK/NDK/JDK.
 4. Let Unity finish upgrading/importing assets and resolving packages. If Unity offers its API updater, allow it to finish, then review any changed files.
 5. Select **Forest Rider → Create or open game scene** and press Play. The scene is created on first import; the forest, actors and HUD are generated in Play Mode. Runtime terrain edits still do not persist to Edit Mode.
-6. Run **Window → General → Test Runner → EditMode → Run All**, then follow [TESTING.md](../TESTING.md). In Play Mode, run **Forest Rider → Validate terrain (Play Mode)** at Low and High graphics quality.
+6. Run **Window → General → Test Runner → EditMode → Run All**, then follow [TESTING.md](../TESTING.md). In Play Mode, run **Forest Rider → Validate terrain (Play Mode)** at Low and High graphics quality. Before building, verify both `Forest` and `TerrainBuildSupport` are enabled in the Build Profile scene list; the latter preserves native terrain resources for the runtime-generated map.
 
 ## Compatibility changes
 

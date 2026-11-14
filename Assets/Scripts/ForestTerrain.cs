@@ -62,7 +62,9 @@ namespace DonkeyForest
             Surface.basemapDistance = 65;
             Surface.detailObjectDistance = 38;
             Surface.detailObjectDensity = .65f;
-            Surface.drawInstanced = true;
+            // A runtime-only terrain may have no retained instancing variant in a
+            // mobile player. Use the standard heightmap path consistently on phones.
+            Surface.drawInstanced = !Application.isMobilePlatform&&SystemInfo.supportsInstancing;
             Surface.Flush();
             Physics.SyncTransforms();
         }

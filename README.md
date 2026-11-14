@@ -1,8 +1,10 @@
 # Czach’s Donkey Journey
 
-![Launch artwork](Assets/Art/Splash/CzachsDonkeyJourney.png)
+![Launch artwork](Assets/Resources/Branding/CzachsDonkeyJourney.png)
 
-Generated splash artwork is configured as the native player launch background (two seconds). Preview it in **Project Settings → Player → Splash Image**; Unity Play Mode does not show the native splash. The existing **Forest Rider** editor tools menu and Android package ID remain stable.
+Generated splash artwork appears for two seconds before gameplay, fitted without cropping or stretching. Wide phones and tablets show dark margins around the complete image. It also appears in Play Mode. The donkey-and-knight launcher icon is in `Assets/Art/AppIcon`. The existing **Forest Rider** editor tools menu and Android package ID remain stable.
+
+Keep **both** `Forest` (first) and `TerrainBuildSupport` enabled in your Build Profile scene list. The second scene contains an inactive Terrain placeholder required by Unity to include its native terrain resources for a runtime-generated map; the game never loads that scene. Setup adds it to global and existing custom profile scene lists automatically.
 
 Unity **6000.4.11f1 (Unity 6.4)** C# mobile PvE game: ride an armored donkey through a hilly forest, fight wildlife and nighttime zombies, train rider/mount skills, and gather ten gems to summon a dragon. Free-use knight, donkey and enemy models are included; [THIRD_PARTY.md](THIRD_PARTY.md) records licenses and adaptations. No paid asset packages are needed. Unity Personal is sufficient.
 

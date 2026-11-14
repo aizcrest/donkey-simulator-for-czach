@@ -8,6 +8,8 @@ namespace DonkeyForest.Editor
     [InitializeOnLoad] public static class GameBuild
     {
         const string Scene="Assets/Scenes/Forest.unity";
+        public const string TerrainSupportScene="Assets/Scenes/TerrainBuildSupport.unity";
+        static readonly string[] BuildScenes={Scene,TerrainSupportScene};
         static GameBuild(){EditorApplication.delayCall+=EnsureScene;}
         [MenuItem("Forest Rider/Create or open game scene")]
         public static void OpenScene()
@@ -45,8 +47,7 @@ namespace DonkeyForest.Editor
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android,"com.aizcrest.forestrider");
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.iOS,"com.aizcrest.forestrider");
             EnsureLegacyInput();
-            KeepRuntimeShaders();
-            ConfigureSplash();
+            ConfigurePlayerAssets();
             // Delay-call startup is noninteractive and must preserve Untitled scenes,
             // including a fresh template scene whose isDirty flag may still be false.
             if(!System.IO.File.Exists(Scene)&&HasUntitledScene())return false;
@@ -66,20 +67,33 @@ namespace DonkeyForest.Editor
                     if(previous.IsValid()&&previous.isLoaded)SceneManager.SetActiveScene(previous);
                 }
             }
-            EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(Scene,true)};
+            EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(Scene,true),new EditorBuildSettingsScene(TerrainSupportScene,true)};
+            TerrainBuildSupport.UpdateProfiles();
             return true;
         }
-        static void ConfigureSplash()
+        public static void ConfigurePlayerAssets()
         {
-            var artwork=AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Splash/CzachsDonkeyJourney.png");
-            if(!artwork)return;
-            PlayerSettings.SplashScreen.show=true;
+            KeepRuntimeShaders();
+            // Unity's native background fills/crops the display. LaunchSplash fits the
+            // complete illustration instead, including on 20:9 phones and tablets.
+            PlayerSettings.SplashScreen.show=false;
             PlayerSettings.SplashScreen.showUnityLogo=false;
-            PlayerSettings.SplashScreen.background=artwork;
-            PlayerSettings.SplashScreen.blurBackgroundImage=false;
-            PlayerSettings.SplashScreen.overlayOpacity=0;
-            // A blank logo reserves display time for the full background artwork.
-            PlayerSettings.SplashScreen.logos=new[]{PlayerSettings.SplashScreenLogo.Create(2f)};
+            PlayerSettings.SplashScreen.background=null;
+            PlayerSettings.SplashScreen.logos=new PlayerSettings.SplashScreenLogo[0];
+            var icon=AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Art/AppIcon/DonkeyKnight.png");
+            if(!icon)return;
+            PlayerSettings.SetIcons(NamedBuildTarget.Unknown,new[]{icon},IconKind.Any);
+            foreach(var kind in PlayerSettings.GetSupportedIconKinds(NamedBuildTarget.Android))
+            {
+                var slots=PlayerSettings.GetPlatformIcons(NamedBuildTarget.Android,kind);
+                foreach(var slot in slots)
+                {
+                    var layers=new Texture2D[slot.minLayerCount];
+                    for(int i=0;i<layers.Length;i++)layers[i]=icon;
+                    slot.SetTextures(layers);
+                }
+                PlayerSettings.SetPlatformIcons(NamedBuildTarget.Android,kind,slots);
+            }
         }
         static void EnsureLegacyInput()
         {
@@ -123,14 +137,14 @@ namespace DonkeyForest.Editor
             PlayerSettings.Android.targetArchitectures=AndroidArchitecture.ARMv7|AndroidArchitecture.ARM64;
             PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android,false);
             PlayerSettings.SetGraphicsAPIs(BuildTarget.Android,new[]{UnityEngine.Rendering.GraphicsDeviceType.OpenGLES3});
-            var report=BuildPipeline.BuildPlayer(new[]{Scene},"Builds/CzachsDonkeyJourney.apk",BuildTarget.Android,BuildOptions.None);
+            var report=BuildPipeline.BuildPlayer(BuildScenes,"Builds/CzachsDonkeyJourney.apk",BuildTarget.Android,BuildOptions.None);
             if(report.summary.result!=UnityEditor.Build.Reporting.BuildResult.Succeeded)throw new System.Exception("Android build failed: "+report.summary.result);
         }
         [MenuItem("Forest Rider/Build iOS Xcode project")]
         public static void IOS()
         {
             if(!PrepareSceneForCommand())return;
-            var report=BuildPipeline.BuildPlayer(new[]{Scene},"Builds/iOS",BuildTarget.iOS,BuildOptions.None);
+            var report=BuildPipeline.BuildPlayer(BuildScenes,"Builds/iOS",BuildTarget.iOS,BuildOptions.None);
             if(report.summary.result!=UnityEditor.Build.Reporting.BuildResult.Succeeded)throw new System.Exception("iOS export failed: "+report.summary.result);
         }
     }

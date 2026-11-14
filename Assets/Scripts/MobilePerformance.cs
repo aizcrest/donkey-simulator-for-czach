@@ -18,7 +18,8 @@ namespace DonkeyForest
             RenderSettings.fogDensity=quality==0?.022f:quality==1?.017f:.014f;
             game.View.allowHDR=quality==2;game.View.allowMSAA=quality>0;
             game.View.farClipPlane=quality==0?85:quality==1?120:160;
-            var terrain=game.Landscape.Surface;terrain.drawInstanced=SystemInfo.supportsInstancing;
+            var terrain=game.Landscape.Surface;
+            terrain.drawInstanced=!Application.isMobilePlatform&&SystemInfo.supportsInstancing;
             terrain.heightmapPixelError=quality==0?16:quality==1?10:8;
             terrain.basemapDistance=quality==0?35:quality==1?50:65;
             terrain.detailObjectDistance=quality==0?16:quality==1?27:38;
