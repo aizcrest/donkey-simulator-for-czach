@@ -52,7 +52,7 @@ namespace DonkeyForest
         string SavePath => Path.Combine(Application.persistentDataPath, "forest-rider.json");
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        static void Boot() { if (!FindAnyObjectByType<ForestGame>()) new GameObject("Forest Rider").AddComponent<ForestGame>(); }
+        static void Boot() { if (!FindAnyObjectByType<ForestGame>()) new GameObject("Czach’s Donkey Journey").AddComponent<ForestGame>(); }
         void Awake()
         {
             Instance=this;Paused=true;
@@ -66,7 +66,7 @@ namespace DonkeyForest
         {
             ready=false;Paused=true;SetHudEnabled(false);
             Debug.LogException(error,this);
-            Debug.LogWarning("Forest Rider setup did not finish. See the original exception above; Camp and autosave are disabled to protect your save.",this);
+            Debug.LogWarning("Czach’s Donkey Journey setup did not finish. See the original exception above; Camp and autosave are disabled to protect your save.",this);
         }
         void InitializeGame()
         {
@@ -211,6 +211,7 @@ namespace DonkeyForest
                 controller.Move((direction*(dodgeTime>0?14f:charging?12.5f:6.5f)+Vector3.down*15)*dt);
                 Vector3 pos=rider.position;var correction=new Vector3(Mathf.Clamp(pos.x,-86,86)-pos.x,0,Mathf.Clamp(pos.z,-86,86)-pos.z);
                 if(correction.sqrMagnitude>0)controller.Move(correction);
+                Landscape.KeepAboveGround(controller);
                 if(charging)Skills.CheckCharge(previous,rider.position);
                 Skills.Tick(dt);
                 MountedModel.Animate(direction.sqrMagnitude>.01f,charging||dodgeTime>0,swing);
@@ -226,7 +227,7 @@ namespace DonkeyForest
             if(hudClock<=0)
             {
             hudClock=.2f;
-            status.text=$"FOREST RIDER • {(Night?"NIGHT — ZOMBIES":"DAY — FOREST HUNT")} • {(data.quality==0?"LOW":data.quality==1?"BALANCED":"HIGH")} / {Mathf.RoundToInt(1/frameTime)} FPS • {Difficulty.Name.ToUpperInvariant()}\nHealth {Mathf.CeilToInt(data.health)} / {MaxHealth:0}    Coins {data.coins}    Kills {data.kills}    Lv.{data.journey.level}\nSword {data.sword}  •  Armor {data.armor}  •  Donkey gear {data.barding}  •  Potions {data.potions}";
+            status.text=$"Czach’s Donkey Journey\n{(Night?"NIGHT — ZOMBIES":"DAY — FOREST HUNT")} • {(data.quality==0?"LOW":data.quality==1?"BALANCED":"HIGH")} / {Mathf.RoundToInt(1/frameTime)} FPS • {Difficulty.Name.ToUpperInvariant()}\nHealth {Mathf.CeilToInt(data.health)} / {MaxHealth:0}    Coins {data.coins}    Kills {data.kills}    Lv.{data.journey.level}\nSword {data.sword}  •  Armor {data.armor}  •  Donkey gear {data.barding}  •  Potions {data.potions}";
             objective.text=Encounter.Objective+$" • Dodge {(dodgeCooldown<=0?"READY":dodgeCooldown.ToString("0.0")+"s")}";
             Additions.Refresh();
             }
@@ -466,7 +467,7 @@ namespace DonkeyForest
             var safe=new GameObject("Safe Area",typeof(RectTransform),typeof(SafeArea));safe.transform.SetParent(root.transform,false);
             var sr=safe.GetComponent<RectTransform>();sr.offsetMin=sr.offsetMax=Vector2.zero;
             var parent=safe.transform;
-            status=Label(parent,"",new Vector2(.5f,1),new Vector2(0,-65),new Vector2(950,110),23);
+            status=Label(parent,"",new Vector2(.5f,1),new Vector2(0,-70),new Vector2(950,125),22);
             objective=Label(parent,"",new Vector2(.5f,1),new Vector2(0,-150),new Vector2(1120,70),20);
             message=Label(parent,"",new Vector2(.5f,.5f),new Vector2(0,125),new Vector2(950,80),25);
             Button(parent,"CAMP",new Vector2(1,1),new Vector2(-85,-55),new Vector2(140,60),ToggleMenu);

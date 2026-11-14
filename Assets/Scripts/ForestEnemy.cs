@@ -51,13 +51,13 @@ namespace DonkeyForest
             float dt=Time.deltaTime;cooldown-=dt;wanderTime-=dt;chargeCooldown-=dt;
             if(stunTime>0)
             {
-                stunTime=Mathf.Max(0,stunTime-dt);controller.Move(Vector3.down*15*dt);visual.Play("stun");
+                stunTime=Mathf.Max(0,stunTime-dt);controller.Move(Vector3.down*15*dt);ClampPosition();visual.Play("stun");
                 if(stunTime<=0)healthRenderer.sharedMaterial=game.Mat(new Color(.8f,.22f,.15f));
                 return;
             }
             if(chargeWarning>0)
             {
-                chargeWarning-=dt;visual.Play("attack");controller.Move(Vector3.down*15*dt);
+                chargeWarning-=dt;visual.Play("attack");controller.Move(Vector3.down*15*dt);ClampPosition();
                 if(chargeWarning<=0){rushTime=.7f;rushHit=false;healthRenderer.sharedMaterial=game.Mat(new Color(.8f,.22f,.15f));}
                 return;
             }
@@ -99,6 +99,7 @@ namespace DonkeyForest
         {
             var p=transform.position;var correction=new Vector3(Mathf.Clamp(p.x,-85,85)-p.x,0,Mathf.Clamp(p.z,-85,85)-p.z);
             if(correction.sqrMagnitude>0)controller.Move(correction);
+            game.Landscape.KeepAboveGround(controller);
         }
         public void SkillHit(float amount,float stun,Vector3 push)
         {

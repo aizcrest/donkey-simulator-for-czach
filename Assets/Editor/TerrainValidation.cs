@@ -14,7 +14,10 @@ namespace DonkeyForest.Editor
                 "Enter Play Mode and wait for the forest to generate before validating.");
             Terrain surface = game.Landscape.Surface;
             TerrainData data = surface.terrainData;
-            Require(surface.GetComponent<TerrainCollider>().terrainData == data, "Terrain collider data mismatch.");
+            var collider=surface.GetComponent<TerrainCollider>();
+            Require(collider&&collider.enabled&&collider.terrainData==data,"Terrain collider is missing, disabled, or using different data.");
+            Require(!Physics.GetIgnoreLayerCollision(game.rider.gameObject.layer,ForestTerrain.GroundLayer),"Player layer ignores terrain collisions.");
+            Require(game.rider.position.y>=game.Ground(game.rider.position).y-.15f,"Player has fallen below the terrain.");
             Require(data.heightmapResolution == 257 && data.size == new Vector3(180,24,180), "Unexpected terrain dimensions.");
             Require(data.terrainLayers.Length == 3, "Expected moss, earth and stone terrain layers.");
             Require(data.detailPrototypes.Length > 0, "Missing grass prototype.");

@@ -1,4 +1,8 @@
-# Forest Rider
+# Czach’s Donkey Journey
+
+![Launch artwork](Assets/Art/Splash/CzachsDonkeyJourney.png)
+
+Generated splash artwork is configured as the native player launch background (two seconds). Preview it in **Project Settings → Player → Splash Image**; Unity Play Mode does not show the native splash. The existing **Forest Rider** editor tools menu and Android package ID remain stable.
 
 Unity **6000.4.11f1 (Unity 6.4)** C# mobile PvE game: ride an armored donkey through a hilly forest, fight wildlife and nighttime zombies, train rider/mount skills, and gather ten gems to summon a dragon. Free-use knight, donkey and enemy models are included; [THIRD_PARTY.md](THIRD_PARTY.md) records licenses and adaptations. No paid asset packages are needed. Unity Personal is sufficient.
 
@@ -133,7 +137,7 @@ Reset restores the original starting gear, health, three potions, level/skill de
 
 ## Builds and checks
 
-- **Forest Rider → Build Android APK**: IL2CPP, **ARMv7 + ARM64**, OpenGL ES 3, minimum Android API 26 (Android 8). Output: `Builds/ForestRider.apk`. Install Android build modules first. If prompted, save the open Untitled scene before the game scene is generated; Cancel stops the build. Configure signing/AAB distribution in Unity as needed.
+- **Forest Rider → Build Android APK**: IL2CPP, **ARMv7 + ARM64**, OpenGL ES 3, minimum Android API 26 (Android 8). Output: `Builds/CzachsDonkeyJourney.apk`. Install Android build modules first. If prompted, save the open Untitled scene before the game scene is generated; Cancel stops the build. Configure signing/AAB distribution in Unity as needed.
 - **Forest Rider → Build iOS Xcode project**: output `Builds/iOS`; finish signing/building on macOS with Xcode.
 - `python3 Tools/check_project.py`: repository, model integrity, licensing and audio checks.
 - `blender -b --python Tools/verify_models.py`: FBX mesh/texture/clip round-trip checks.

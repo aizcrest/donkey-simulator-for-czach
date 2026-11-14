@@ -39,13 +39,14 @@ namespace DonkeyForest.Editor
         static bool TryEnsureScene()
         {
             if(EditorApplication.isPlayingOrWillChangePlaymode)return false;
-            PlayerSettings.companyName="Aizcrest";PlayerSettings.productName="Forest Rider";
+            PlayerSettings.companyName="Aizcrest";PlayerSettings.productName="Czach’s Donkey Journey";
             PlayerSettings.defaultInterfaceOrientation=UIOrientation.LandscapeLeft;
             PlayerSettings.allowedAutorotateToPortrait=false;PlayerSettings.allowedAutorotateToPortraitUpsideDown=false;
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android,"com.aizcrest.forestrider");
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.iOS,"com.aizcrest.forestrider");
             EnsureLegacyInput();
             KeepRuntimeShaders();
+            ConfigureSplash();
             // Delay-call startup is noninteractive and must preserve Untitled scenes,
             // including a fresh template scene whose isDirty flag may still be false.
             if(!System.IO.File.Exists(Scene)&&HasUntitledScene())return false;
@@ -67,6 +68,18 @@ namespace DonkeyForest.Editor
             }
             EditorBuildSettings.scenes=new[]{new EditorBuildSettingsScene(Scene,true)};
             return true;
+        }
+        static void ConfigureSplash()
+        {
+            var artwork=AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/Splash/CzachsDonkeyJourney.png");
+            if(!artwork)return;
+            PlayerSettings.SplashScreen.show=true;
+            PlayerSettings.SplashScreen.showUnityLogo=false;
+            PlayerSettings.SplashScreen.background=artwork;
+            PlayerSettings.SplashScreen.blurBackgroundImage=false;
+            PlayerSettings.SplashScreen.overlayOpacity=0;
+            // A blank logo reserves display time for the full background artwork.
+            PlayerSettings.SplashScreen.logos=new[]{PlayerSettings.SplashScreenLogo.Create(2f)};
         }
         static void EnsureLegacyInput()
         {
@@ -110,7 +123,7 @@ namespace DonkeyForest.Editor
             PlayerSettings.Android.targetArchitectures=AndroidArchitecture.ARMv7|AndroidArchitecture.ARM64;
             PlayerSettings.SetUseDefaultGraphicsAPIs(BuildTarget.Android,false);
             PlayerSettings.SetGraphicsAPIs(BuildTarget.Android,new[]{UnityEngine.Rendering.GraphicsDeviceType.OpenGLES3});
-            var report=BuildPipeline.BuildPlayer(new[]{Scene},"Builds/ForestRider.apk",BuildTarget.Android,BuildOptions.None);
+            var report=BuildPipeline.BuildPlayer(new[]{Scene},"Builds/CzachsDonkeyJourney.apk",BuildTarget.Android,BuildOptions.None);
             if(report.summary.result!=UnityEditor.Build.Reporting.BuildResult.Succeeded)throw new System.Exception("Android build failed: "+report.summary.result);
         }
         [MenuItem("Forest Rider/Build iOS Xcode project")]

@@ -1,0 +1,6 @@
+<linker>
+  <!-- The forest is generated at runtime; no saved scene references its collider. -->
+  <assembly fullname="UnityEngine.TerrainPhysicsModule">
+    <type fullname="UnityEngine.TerrainCollider" preserve="all" />
+  </assembly>
+</linker>

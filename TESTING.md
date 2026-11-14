@@ -20,6 +20,8 @@ Automated repository checks: `python3 Tools/check_project.py`. These validate re
 
 ## Terrain upgrade acceptance
 
+- Run the five `TerrainCollisionTests` cases in **Window → General → Test Runner → EditMode**. They check collision immediately after generation at camp and on hills, restore a deliberately ignored layer pair, apply repeated gravity to player/animal-sized controllers without recovery, and test recovery with the collider disabled. These Unity-only cases have not run in the development workspace.
+- Rebuild the APK after pulling this fix; installing over the existing app with the same signing key retains the Android save. On a cold launch, stand still for 30 seconds and watch both rider and wildlife: neither should fall through the map. Ride, dodge and charge across hills, stun/knock back enemies and watch a moose charge. Repeat after background/resume and at Low/High quality. A one-time `Recovered an actor below the forest terrain` warning means the safety recovery was needed; capture Android Logcat if it appears on every launch. Check collision itself in addition to visible grounding.
 - In Play Mode run **Forest Rider → Validate terrain (Play Mode)**. Confirm the validation passes in the Console.
 - Inspect the runtime terrain: rolling hills, level camp, winding earth trails, moss and rock blends, grass off the trails. Check for magenta shaders in both Editor and an actual Android/WebGL build.
 - Ride uphill, downhill and sideways over hill crests. Confirm the donkey remains grounded without sinking or falling through; check animal movement on the same slopes.

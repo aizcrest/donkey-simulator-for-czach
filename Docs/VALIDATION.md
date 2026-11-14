@@ -1,5 +1,13 @@
 # Validation
 
+## Mobile startup collision and new title — 2026-11-14
+
+The user confirmed the sky-only mobile view was caused by actors falling below the map immediately at startup. World generation already precedes actor creation, but the previous terrain helper had no explicit runtime TerrainCollider reference. The precise device-side cause is not confirmed without Unity/device logs. Terrain and TerrainCollider are now created explicitly, share the generated height data, enable Default-to-ground collisions, and synchronize physics before actors spawn. A narrow linker entry retains TerrainCollider for runtime-generated player builds. All player/enemy movement branches now recover feet that fall below the sampled terrain, including stun, charge telegraph, rush and knockback; ordinary contacts remain handled by physics. The first recovery logs a diagnostic warning.
+
+Added five Unity EditMode cases for immediate collider/raycast readiness, actual gravity collision at three actor sizes (without recovery), and below-ground recovery with the collider disabled. Repository integrity/metadata checks and C# 9 syntax parsing passed (40 files, zero syntax errors). **Unity API compilation, these five tests, APK build and device collision have not been run here.**
+
+Renamed the player product and HUD to **Czach’s Donkey Journey**, keeping the Android identifier and save filename stable. Added generated splash artwork, a compressed non-readable sprite import, and native two-second launch background setup. The Android menu output is now `Builds/CzachsDonkeyJourney.apk`. Splash API signatures were checked against Unity's public reference source; actual import, preview, phone aspect-ratio cropping and launch display still require Unity. Test **Project Settings → Player → Splash Image → Preview**, then cold-launch the rebuilt APK. Play Mode does not display the native player splash.
+
 ## Moose texture startup failure and cubemap mismatch — 2026-11-14
 
 The user supplied the original startup exception: Resources.Load<Texture2D> failed for the moose coat, followed by EnemyVisual.Update accessing its uninitialized animation list, plus a CUBE-to-2D material error. The PNG is present and valid in the repository; the reported mismatch is consistent with a texture importing as a cubemap. Added a model-texture importer that explicitly sets Default/Texture2D for the four `.fbm` PNGs without loading or reimporting other assets. UI/sky textures now explicitly use Texture2D too.

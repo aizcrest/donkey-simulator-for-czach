@@ -13,6 +13,8 @@ namespace DonkeyForest
         const int SurfaceResolution = 128;
         const float Elevation = 24f;
         public Terrain Surface { get; private set; }
+        public TerrainCollider GroundCollider { get; private set; }
+        bool reportedRecovery;
         readonly List<Object> generated = new List<Object>();
 
         public void Generate()
@@ -43,18 +45,26 @@ namespace DonkeyForest
             };
             PaintSurface(data);
             AddGrass(data);
-            var ground = Terrain.CreateTerrainGameObject(data);
-            ground.name = "Unity Terrain — rolling forest hills";
+            // Explicit component references keep the runtime-only terrain physics path
+            // visible to player-build stripping; assign the same data to both components.
+            var ground = new GameObject("Unity Terrain — rolling forest hills");
             ground.layer = GroundLayer;
             ground.transform.SetParent(transform, false);
             ground.transform.position = new Vector3(-Size / 2, 0, -Size / 2);
-            Surface = ground.GetComponent<Terrain>();
+            Surface = ground.AddComponent<Terrain>();Surface.terrainData=data;
+            GroundCollider=ground.AddComponent<TerrainCollider>();GroundCollider.terrainData=data;
+            GroundCollider.enabled=true;
+            Physics.IgnoreLayerCollision(0,GroundLayer,false); // Player and wildlife use Default.
+            Surface.drawHeightmap=true;
+            var terrainMaterial=new Material(Shader.Find("Nature/Terrain/Standard"));
+            generated.Add(terrainMaterial);Surface.materialTemplate=terrainMaterial;
             Surface.heightmapPixelError = 8;
             Surface.basemapDistance = 65;
             Surface.detailObjectDistance = 38;
             Surface.detailObjectDensity = .65f;
             Surface.drawInstanced = true;
             Surface.Flush();
+            Physics.SyncTransforms();
         }
 
         // Broad smooth hills remain rideable; the central clearing stays level for revival.
@@ -87,6 +97,25 @@ namespace DonkeyForest
         {
             position.y = Surface.SampleHeight(position) + Surface.transform.position.y + clearance;
             return position;
+        }
+        public void KeepAboveGround(CharacterController actor)
+        {
+            if(!actor||!actor.enabled||!Surface)return;
+            Vector3 position=actor.transform.position;
+            Vector3 terrainOrigin=Surface.transform.position;
+            if(position.x<terrainOrigin.x||position.z<terrainOrigin.z||position.x>terrainOrigin.x+Size||position.z>terrainOrigin.z+Size)return;
+            float floor=Ground(position).y;
+            float footOffset=actor.center.y-actor.height*.5f;
+            // Leave ordinary contacts/skin-width overlap to physics; recover only a
+            // controller whose feet have actually penetrated below the heightmap.
+            if(position.y+footOffset>=floor-.15f)return;
+            position.y=floor-footOffset+.08f;
+            actor.enabled=false;actor.transform.position=position;actor.enabled=true;
+            if(!reportedRecovery)
+            {
+                reportedRecovery=true;
+                Debug.LogWarning("Recovered an actor below the forest terrain. Check terrain collision on this device. Collider ready: "+(GroundCollider&&GroundCollider.enabled&&GroundCollider.terrainData==Surface.terrainData));
+            }
         }
         public float Slope(Vector3 position)
         {
