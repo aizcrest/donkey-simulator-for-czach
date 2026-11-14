@@ -1,5 +1,11 @@
 # Validation
 
+## Partial HUD / Camp null-reference correction — 2026-11-14
+
+The user reported ToggleMenu throwing on CAMP and supplied a screenshot showing only the first, untextured CAMP button. That supports interrupted UI construction before the Camp panel exists; the original startup exception was not supplied. UI art now imports as single Sprites (full rectangular meshes and a 32px button border) and loads directly through Resources, removing runtime Sprite.Create from button construction. Missing artwork logs a warning and falls back to plain labeled controls. Imported sprites are no longer destroyed by the skin component.
+
+HUD rendering/input stays disabled until initialization succeeds. The HUD is owned by the game object, missing menu references trigger a rebuild, and audio is optional when toggling camp. Initialization failures log their original exception, pause the partial game and disable autosaves instead of leaving a clickable incomplete HUD. Repository checks and C# 9 syntax parsing passed (35 files). Added a Unity-only sprite-import regression test; it has **not** run here. Actual Unity imports, initial startup and Camp clicks remain unverified without Unity.
+
 ## Reset progress — 2026-11-14
 
 Added Camp reset confirmation, fresh progress retaining difficulty/graphics/audio preferences, staged save replacement and removal of old recovery files. The live game resets in place: skills, enemies, loot, encounter hazards, gems and player position/timers are rebuilt or cleared without reloading the scene. This also supports Play Mode from Untitled scenes.

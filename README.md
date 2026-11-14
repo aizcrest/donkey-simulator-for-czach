@@ -76,7 +76,7 @@ The project includes **19 original synthesized audio files**: day/night ambience
 
 ## Touch controls, sky and skill effects
 
-Touch buttons use original leather/brass textures, a round joystick, action icons, press feedback and skill cooldown wipes. Sprite backgrounds are nine-sliced; labels and hit areas retain their existing layout. Regenerate the artwork with `python3 Tools/generate_touch_art.py` (Pillow and NumPy).
+Touch buttons use original leather/brass textures, a round joystick, action icons, press feedback and skill cooldown wipes. UI textures import as Sprite assets; missing artwork falls back to plain labeled controls. Sprite backgrounds are nine-sliced; labels and hit areas retain their existing layout. Regenerate the artwork with `python3 Tools/generate_touch_art.py` (Pillow and NumPy).
 
 The saved six-minute day/night cycle now drives a skybox with blue daylight, warm dawn/dusk, a moving sun and moon, drifting clouds and stars. Ambient light, directional light and fog blend with the sky. Camp pauses the clock; loading restores the saved sky phase. The sky uses one small lookup texture and no realtime reflection updates.
 
@@ -137,7 +137,7 @@ Reset restores the original starting gear, health, three potions, level/skill de
 - **Forest Rider → Build iOS Xcode project**: output `Builds/iOS`; finish signing/building on macOS with Xcode.
 - `python3 Tools/check_project.py`: repository, model integrity, licensing and audio checks.
 - `blender -b --python Tools/verify_models.py`: FBX mesh/texture/clip round-trip checks.
-- Unity **Window → General → Test Runner → EditMode → Run All**: 20 difficulty/gem/dragon/skill/progression/save-reset test cases plus one Unity-only repeated-model-import regression.
+- Unity **Window → General → Test Runner → EditMode → Run All**: 20 difficulty/gem/dragon/skill/progression/save-reset test cases plus Unity-only model-import and touch-sprite regressions.
 - In Play Mode: **Forest Rider → Validate terrain (Play Mode)**.
 
 All 20 standalone C# NUnit test cases passed outside Unity under .NET 8, and C# 9 syntax checks passed. See [Docs/VALIDATION.md](Docs/VALIDATION.md). Unity API compilation, actual Unity imports, device playthroughs and hardware performance remain unverified. Use [TESTING.md](TESTING.md) before release.

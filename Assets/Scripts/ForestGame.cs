@@ -38,7 +38,8 @@ namespace DonkeyForest
         readonly List<AudioListener> previousListeners=new List<AudioListener>();
         Light sun;
         Text status, message, inventory, objective;
-        GameObject menu, creditsPanel;
+        GameObject menu, creditsPanel, hudRoot;
+        bool ready;
         float comboWindow,hudClock,frameTime=1f/30;
         static readonly string[] AnimalSpecies={"Bear","Deer","Moose","Wolf","Fox"};
         int comboStep;
@@ -54,7 +55,21 @@ namespace DonkeyForest
         static void Boot() { if (!FindAnyObjectByType<ForestGame>()) new GameObject("Forest Rider").AddComponent<ForestGame>(); }
         void Awake()
         {
-            Instance = this;
+            Instance=this;Paused=true;
+            try
+            {
+                InitializeGame();ready=true;Paused=false;SetHudEnabled(true);
+            }
+            catch(Exception error){FailInitialization(error);}
+        }
+        void FailInitialization(Exception error)
+        {
+            ready=false;Paused=true;SetHudEnabled(false);
+            Debug.LogException(error,this);
+            Debug.LogWarning("Forest Rider setup did not finish. See the original exception above; Camp and autosave are disabled to protect your save.",this);
+        }
+        void InitializeGame()
+        {
             Application.targetFrameRate = 30;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
             Load();
@@ -166,7 +181,9 @@ namespace DonkeyForest
         }
         void Update()
         {
+            if(!ready)return;
             if(Input.GetKeyDown(KeyCode.Escape)) ToggleMenu();
+            if(!ready)return;
             if(Input.GetKeyDown(KeyCode.F5)) Save();
             if(Input.GetKeyDown(KeyCode.Space)) Attack();
             if(Input.GetKeyDown(KeyCode.H)) Heal();
@@ -217,7 +234,7 @@ namespace DonkeyForest
         }
         void LateUpdate()
         {
-            if(!rider)return;
+            if(!ready||!rider)return;
             orbitCamera.ReadInput();
             Vector3 look = rider.position + Vector3.up * 1.6f;
             Vector3 target = look + orbitCamera.Offset(Encounter && Encounter.Active?19:10.5f);
@@ -310,6 +327,7 @@ namespace DonkeyForest
         public void Show(string text){notice=text;messageClock=6;}
         public void Save(bool notify=true)
         {
+            if(!ready)return;
             if(rider){data.x=rider.position.x;data.z=rider.position.z;}
             string temp=SavePath+".tmp";
             try
@@ -350,7 +368,27 @@ namespace DonkeyForest
             foreach(var previous in previousListeners)if(previous)previous.enabled=true;
             if(Instance==this)Instance=null;
         }
-        void ToggleMenu(){Paused=!Paused;menu.SetActive(Paused);if(creditsPanel)creditsPanel.SetActive(false);moveInput=Vector2.zero;if(Additions)Additions.Close();RefreshCamp();Audio.Play("ui");if(!Paused)Save(false);}
+        void ToggleMenu()
+        {
+            if(!ready)return;
+            if(!hudRoot||!menu||!inventory||!Additions)
+            {
+                try{BuildUI();SetHudEnabled(true);}
+                catch(Exception error){FailInitialization(error);return;}
+            }
+            Paused=!Paused;
+            menu.SetActive(Paused);
+            if(creditsPanel)creditsPanel.SetActive(false);
+            moveInput=Vector2.zero;Additions.Close();RefreshCamp();Additions.Refresh();
+            if(Audio)Audio.Play("ui");
+            if(!Paused)Save(false);
+        }
+        void SetHudEnabled(bool value)
+        {
+            if(!hudRoot)return;
+            var canvas=hudRoot.GetComponent<Canvas>();if(canvas)canvas.enabled=value;
+            var raycaster=hudRoot.GetComponent<GraphicRaycaster>();if(raycaster)raycaster.enabled=value;
+        }
         void RefreshCamp(){inventory.text=$"CAMP & EQUIPMENT\nCoins: {data.coins}\nSword Lv.{data.sword}   Rider armor Lv.{data.armor}   Donkey armor Lv.{data.barding}\nUpgrades cost 40 × current level. Maximum level 10.\nLocal autosave every 30 seconds. One save per device.";}
         void Upgrade(int kind)
         {
@@ -415,8 +453,12 @@ namespace DonkeyForest
         }
         void BuildUI()
         {
+            if(hudRoot){hudRoot.SetActive(false);Destroy(hudRoot);}
+            menu=creditsPanel=null;inventory=null;
             font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             var root=new GameObject("Mobile HUD",typeof(Canvas),typeof(CanvasScaler),typeof(GraphicRaycaster));root.GetComponent<Canvas>().renderMode=RenderMode.ScreenSpaceOverlay;
+            hudRoot=root;root.transform.SetParent(transform,false);SetHudEnabled(false);
+            // Keep objects active for label lookup, but hide rendering/input until setup completes.
             var scaler=root.GetComponent<CanvasScaler>();scaler.uiScaleMode=CanvasScaler.ScaleMode.ScaleWithScreenSize;scaler.referenceResolution=new Vector2(1280,720);scaler.matchWidthOrHeight=.5f;
             if(!FindAnyObjectByType<EventSystem>())new GameObject("EventSystem",typeof(EventSystem),typeof(StandaloneInputModule));
             var safe=new GameObject("Safe Area",typeof(RectTransform),typeof(SafeArea));safe.transform.SetParent(root.transform,false);
@@ -452,7 +494,8 @@ namespace DonkeyForest
             Button(credits,"MODEL SOURCES",new Vector2(.5f,0),new Vector2(-150,65),new Vector2(250,65),()=>Application.OpenURL("https://github.com/aizcrest/donkey-simulator-for-czach/blob/main/THIRD_PARTY.md"));
             Button(credits,"BACK",new Vector2(.5f,0),new Vector2(150,65),new Vector2(250,65),()=>creditsPanel.SetActive(false));
             creditsPanel.SetActive(false);
-            Additions=gameObject.AddComponent<CampAdditions>();Additions.Setup(this,panel,parent);
+            if(!Additions)Additions=gameObject.AddComponent<CampAdditions>();
+            Additions.Setup(this,panel,parent);
             menu.SetActive(false);
         }
     }

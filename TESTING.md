@@ -114,3 +114,12 @@ Automated repository checks: `python3 Tools/check_project.py`. These validate re
 - Restart the app after resetting, including immediately after confirmation. The new run must load. Old `.bak`/`.tmp` recovery candidates must be gone or replaced with new-run data. Test repeated resets and check stable terrain/player/material counts.
 - Check reset in both the generated Forest scene and Play Mode from an Untitled scene; no scene reload is needed. Test Android file replacement and a storage failure: an unsuccessful reset must show an error and leave the current adventure loaded.
 - Run `ProgressResetTests` in EditMode. The four reset cases passed in the standalone runner against a temporary filesystem; Unity JSON integration, runtime cleanup, confirmation UI and Android/iOS storage still need local testing.
+
+## Camp and interrupted HUD setup
+
+- Stop Play Mode, pull the fix, wait for the UI textures to reimport and start Play again. Confirm the HUD includes status text, movement, ATTACK/DODGE/HEAL and all four skills before clicking CAMP. Test CAMP/RESUME and Escape repeatedly, including after death and progress reset.
+- Run **EditMode → TouchArtTests** to verify every UI asset loads as a Sprite and the button border is preserved. Sky lookup must remain a texture. This test requires Unity and has not been run in the Cloud workspace.
+- In a disposable checkout, remove one UI icon or the button texture, then Play: a warning should identify the missing art and plain labeled controls must still work. Restore the asset afterward. No missing image may abort HUD construction.
+- While playing, remove the Camp child from the runtime HUD, then press Escape: the HUD should rebuild once, opening a functioning Camp without duplicate hotbars or CampAdditions components. Test deleting the whole HUD and pressing Escape too.
+- Cause an early startup failure in a disposable checkout (for example, temporarily remove mounted model data). Confirm the first exception is logged, no partial HUD accepts clicks, and exiting Play Mode does not write an incomplete/default save over existing progress.
+- Repeat normal startup and Camp interaction in an Android build. Editor compilation, these Unity lifecycle checks and device behavior remain unverified here.
