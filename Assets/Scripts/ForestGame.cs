@@ -72,7 +72,7 @@ namespace DonkeyForest
         {
             Application.targetFrameRate = 30;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
-            Load();
+            Load();GemRules.NormalizeState(data);
             if(data.skills==null)data.skills=new SkillSave();if(data.journey==null)data.journey=new JourneySave();
             SkillRules.Normalize(data.skills);JourneyRules.Normalize(data.journey);data.health=Mathf.Clamp(data.health,0,MaxHealth);
             data.masterVolume=SafeVolume(data.masterVolume,.75f);data.musicVolume=SafeVolume(data.musicVolume,.2f);data.effectsVolume=SafeVolume(data.effectsVolume,.8f);
@@ -86,7 +86,7 @@ namespace DonkeyForest
             MobilePerformance.Apply(this);
             Encounter=new GameObject("Gems and summoning altar").AddComponent<DragonEncounter>();
             Encounter.Setup(this);
-            if(!Encounter.Active)for (int i = 0; i < MobilePerformance.InitialEnemies(data.quality); i++) SpawnEnemy(false);
+            if(!Encounter.Active)for (int i = 0; i < MobilePerformance.InitialEnemies(data.quality,data.difficulty); i++) SpawnEnemy(false);
             Show(notice);
         }
         static float SafeVolume(float value,float fallback)=>float.IsNaN(value)||float.IsInfinity(value)?fallback:Mathf.Clamp01(value);
@@ -217,7 +217,7 @@ namespace DonkeyForest
                 MountedModel.Animate(direction.sqrMagnitude>.01f,charging||dodgeTime>0,swing);
                 Audio.Hooves(dt,(rider.position-previous).sqrMagnitude>.0001f&&direction.sqrMagnitude>.01f,charging||dodgeTime>0);
                 data.time=Mathf.Repeat(data.time+dt/360,1);
-                spawnClock+=dt;if(spawnClock>4){spawnClock=0;if(enemies.Count<MobilePerformance.EnemyCap(data.quality)&&!Encounter.Active)SpawnEnemy(Night);}
+                spawnClock+=dt;if(spawnClock>4){spawnClock=0;if(enemies.Count<MobilePerformance.EnemyCap(data.quality,data.difficulty)&&!Encounter.Active)SpawnEnemy(Night);}
                 autoSave+=dt;if(autoSave>30){autoSave=0;Save(false);}
                 attackCooldown-=dt;swing=Mathf.Max(0,swing-dt);
             }
@@ -231,7 +231,7 @@ namespace DonkeyForest
             objective.text=Encounter.Objective+$" • Dodge {(dodgeCooldown<=0?"READY":dodgeCooldown.ToString("0.0")+"s")}";
             Additions.Refresh();
             }
-            messageClock-=Time.unscaledDeltaTime;message.text=Dead?"You fell. Open CAMP to revive.":messageClock>0?notice:"";
+            messageClock-=Time.unscaledDeltaTime;message.text=Dead?"":messageClock>0?notice:"";
         }
         void LateUpdate()
         {
@@ -276,7 +276,7 @@ namespace DonkeyForest
             if(Dead||Paused||dodgeTime>0)return;
             data.health=Mathf.Max(0,data.health-Mathf.Max(1,amount*Skills.GuardMultiplier*(1-Mathf.Min(.65f,(data.armor+data.barding)*.035f))));
             Audio.Play("hit",.55f);
-            if(Dead){Skills.CancelEffects();Audio.Play("death");Show("You fell. Your equipment is safe. Revive at camp.");Save(false);}
+            if(Dead){Skills.CancelEffects();moveInput=Vector2.zero;Audio.Play("death");Encounter.OnPlayerDeath();Save(false);}
         }
         void SpawnEnemy(bool zombie)
         {
@@ -421,7 +421,7 @@ namespace DonkeyForest
             foreach(var stick in FindObjectsByType<MobileStick>(FindObjectsSortMode.None))stick.ResetStick();
             MountedModel.Animate(false,false,0);
             Encounter=new GameObject("Gems and summoning altar").AddComponent<DragonEncounter>();Encounter.Setup(this);
-            for(int i=0;i<MobilePerformance.InitialEnemies(data.quality);i++)SpawnEnemy(false);
+            for(int i=0;i<MobilePerformance.InitialEnemies(data.quality,data.difficulty);i++)SpawnEnemy(false);
             sky.Tick();hudClock=0;ToggleMenu();
             Show("New adventure started! Find the ten gems and challenge the dragon again.");
             return true;
@@ -433,11 +433,26 @@ namespace DonkeyForest
             bool restart=Encounter&&Encounter.Active;
             data.difficulty=value;
             foreach(var enemy in enemies)if(enemy)enemy.ApplyDifficulty();
+            MobilePerformance.Apply(this);
             if(restart)Encounter.RestartBoss();
+            else if(!Dead)for(int i=enemies.Count;i<MobilePerformance.InitialEnemies(data.quality,data.difficulty);i++)SpawnEnemy(Night);
             Show(Difficulty.Name+" difficulty applied."+(restart?" Dragon fight restarted at full health.":""));
             Save(false);
         }
-        void Revive(){if(!Dead){Show("You can revive after falling in battle.");return;}data.health=MaxHealth;controller.enabled=false;rider.position=Ground(Vector3.zero,.08f);controller.enabled=true;foreach(var e in enemies.ToArray())if(e)Destroy(e.gameObject);enemies.Clear();dodgeTime=0;dodgeCooldown=0;comboStep=0;comboWindow=0;Skills.CancelEffects();Encounter.RestartBoss();Save();ToggleMenu();}
+        void Revive()
+        {
+            if(!ready||!Dead)return;
+            data.health=MaxHealth;controller.enabled=false;rider.position=Ground(Vector3.zero,.08f);controller.enabled=true;
+            foreach(var e in enemies.ToArray())if(e){e.gameObject.SetActive(false);Destroy(e.gameObject);}
+            enemies.Clear();moveInput=Vector2.zero;dodgeTime=dodgeCooldown=comboWindow=attackCooldown=swing=spawnClock=0;comboStep=0;
+            foreach(var stick in FindObjectsByType<MobileStick>(FindObjectsSortMode.None))stick.ResetStick();
+            Skills.CancelEffects();Audio.ResetCombat();Paused=false;
+            if(menu)menu.SetActive(false);if(creditsPanel)creditsPanel.SetActive(false);Additions.Close();
+            Encounter.RestartBoss();
+            if(!Encounter.Active)for(int i=0;i<MobilePerformance.InitialEnemies(data.quality,data.difficulty);i++)SpawnEnemy(Night);
+            hudClock=0;Save(false);Show("Revived at camp. Your journey continues.");
+        }
+
         Font font;
         public RectTransform Panel(string name,Transform parent,Vector2 anchor,Vector2 pos,Vector2 size,Color color)
         {
@@ -500,6 +515,8 @@ namespace DonkeyForest
             if(!Additions)Additions=gameObject.AddComponent<CampAdditions>();
             Additions.Setup(this,panel,parent);
             menu.SetActive(false);
+            var combatHud=GetComponent<CombatHud>();if(!combatHud)combatHud=gameObject.AddComponent<CombatHud>();
+            combatHud.Setup(this,parent,Revive);
         }
     }
     public sealed class SafeArea:MonoBehaviour

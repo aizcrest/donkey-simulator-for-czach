@@ -52,10 +52,10 @@ namespace DonkeyForest
             {
                 int mode=i;var profile=DifficultyRules.Get(mode);float y=125-i*105;
                 difficultyButtons[i]=game.Button(difficultyPanel.transform,profile.Name.ToUpperInvariant(),new Vector2(.5f,.5f),new Vector2(-295,y),new Vector2(230,65),()=>{game.SetDifficulty(mode);Refresh();});
-                string details=$"Monsters + dragon: {profile.HealthMultiplier:0.##}× HP / {profile.DamageMultiplier:0.##}× damage\nFireball radius {profile.FireballRadius:0.#}m • flight {profile.FireballTravelSeconds:0.##}s\nDragon stunned for {profile.DragonStunSeconds:0.##}s";
-                game.Label(difficultyPanel.transform,details,new Vector2(.5f,.5f),new Vector2(120,y),new Vector2(560,95),20);
+                string details=$"{profile.HealthMultiplier:0.##}× HP / {profile.DamageMultiplier:0.##}× damage • {(mode==0?"Standard crowds":mode==1?"Larger crowds":"Largest crowds; carried gems drop on death")}\nFireball {profile.FireballRadius:0.#}m / {profile.FireballTravelSeconds:0.##}s • Dive {profile.DiveRadius:0.#}m\nStun {profile.DragonStunSeconds:0.##}s (+2s when exhausted)";
+                game.Label(difficultyPanel.transform,details,new Vector2(.5f,.5f),new Vector2(120,y),new Vector2(560,95),18);
             }
-            game.Label(difficultyPanel.transform,"Normal keeps the original balance. Changes save immediately.\nChanging difficulty restarts an active dragon fight at full health.",new Vector2(.5f,.5f),new Vector2(0,-165),new Vector2(840,55),18);
+            game.Label(difficultyPanel.transform,"Enemy counts also scale with graphics quality. Changes save immediately.\nChanging difficulty restarts an active dragon fight at full health.",new Vector2(.5f,.5f),new Vector2(0,-165),new Vector2(840,55),18);
             AudioSlider("Master",105,game.data.masterVolume,value=>game.data.masterVolume=value);
             AudioSlider("Music",40,game.data.musicVolume,value=>game.data.musicVolume=value);
             AudioSlider("Effects",-25,game.data.effectsVolume,value=>game.data.effectsVolume=value);

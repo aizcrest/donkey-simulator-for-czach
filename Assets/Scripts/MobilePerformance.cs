@@ -4,8 +4,8 @@ namespace DonkeyForest
     public static class MobilePerformance
     {
         static int nativeWidth,nativeHeight;
-        public static int EnemyCap(int quality)=>quality==0?12:quality==1?18:22;
-        public static int InitialEnemies(int quality)=>quality==0?8:quality==1?12:14;
+        public static int EnemyCap(int quality,int difficulty=0)=>DifficultyRules.EnemyCap(quality,difficulty);
+        public static int InitialEnemies(int quality,int difficulty=0)=>DifficultyRules.InitialEnemies(quality,difficulty);
         public static void Apply(ForestGame game)
         {
             int quality=Mathf.Clamp(game.data.quality,0,2);
@@ -38,7 +38,7 @@ namespace DonkeyForest
                 Screen.SetResolution(Mathf.Max(320,Mathf.RoundToInt(nativeWidth*scale)),Mathf.Max(180,Mathf.RoundToInt(nativeHeight*scale)),true);
             }
             // Lowering a preset removes surplus wildlife without granting rewards.
-            for(int i=game.enemies.Count-1;i>=EnemyCap(quality);i--)
+            for(int i=game.enemies.Count-1;i>=EnemyCap(quality,game.data.difficulty);i--)
             {var enemy=game.enemies[i];game.enemies.RemoveAt(i);if(enemy)Object.Destroy(enemy.gameObject);}
         }
     }

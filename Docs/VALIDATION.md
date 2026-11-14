@@ -1,5 +1,15 @@
 # Validation
 
+## Death, crowds, Extreme gem loss and dragon stamina — 2026-11-14
+
+Added a death overlay and direct Revive action using the existing gold/green control sprite and heal icon. Revival now closes menus explicitly rather than toggling Camp, resets input/combat effects and restores the difficulty's initial wildlife count (or restarts an unlocked boss). Hard/Extreme raise initial counts and caps; Low is limited to 12/16/20 alive across Normal/Hard/Extreme. In-place changes apply the new population budget.
+
+Extreme deaths clear only carried gem IDs, preserve exact deposited IDs, choose reachable random drop positions and save coordinates with the death before returning to the UI. Old partial-deposit saves infer protected IDs without losing the altar count. Subsequent deposits record exact IDs. Drops remain collectible across reload, repeated handling is idempotent, and recollection gives no repeated gem XP. Reset starts fresh arrays and clears drop state.
+
+Dragon dive warning and damage now share 4/4.5/5m radii. Each launched fireball spends 10 of 100 stamina; a dive spends 30. Unspent stamina carries between cycles. Zero stamina adds exactly two seconds to the next stun and refills at takeoff after that stun. The HUD shows remaining stamina or exhaustion without allocating a new label string every frame.
+
+All **32 standalone NUnit cases passed**, including 12 new cases covering crowd budgets, larger dive radii, stamina consumption/extension/refill/overshoot, Normal/Hard gem retention, exact altar IDs, reset state and all 1,024 possible collected-gem subsets with every valid partial-deposit count. Repository/metadata checks and C# syntax parsing passed (46 files). Added two Unity-only HUD/JSON tests. **Unity API compilation, the Unity-only tests, Play Mode UI/encounter integration, actual Android save round trips and phone performance have not been run here.**
+
 ## Missing Android ground, cropped splash and launcher icon — 2026-11-14
 
 The updated device screenshot shows ordinary meshes (rider, animals, trees, loot) but no terrain surface. Unity's [runtime terrain requirements](https://docs.unity3d.com/6000.0/Documentation/Manual/terrain-Runtime.html) state that dedicated engine resources are included only when a Terrain instance exists in a scene in the build. The project's generated empty scene did not satisfy that requirement; shader retention and a collider linker entry alone do not replace it. Added `TerrainBuildSupport.unity` with an inactive serialized Terrain/Collider and included it in both menu builds, global scene settings and existing custom Build Profile overrides. It is never loaded by gameplay. A build preprocessor also configures dependencies and icons for File → Build Profiles builds. Phone quality presets consistently use non-instanced terrain rendering.

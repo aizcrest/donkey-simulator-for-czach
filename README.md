@@ -64,11 +64,11 @@ Find ten unique glowing turquoise gems. The HUD shows the nearest remaining gem'
 On **Normal**, the dragon has 650 health and repeats this cycle (Hard/Extreme values are listed under Difficulty below):
 
 1. **Aerial fireballs — 10 seconds.** Orange 2.1m-radius circles lock onto the rider when each shot launches. After 1.2s the impact deals 22 base damage. Move out or dodge; shots do not keep tracking.
-2. **Dive warning — 1.5 seconds.** A red 3m-radius marker locks in place.
+2. **Dive warning — 1.5 seconds.** A red 4m-radius marker locks in place.
 3. **Dive — .8 seconds.** The dragon dives to the marker and deals 36 base damage once on impact.
-4. **Stunned — exactly 5 seconds.** A green ring appears and sword/skill hits can damage the grounded dragon. It becomes immune again at takeoff.
+4. **Stunned — 5 seconds, or 7 when exhausted.** A green ring appears and sword/skill hits can damage the grounded dragon. It becomes immune again at takeoff.
 
-Iron Guard and armor reduce dragon damage; dodge grants brief immunity. Leaving the 32m altar arena resets boss health and attacks. Death/revival or reloading starts an unlocked fight at full health, preserving your deposited gems. Boss health/phase are transient.
+Iron Guard and armor reduce dragon damage; dodge grants brief immunity. Leaving the 32m altar arena resets boss health and attacks. Death/revival or reloading starts an unlocked fight at full health, preserving your deposited gems. Boss health/phase/stamina are transient. The dragon starts with 100 stamina, spends 10 per launched fireball and 30 per dive, and retains remaining stamina between cycles. At zero, its next stun is extended by exactly two seconds; stamina refills at takeoff after that extended stun. The gold-framed stamina bar appears during the encounter.
 
 Victory saves permanently and awards 500 coins, three potions and 250 XP, in addition to the separately claimable Dragon Slayer contract. Ordinary wildlife resumes. The boss is a one-time progression encounter per save.
 
@@ -90,7 +90,7 @@ Whirlwind draws spinning sword arcs, Iron Guard forms rotating shield hoops, Cha
 
 ## Difficulty
 
-Choose **CAMP → SETTINGS → DIFFICULTY → Normal / Hard / Extreme**. Normal preserves the original balance and remains the default for new and older saves. The selection saves immediately and appears in the HUD, independently of graphics quality.
+Choose **CAMP → SETTINGS → DIFFICULTY → Normal / Hard / Extreme**. Normal remains the default for new and older saves. The selection saves immediately and appears in the HUD, independently of graphics quality.
 
 | Combat setting | Normal | Hard | Extreme |
 | --- | --- | --- | --- |
@@ -98,11 +98,23 @@ Choose **CAMP → SETTINGS → DIFFICULTY → Normal / Hard / Extreme**. Normal 
 | Monster and dragon damage | 1× | 1.35× | 1.75× |
 | Dragon fireball blast radius | 2.1m | 2.7m | 3.3m |
 | Fireball travel / dodge-warning time | 1.2s | 0.85s | 0.5s |
-| Dragon stun window | 5s | 3.75s | 2.5s |
+| Base dragon stun window | 5s | 3.75s | 2.5s |
+| Dragon dive radius | 4m | 4.5m | 5m |
+| Death drops carried gems | No | No | Yes |
 
 Extreme fireballs travel 2.4× as fast as Normal over the same distance. Warning circles and impact effects match each mode's damage radius. The aerial phase remains 10 seconds, followed by the original dive warning and dive, then the selected stun duration. Higher difficulty multiplies the existing enemy level/elite scaling; rewards and progression costs remain the same.
 
 Existing wildlife keeps its health percentage when you change modes. Changing difficulty during an active dragon encounter clears its hazards and restarts the fight at full health under the new rules. Gems, equipment, progression and dragon victory remain saved; changing difficulty does not summon a defeated dragon again.
+
+On death, a gold-and-green **You died.** panel offers a direct **REVIVE** button. It restores health at camp and resumes gameplay without needing to open Camp. On Extreme, all carried (unoffered) gem IDs are dropped at randomly chosen reachable map positions, saved immediately with the death. Altar offerings remain protected. Reloading preserves those locations; recollection does not grant gem XP again. Normal and Hard keep carried gems.
+
+Enemy counts increase with difficulty while still following the selected graphics budget. Each cell is **initial count / maximum alive**; terrain clearance may reduce the number successfully spawned initially. Night zombies share the same cap. No ordinary enemies spawn during a dragon encounter.
+
+| Graphics | Normal | Hard | Extreme |
+| --- | --- | --- | --- |
+| Low | 8 / 12 | 12 / 16 | 16 / 20 |
+| Balanced | 12 / 18 | 16 / 24 | 20 / 30 |
+| High | 14 / 22 | 20 / 30 | 26 / 38 |
 
 ## Graphics quality and mobile performance
 
@@ -129,7 +141,7 @@ Native Unity Terrain spans 180 × 180m with a 257 × 257 heightmap, broad hills,
 
 Character controllers handle slope movement and collision. Spawns, loot, revival and restored positions sample terrain height; the camera checks terrain/trunk obstruction. Existing flat-world saves adapt to elevation on load.
 
-Saves live at `Application.persistentDataPath/forest-rider.json`, with backup/temporary recovery files. They preserve health, X/Z, time, equipment, inventory counters, gems, victory, XP, skill levels/cooldowns, contract claims, audio, quality and difficulty. Autosave runs every 30s and after progress events/backgrounding/quit; camp also offers manual save. Enemy positions and uncollected drops are transient. Uninstalling the app can remove local saves.
+Saves live at `Application.persistentDataPath/forest-rider.json`, with backup/temporary recovery files. They preserve health, X/Z, time, equipment, inventory counters, gems, victory, XP, skill levels/cooldowns, contract claims, audio, quality and difficulty. Autosave runs every 30s and after progress events/backgrounding/quit; camp also offers manual save. Scattered objective gem positions persist. Enemy positions and ordinary uncollected loot drops are transient. Uninstalling the app can remove local saves.
 
 ## Start again
 
@@ -143,7 +155,7 @@ Reset restores the original starting gear, health, three potions, level/skill de
 - **Forest Rider → Build iOS Xcode project**: output `Builds/iOS`; finish signing/building on macOS with Xcode.
 - `python3 Tools/check_project.py`: repository, model integrity, licensing and audio checks.
 - `blender -b --python Tools/verify_models.py`: FBX mesh/texture/clip round-trip checks.
-- Unity **Window → General → Test Runner → EditMode → Run All**: 20 difficulty/gem/dragon/skill/progression/save-reset test cases plus Unity-only model-import/material, touch-sprite and hidden Camp menu regressions.
+- Unity **Window → General → Test Runner → EditMode → Run All**: 32 difficulty/gem/dragon/skill/progression/save-reset test cases plus Unity-only model-import/material, touch-sprite and hidden Camp menu regressions.
 - In Play Mode: **Forest Rider → Validate terrain (Play Mode)**.
 
 All 20 standalone C# NUnit test cases passed outside Unity under .NET 8, and C# 9 syntax checks passed. See [Docs/VALIDATION.md](Docs/VALIDATION.md). Unity API compilation, actual Unity imports, device playthroughs and hardware performance remain unverified. Use [TESTING.md](TESTING.md) before release.

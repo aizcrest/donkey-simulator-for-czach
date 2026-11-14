@@ -14,6 +14,8 @@ namespace DonkeyForest
         Vector3 diveTarget,diveStart;
         float health,shotClock=1.2f,orbit;
         bool waiting;
+        public int Stamina=>pattern==null?DragonPattern.MaxStamina:pattern.Stamina;
+        public bool Exhausted=>Stamina==0;
         public string Status => waiting?"DRAGON — return within 32m of the altar (fight resets on retreat)":
             $"DRAGON {Mathf.CeilToInt(health)}/{maxHealth:0} • {(pattern.Phase==DragonPhase.Airborne?"FIREBALLS — avoid orange circles":pattern.Phase==DragonPhase.DiveWarning?"DIVE INCOMING — DODGE!":pattern.Phase==DragonPhase.Diving?"DIVE — move out!":"STUNNED — ATTACK NOW!")} • {pattern.Remaining:0.0}s";
         public void Setup(ForestGame owner,DragonEncounter source)
@@ -72,17 +74,17 @@ namespace DonkeyForest
             if(phase==DragonPhase.DiveWarning)
             {
                 game.Audio.Play("roar",.65f);ClearHazards();diveTarget=game.Ground(game.rider.position,.12f);diveStart=visual.transform.position;
-                encounter.Ring(hazards,diveTarget,3,new Color(1,.15f,.08f));
+                encounter.Ring(hazards,diveTarget,difficulty.DiveRadius,new Color(1,.15f,.08f));
                 game.Show("DIVE INCOMING! The red circle is locked — ride or DODGE away.");
             }
-            else if(phase==DragonPhase.Diving){visual.Play("attack");game.Audio.Play("dive");}
+            else if(phase==DragonPhase.Diving){pattern.DiveAttack();visual.Play("attack");game.Audio.Play("dive");}
             else if(phase==DragonPhase.Stunned)
             {
                 game.Audio.Play("kick",.65f);visual.transform.position=diveTarget;visual.transform.rotation=Quaternion.Euler(0,visual.transform.eulerAngles.y,0);
-                if(Inside(game.rider.position,diveTarget,3))game.Damage(36*difficulty.DamageMultiplier);
+                if(Inside(game.rider.position,diveTarget,difficulty.DiveRadius))game.Damage(36*difficulty.DamageMultiplier);
                 ClearHazards();visual.Play("stun");
                 encounter.Ring(hazards,diveTarget,3.4f,new Color(.3f,1,.2f));
-                game.Show($"Dragon stunned for {difficulty.DragonStunSeconds:0.##} seconds — get close and ATTACK!");
+                game.Show($"Dragon stunned for {pattern.StunDuration:0.##} seconds{(Exhausted?" (+2s exhausted)":"")} — get close and ATTACK!");
             }
             else
             {
@@ -95,6 +97,7 @@ namespace DonkeyForest
             game.Audio.Play("fireball",.45f);
             var obj=new GameObject("Dragon fireball");obj.transform.SetParent(hazards,false);
             obj.AddComponent<DragonFireball>().Setup(game,encounter,visual.transform.position+Vector3.down*.5f,game.Ground(game.rider.position,.1f),difficulty);
+            pattern.FireballAttack();
         }
         public Vector3 Position=>visual.transform.position;
         public void Hit(float damage)=>HitArea(damage,game.rider.position,game.rider.forward,4,-.15f);
