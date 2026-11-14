@@ -19,6 +19,10 @@ namespace DonkeyForest.Tests
                 string texture=$"Assets/Resources/Enemies/{kinds[i]}.fbm/{textures[i]}.png";
                 sourceHashes[i]=HashFile(texture);
                 AssetDatabase.ImportAsset(texture,options);
+                var importer=(TextureImporter)AssetImporter.GetAtPath(texture);
+                Assert.AreEqual(TextureImporterShape.Texture2D,importer.textureShape);
+                Assert.IsInstanceOf<Texture2D>(AssetDatabase.LoadMainAssetAtPath(texture));
+                Assert.IsNotNull(Resources.Load<Texture2D>($"Enemies/{kinds[i]}.fbm/{textures[i]}"),"Runtime 2D texture lookup failed: "+texture);
             }
             // Warm every model before measuring the second import, so import order is irrelevant.
             for(int i=0;i<kinds.Length;i++)AssetDatabase.ImportAsset(ModelPath(kinds[i]),options);

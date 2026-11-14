@@ -1,5 +1,13 @@
 # Validation
 
+## Moose texture startup failure and cubemap mismatch — 2026-11-14
+
+The user supplied the original startup exception: Resources.Load<Texture2D> failed for the moose coat, followed by EnemyVisual.Update accessing its uninitialized animation list, plus a CUBE-to-2D material error. The PNG is present and valid in the repository; the reported mismatch is consistent with a texture importing as a cubemap. Added a model-texture importer that explicitly sets Default/Texture2D for the four `.fbm` PNGs without loading or reimporting other assets. UI/sky textures now explicitly use Texture2D too.
+
+Runtime material binding accepts only Texture2D assets, falls back to an existing 2D map or species coat color, and creates owned materials without copying potentially invalid source texture bindings. Incomplete visual/enemy creation disables and destroys its partial objects; animation collections start empty. Model-import regression tests now check the actual main asset type and runtime Resources paths. Added six Unity-only material tests for fallback colors, UVs and vertex-color shader compatibility.
+
+Repository/asset/metadata checks and C# 9 syntax parsing passed (38 files). A harness compiled the actual material binder against simulated Unity APIs and passed missing/cubemap/2D resource cases for Bear/Moose/Zombie/Rider, source-material preservation, shared caching and existing-2D fallback. Actual Unity reimport, material tests, visual cleanup and startup still require local verification.
+
 ## Hidden submenu label regression — 2026-11-14
 
 The previous startup guard left Paused true while CampAdditions.Setup called Close and Refresh. Refresh used GetComponentInChildren<Text>() on inactive settings, difficulty, upgrade and contract buttons; Unity excludes inactive descendants by default, so those lookups return null. This is a definite startup bug introduced by the paused initialization change, and the same lookups could also fail on opening Camp with submenus closed. Changed all control-label lookups to explicitly include inactive descendants.

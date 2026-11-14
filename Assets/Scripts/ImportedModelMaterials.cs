@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 namespace DonkeyForest
@@ -28,23 +27,42 @@ namespace DonkeyForest
                         {
                             string path="Enemies/"+kind+".fbm/"+texture;
                             diffuse=Resources.Load<Texture2D>(path);
-                            if(!diffuse)throw new InvalidOperationException("Missing model color texture: "+path);
+                            if(!diffuse)
+                            {
+                                if(source.HasProperty("_MainTex"))diffuse=source.mainTexture as Texture2D;
+                                Debug.LogWarning("Missing 2D model color texture: "+path+". Using "+(diffuse?"the existing 2D texture.":"a plain coat color. Reimport the model textures to restore the artwork."));
+                            }
                         }
                         if(kind=="Deer")
                         {
                             shader=Shader.Find("Forest Rider/Model Vertex Colors");
-                            if(!shader)throw new InvalidOperationException("Missing model vertex-color shader.");
+                            if(!shader)Debug.LogWarning("Missing model vertex-color shader; using the imported shader.");
                         }
-                        copy=new Material(source){name=source.name+" runtime",enableInstancing=true};
-                        if(shader)copy.shader=shader;
-                        if(diffuse)copy.mainTexture=diffuse;
-                        copy.color=Color.white;
+                        copy=CreateMaterial(source,kind,diffuse,shader);
                         cache.Add(source,copy);
                     }
                     materials[i]=copy;
                 }
                 renderer.sharedMaterials=materials;
             }
+        }
+        static Material CreateMaterial(Material source,string kind,Texture2D diffuse,Shader shader)
+        {
+            // Do not clone a source material's possibly invalid cubemap binding into
+            // Standard's 2D _MainTex slot. Bind only a verified Texture2D.
+            var copy=new Material(shader?shader:source.shader){name=source.name+" runtime",enableInstancing=true};
+            if(copy.HasProperty("_MainTex"))
+            {
+                copy.mainTexture=diffuse;
+                if(source.HasProperty("_MainTex"))
+                {copy.mainTextureScale=source.mainTextureScale;copy.mainTextureOffset=source.mainTextureOffset;}
+            }
+            copy.color=diffuse||kind=="Deer"?Color.white:
+                kind=="Bear"?new Color(.30f,.20f,.12f):kind=="Moose"?new Color(.39f,.30f,.20f):
+                kind=="Zombie"?new Color(.4f,.6f,.3f):new Color(.55f,.6f,.65f);
+            if(copy.HasProperty("_Metallic"))copy.SetFloat("_Metallic",0);
+            if(copy.HasProperty("_Glossiness"))copy.SetFloat("_Glossiness",.1f);
+            return copy;
         }
         public static void ReleaseAll()
         {

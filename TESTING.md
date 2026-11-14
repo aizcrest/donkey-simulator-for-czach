@@ -129,3 +129,11 @@ Automated repository checks: `python3 Tools/check_project.py`. These validate re
 - After updating, stop and restart Play Mode. The status text, joystick, combat controls and CAMP must appear. Startup must finish without a CampAdditions.Refresh null-reference error.
 - Open CAMP with Settings/Skills/Journal/Difficulty closed. Open each submenu, return to Camp, and repeat. Hidden button labels should refresh without null references, including difficulty/quality selections, skill upgrade costs and contract states.
 - Run **EditMode → CampUiTests → PausedHudSetupAndClosedSubmenuRefreshKeepTheirLabels**. This builds the real HUD on an inactive test host so Awake never loads or writes an adventure, then exercises closed-panel refresh. It requires Unity and has not been executed here.
+
+## Model textures, cubemap mismatch and startup cleanup
+
+- Stop Play Mode, update, then reimport **Assets/Resources/Enemies** once. Select each `.fbm` PNG: Texture Type must be Default and Texture Shape must be 2D. UI sprites and the sky lookup must also use 2D texture shape.
+- Run **ModelImportTests** and **ImportedMaterialTests** in the Unity EditMode runner. The model test now checks that the main PNG asset is a Texture2D and the runtime Resources path resolves, in addition to repeated-import stability.
+- Play and spawn several moose/bears: coats should render, antlers should keep their own material, and HUD/CAMP should remain available. No missing model texture exception or CUBE-to-2D assignment should occur. Repeat in an Android build.
+- In a disposable checkout, temporarily remove a coat texture, then Play: a warning should appear, and the animal should use an existing valid 2D texture or a plain species coat color. Startup and controls must still finish. Restore/reimport the asset afterward.
+- Exercise a failed visual setup in a disposable checkout: partially created enemy/visual objects must be inactive and removed, with the original exception preserved and no repeating EnemyVisual.Update null errors. Original asset materials must remain unchanged after Play Mode.

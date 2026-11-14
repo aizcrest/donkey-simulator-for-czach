@@ -5,18 +5,27 @@ namespace DonkeyForest
 {
     public sealed class EnemyVisual : MonoBehaviour
     {
-        Animation[] animations;
+        Animation[] animations=Array.Empty<Animation>();
         string state="";
         bool frozen;
         BakedEnemyAnimation bakedAnimation;
         public GameObject Model { get; private set; }
-        Dictionary<string,string>[] choices;
+        Dictionary<string,string>[] choices=Array.Empty<Dictionary<string,string>>();
         static readonly string[] States={"idle","walk","move","attack","stun","fly","kick","guard"};
         public static EnemyVisual Create(string kind,Transform parent,float height)
         {
+            var root=new GameObject(kind+" visual");root.transform.SetParent(parent,false);
+            try{return BuildModel(kind,root,height);}
+            catch
+            {
+                root.SetActive(false);Destroy(root);
+                throw;
+            }
+        }
+        static EnemyVisual BuildModel(string kind,GameObject root,float height)
+        {
             if(BakedEnemyAnimation.Supports(kind))
             {
-                var root=new GameObject(kind+" visual");root.transform.SetParent(parent,false);
                 var bakedModel=new GameObject(kind+" baked model");bakedModel.transform.SetParent(root.transform,false);bakedModel.transform.localScale=Vector3.one*height;
                 var bakedVisual=root.AddComponent<EnemyVisual>();bakedVisual.Model=bakedModel;bakedVisual.animations=Array.Empty<Animation>();
                 bakedVisual.bakedAnimation=bakedModel.AddComponent<BakedEnemyAnimation>();bakedVisual.bakedAnimation.Setup(kind);
@@ -24,7 +33,7 @@ namespace DonkeyForest
             }
             var source=Resources.Load<GameObject>("Enemies/"+kind);
             if(!source)throw new InvalidOperationException("Missing enemy model: "+kind+". Let Unity finish importing Assets/Resources/Enemies.");
-            var pivot=new GameObject(kind+" visual").transform;pivot.SetParent(parent,false);
+            var pivot=root.transform;
             // Imported root transforms can be animated. Keep normalization outside the FBX hierarchy.
             var fit=new GameObject("Model normalization").transform;fit.SetParent(pivot,false);
             var model=Instantiate(source,fit,false);model.name=kind+" licensed model";

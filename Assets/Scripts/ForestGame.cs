@@ -293,7 +293,9 @@ namespace DonkeyForest
             }
             if(!found)return;
             var enemy=new GameObject(zombie?"Zombie":AnimalSpecies[UnityEngine.Random.Range(0,AnimalSpecies.Length)]).AddComponent<ForestEnemy>();
-            enemy.transform.position=pos;enemy.Setup(this,enemy.name,UnityEngine.Random.value<.12f);enemies.Add(enemy);
+            enemy.transform.position=pos;
+            try{enemy.Setup(this,enemy.name,UnityEngine.Random.value<.12f);enemies.Add(enemy);}
+            catch{enemy.gameObject.SetActive(false);Destroy(enemy.gameObject);throw;}
         }
         public void Killed(ForestEnemy enemy)
         {

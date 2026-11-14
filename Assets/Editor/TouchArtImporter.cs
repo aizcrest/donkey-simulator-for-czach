@@ -4,12 +4,13 @@ namespace DonkeyForest.Editor
 {
     public sealed class TouchArtImporter:AssetPostprocessor
     {
-        public override uint GetVersion()=>2;
+        public override uint GetVersion()=>3;
         void OnPreprocessTexture()
         {
             if(!assetPath.StartsWith("Assets/Resources/UI/"))return;
             bool sky=assetPath.EndsWith("sky-lookup.png");
             var importer=(TextureImporter)assetImporter;
+            importer.textureShape=TextureImporterShape.Texture2D;
             importer.textureType=sky?TextureImporterType.Default:TextureImporterType.Sprite;importer.isReadable=false;
             if(!sky)
             {
