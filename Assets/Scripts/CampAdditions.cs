@@ -41,10 +41,10 @@ namespace DonkeyForest
                 float y=95-i*78;var id=(SkillId)i;var quest=(ContractId)i;
                 skillDetails[i]=game.Label(skills.transform,"",new Vector2(.5f,.5f),new Vector2(-110,y),new Vector2(580,76),20);
                 upgrades[i]=game.Button(skills.transform,"",new Vector2(.5f,.5f),new Vector2(315,y),new Vector2(210,65),()=>Upgrade(id));
-                upgrades[i].GetComponentInChildren<Text>().fontSize=18;
+                upgrades[i].GetComponentInChildren<Text>(true).fontSize=18;
                 questDetails[i]=game.Label(journal.transform,"",new Vector2(.5f,.5f),new Vector2(-110,y),new Vector2(580,76),20);
                 contracts[i]=game.Button(journal.transform,"",new Vector2(.5f,.5f),new Vector2(315,y),new Vector2(210,65),()=>Claim(quest));
-                contracts[i].GetComponentInChildren<Text>().fontSize=18;
+                contracts[i].GetComponentInChildren<Text>(true).fontSize=18;
             }
             difficultyPanel=Overlay(camp,"DIFFICULTY");
             difficultySelector=game.Button(audioPanel.transform,"DIFFICULTY",new Vector2(.5f,.5f),new Vector2(0,170),new Vector2(340,46),()=>Open(difficultyPanel));
@@ -70,7 +70,7 @@ namespace DonkeyForest
             game.Button(resetPanel.transform,"RESET & START AGAIN",new Vector2(.5f,.5f),new Vector2(0,-130),new Vector2(360,65),()=>{
                 if(!game.ResetProgress())resetMessage.text="Could not reset progress.\nCheck that device storage is available, then try again.\nYour current adventure is still loaded.";
             });
-            resetPanel.transform.Find("BACK").GetComponentInChildren<Text>().text="CANCEL";
+            resetPanel.transform.Find("BACK").GetComponentInChildren<Text>(true).text="CANCEL";
             Close();Refresh();
         }
         GameObject Overlay(Transform camp,string title)
@@ -106,6 +106,7 @@ namespace DonkeyForest
             game.data.health=Mathf.Min(game.MaxHealth,game.data.health+(game.data.journey.level-before)*3);
             game.Show("Contract complete: coins, a potion, XP and skill points awarded.");game.Audio.Play("level");game.Save(false);Refresh();
         }
+        // Camp submenus stay inactive until selected; their labels must still refresh.
         public void Refresh()
         {
             if(!game||game.Skills==null)return;
@@ -113,23 +114,23 @@ namespace DonkeyForest
             for(int i=0;i<4;i++)
             {
                 var id=(SkillId)i;int level=book.Level(id);float remaining=book.Remaining(id);bool active=book.Active(id)>0;
-                hotbar[i].GetComponentInChildren<Text>().text=$"{i+1}: {shortNames[i]}\nLv.{level} • {(active?"ACTIVE":remaining>0?remaining.ToString("0.0")+"s":"READY")}";
+                hotbar[i].GetComponentInChildren<Text>(true).text=$"{i+1}: {shortNames[i]}\nLv.{level} • {(active?"ACTIVE":remaining>0?remaining.ToString("0.0")+"s":"READY")}";
                 cooldowns[i].fillAmount=Mathf.Clamp01(remaining/SkillRules.Cooldown(id,level));
                 hotbar[i].interactable=!game.Paused&&!game.Dead&&remaining<=0 && !(id==SkillId.Charge&&game.IsDodging);
             }
             if(!game.Paused)return;
-            difficultySelector.GetComponentInChildren<Text>().text="DIFFICULTY: "+game.Difficulty.Name.ToUpperInvariant();
+            difficultySelector.GetComponentInChildren<Text>(true).text="DIFFICULTY: "+game.Difficulty.Name.ToUpperInvariant();
             string xp=journey.level>=JourneyRules.MaxLevel?"MAX LEVEL":$"XP {journey.xp}/{JourneyRules.Needed(journey.level)}";
             skillSummary.text=$"Level {journey.level} • {xp} • Skill points {journey.skillPoints} • Coins {game.data.coins}";
             journalSummary.text=$"Level {journey.level} • {xp} • Claim each completed contract once";
             for(int i=0;i<3;i++)
             {
                 bool modeSelected=i==game.data.difficulty;
-                difficultyButtons[i].GetComponentInChildren<Text>().text=DifficultyRules.Get(i).Name.ToUpperInvariant()+(modeSelected?" ✓":"");
+                difficultyButtons[i].GetComponentInChildren<Text>(true).text=DifficultyRules.Get(i).Name.ToUpperInvariant()+(modeSelected?" ✓":"");
                 difficultyButtons[i].interactable=!modeSelected;
                 difficultyButtons[i].GetComponent<Image>().color=modeSelected?new Color(.75f,1,.75f):Color.white;
                 var modeColors=difficultyButtons[i].colors;modeColors.disabledColor=Color.white;difficultyButtons[i].colors=modeColors;
-                qualityButtons[i].GetComponentInChildren<Text>().text=(i==0?"LOW • 30 FPS":i==1?"BALANCED • 30 FPS":"HIGH • 60 FPS")+(i==game.data.quality?" ✓":"");
+                qualityButtons[i].GetComponentInChildren<Text>(true).text=(i==0?"LOW • 30 FPS":i==1?"BALANCED • 30 FPS":"HIGH • 60 FPS")+(i==game.data.quality?" ✓":"");
                 bool selected=i==game.data.quality;
                 qualityButtons[i].interactable=!selected;
                 qualityButtons[i].GetComponent<Image>().color=selected?new Color(.75f,1,.75f):Color.white;
@@ -139,12 +140,12 @@ namespace DonkeyForest
             {
                 var id=(SkillId)i;int level=book.Level(id);
                 skillDetails[i].text=$"{SkillRules.Name(id)} • Lv.{level}/{SkillRules.MaxLevel}\n{descriptions[i]} • CD {SkillRules.Cooldown(id,level):0.#}s";
-                upgrades[i].GetComponentInChildren<Text>().text=level==SkillRules.MaxLevel?"MAX LEVEL":$"UPGRADE\n{SkillRules.UpgradeCost(level)} coins + 1 point";
+                upgrades[i].GetComponentInChildren<Text>(true).text=level==SkillRules.MaxLevel?"MAX LEVEL":$"UPGRADE\n{SkillRules.UpgradeCost(level)} coins + 1 point";
                 upgrades[i].interactable=level<SkillRules.MaxLevel&&journey.skillPoints>0&&game.data.coins>=SkillRules.UpgradeCost(level);
                 var quest=(ContractId)i;int progress=JourneyRules.Progress(journey,quest,GemRules.Count(game.data.gemMask),game.data.dragonDefeated),goal=JourneyRules.Goal(quest);
                 bool claimed=JourneyRules.Claimed(journey,quest);
                 questDetails[i].text=JourneyRules.ContractName(quest)+$"\n{Mathf.Min(progress,goal)}/{goal} • {(quest==ContractId.DragonSlayer?"200 coins, 2 points":"80 coins, 1 point")} + potion & XP";
-                contracts[i].GetComponentInChildren<Text>().text=claimed?"CLAIMED":progress>=goal?"CLAIM REWARD":"IN PROGRESS";
+                contracts[i].GetComponentInChildren<Text>(true).text=claimed?"CLAIMED":progress>=goal?"CLAIM REWARD":"IN PROGRESS";
                 contracts[i].interactable=!claimed&&progress>=goal;
             }
         }

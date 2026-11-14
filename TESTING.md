@@ -123,3 +123,9 @@ Automated repository checks: `python3 Tools/check_project.py`. These validate re
 - While playing, remove the Camp child from the runtime HUD, then press Escape: the HUD should rebuild once, opening a functioning Camp without duplicate hotbars or CampAdditions components. Test deleting the whole HUD and pressing Escape too.
 - Cause an early startup failure in a disposable checkout (for example, temporarily remove mounted model data). Confirm the first exception is logged, no partial HUD accepts clicks, and exiting Play Mode does not write an incomplete/default save over existing progress.
 - Repeat normal startup and Camp interaction in an Android build. Editor compilation, these Unity lifecycle checks and device behavior remain unverified here.
+
+## Hidden submenu startup regression
+
+- After updating, stop and restart Play Mode. The status text, joystick, combat controls and CAMP must appear. Startup must finish without a CampAdditions.Refresh null-reference error.
+- Open CAMP with Settings/Skills/Journal/Difficulty closed. Open each submenu, return to Camp, and repeat. Hidden button labels should refresh without null references, including difficulty/quality selections, skill upgrade costs and contract states.
+- Run **EditMode → CampUiTests → PausedHudSetupAndClosedSubmenuRefreshKeepTheirLabels**. This builds the real HUD on an inactive test host so Awake never loads or writes an adventure, then exercises closed-panel refresh. It requires Unity and has not been executed here.

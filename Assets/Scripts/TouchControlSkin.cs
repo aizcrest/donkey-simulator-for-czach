@@ -25,7 +25,7 @@ namespace DonkeyForest
             var rect=button.GetComponent<RectTransform>();var obj=new GameObject(name+" icon",typeof(RectTransform),typeof(Image));obj.transform.SetParent(rect,false);
             var icon=obj.GetComponent<Image>();icon.sprite=Sprite(name);icon.enabled=icon.sprite;icon.preserveAspect=true;icon.raycastTarget=false;
             var r=obj.GetComponent<RectTransform>();r.anchorMin=r.anchorMax=skill?new Vector2(.5f,1):new Vector2(0,.5f);r.anchoredPosition=skill?new Vector2(0,-20):new Vector2(28,0);r.sizeDelta=Vector2.one*(skill?30:34);
-            var label=button.GetComponentInChildren<Text>();label.rectTransform.anchoredPosition=skill?new Vector2(0,-17):new Vector2(20,0);label.rectTransform.sizeDelta=new Vector2(rect.sizeDelta.x-(skill?8:48),skill?42:rect.sizeDelta.y-8);label.fontSize=skill?14:19;
+            var label=button.GetComponentInChildren<Text>(true);label.rectTransform.anchoredPosition=skill?new Vector2(0,-17):new Vector2(20,0);label.rectTransform.sizeDelta=new Vector2(rect.sizeDelta.x-(skill?8:48),skill?42:rect.sizeDelta.y-8);label.fontSize=skill?14:19;
             if(!skill)return icon;
             var overlay=new GameObject("Cooldown",typeof(RectTransform),typeof(Image));overlay.transform.SetParent(r,false);
             var fill=overlay.GetComponent<Image>();fill.sprite=Sprite("stick");fill.enabled=fill.sprite;fill.color=new Color(.04f,.07f,.09f,.8f);fill.raycastTarget=false;fill.type=Image.Type.Filled;fill.fillMethod=Image.FillMethod.Radial360;fill.fillOrigin=2;fill.fillAmount=0;

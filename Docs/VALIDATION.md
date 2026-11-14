@@ -1,5 +1,11 @@
 # Validation
 
+## Hidden submenu label regression — 2026-11-14
+
+The previous startup guard left Paused true while CampAdditions.Setup called Close and Refresh. Refresh used GetComponentInChildren<Text>() on inactive settings, difficulty, upgrade and contract buttons; Unity excludes inactive descendants by default, so those lookups return null. This is a definite startup bug introduced by the paused initialization change, and the same lookups could also fail on opening Camp with submenus closed. Changed all control-label lookups to explicitly include inactive descendants.
+
+An isolated harness compiled the actual old/new Refresh bodies against simulated UI lookup semantics: the old body threw NullReferenceException; the corrected body refreshed hidden labels for Normal, Hard and Extreme and returned safely after resume. Repository checks and C# 9 syntax parsing passed (36 files). Added a Unity EditMode CampUiTests regression that builds an inactive, paused HUD and refreshes every closed submenu without loading or saving a real adventure. **The Unity test and actual Play Mode have not run here.**
+
 ## Partial HUD / Camp null-reference correction — 2026-11-14
 
 The user reported ToggleMenu throwing on CAMP and supplied a screenshot showing only the first, untextured CAMP button. That supports interrupted UI construction before the Camp panel exists; the original startup exception was not supplied. UI art now imports as single Sprites (full rectangular meshes and a 32px button border) and loads directly through Resources, removing runtime Sprite.Create from button construction. Missing artwork logs a warning and falls back to plain labeled controls. Imported sprites are no longer destroyed by the skin component.
