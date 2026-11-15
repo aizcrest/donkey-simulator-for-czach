@@ -50,3 +50,7 @@ The image `Docs/forest-rider-concept.png` is generated concept artwork, not a ga
 Retrieved 2026-11-15. Both allow commercial use without a purchase. Polyfork's **free mesh GLB** is used under its CC BY 4.0 option, documented on its [licensing page](https://polyfork.dev/licensing); this does not use its paid HD edition, source modules or website preview artwork. Attribution and modifications are also recorded in the in-game asset credits. No endorsement by either creator is implied.
 
 Original GLBs, license texts, download URLs, SHA-256 hashes and adaptations are in [Tools/AssetSources/MountedV2](Tools/AssetSources/MountedV2). The KayKit creator's [repository license](https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/blob/main/LICENSE.txt) covers the model and bundled animations. These credits apply to the derived runtime `.bytes` files too. `Docs/v2-mounted-preview.png` is our Blender render of the exported meshes, not a gameplay screenshot.
+
+## Tutorial snapshots
+
+`Assets/Resources/Tutorial/{ride,combat,orbs,dragon}.png` are staged instructional renders made with `Tools/render_tutorial_snapshots.py`, not gameplay screenshots. They use the credited Polyfork donkey (CC BY 4.0), KayKit knight/equipment (CC0), and Quaternius wolf/dragon (CC0), alongside original forest props, altar, markers and orbs. The donkey's credit, source link, license and adaptation notice appear above and in Camp → Asset Credits.

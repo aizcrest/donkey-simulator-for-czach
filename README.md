@@ -175,3 +175,9 @@ All 36 standalone C# NUnit test cases passed outside Unity under .NET 8, and C# 
 See [Docs/ROADMAP.md](Docs/ROADMAP.md). Priority gaps are Unity/device validation and balancing, more polished transitions/tutorials, and animations for the static bear/moose. Inventory/crafting, additional environments and bosses are optional future design expansions.
 
 The generated image in `Docs/forest-rider-concept.png` is concept artwork, not a gameplay screenshot.
+
+## Quick tutorial
+
+Open **Camp → Tutorial** for four short illustrated pages: ride/look, combat and Camp, orb hunting, and the dragon fight. Use Previous/Next, Done, or Back to Camp; reopening starts at page one. Camp keeps gameplay paused while reading. The four 768×288 snapshots are staged Blender renders of the actual licensed game meshes, not Unity gameplay captures. They preserve their aspect ratio and load only as their pages are opened.
+
+`blender -b -t 4 --python Tools/render_tutorial_snapshots.py` regenerates the images. In Unity/Android, check all four pages at your phone's aspect ratio, including page boundaries, Done, closing/reopening Camp and changing difficulty. Unity UI rendering still needs device verification.
