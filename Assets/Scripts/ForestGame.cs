@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
@@ -56,7 +55,9 @@ namespace DonkeyForest
         readonly ForestPropMeshes propMeshes=new ForestPropMeshes();
         readonly List<Material> mats = new List<Material>();
         readonly Dictionary<Color, Material> palette = new Dictionary<Color, Material>();
-        string SavePath => Path.Combine(Application.persistentDataPath, "forest-rider.json");
+        SaveSlotStore saves;
+        bool saveBlocked;
+        public int ActiveSlot { get; private set; }=1;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Boot() { if (!FindAnyObjectByType<ForestGame>()) new GameObject("Czach’s Donkey Journey launch").AddComponent<LaunchSplash>(); }
@@ -79,12 +80,7 @@ namespace DonkeyForest
         {
             Application.targetFrameRate = 30;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
-            Load();GemRules.NormalizeState(data);
-            if(data.skills==null)data.skills=new SkillSave();if(data.journey==null)data.journey=new JourneySave();
-            SkillRules.Normalize(data.skills);JourneyRules.Normalize(data.journey);data.health=Mathf.Clamp(data.health,0,MaxHealth);
-            data.masterVolume=SafeVolume(data.masterVolume,.75f);data.musicVolume=SafeVolume(data.musicVolume,.2f);data.effectsVolume=SafeVolume(data.effectsVolume,.8f);
-            data.quality=Mathf.Clamp(data.quality,0,2);
-            data.difficulty=DifficultyRules.Normalize(data.difficulty);
+            Load();NormalizeProgress(data);
             Audio=gameObject.AddComponent<GameAudio>();Audio.Setup(this);
             BuildWorld(); BuildRider();
             Skills=gameObject.AddComponent<MountedSkills>();Skills.Setup(this);
@@ -167,9 +163,8 @@ namespace DonkeyForest
             Physics.SyncTransforms();
             UnityEngine.Random.InitState(Environment.TickCount);
         }
-        void BuildRider()
+        Vector3 RestoredPlayerPosition()
         {
-            rider=new GameObject("Mounted player").transform;
             Vector3 savedPosition=new Vector3(Mathf.Clamp(data.x,-82,82),0,Mathf.Clamp(data.z,-82,82));
             Vector3 start=Ground(savedPosition,.08f);
             // Older flat-world saves can now land inside a newly placed tree trunk.
@@ -180,7 +175,12 @@ namespace DonkeyForest
                 start=Ground(savedPosition+new Vector3(Mathf.Cos(angle)*radius,0,Mathf.Sin(angle)*radius),.08f);
             }
             start.x=Mathf.Clamp(start.x,-86,86);start.z=Mathf.Clamp(start.z,-86,86);
-            rider.position=Ground(start,.08f);
+            return Ground(start,.08f);
+        }
+        void BuildRider()
+        {
+            rider=new GameObject("Mounted player").transform;
+            rider.position=RestoredPlayerPosition();
             controller=rider.gameObject.AddComponent<CharacterController>();controller.center=new Vector3(0,1,0);controller.height=2;controller.radius=.55f;controller.stepOffset=.4f;controller.slopeLimit=45;
             MountedModel=rider.gameObject.AddComponent<PlayerMountVisual>();MountedModel.Setup(this);
             view.transform.position=rider.position+new Vector3(0,7,-9);
@@ -348,34 +348,78 @@ namespace DonkeyForest
         public void Save(bool notify=true)
         {
             if(!ready)return;
+            if(saveBlocked){if(notify)Show("Open Camp > SAVE / LOAD to select or replace a save slot.");return;}
+            SaveSlot(ActiveSlot,notify);
+        }
+        public bool SlotExists(int slot)=>saves!=null&&saves.Exists(slot);
+        public Progress ReadSlot(int slot)
+        {
+            Progress result=null;
+            if(saves==null)return null;
+            saves.TryRead(slot,json=>{result=ParseProgress(json);return result!=null;},out _);
+            return result;
+        }
+        public bool SaveSlot(int slot,bool notify=true)
+        {
+            if(!ready)return false;
             if(rider){data.x=rider.position.x;data.z=rider.position.z;}
-            string temp=SavePath+".tmp";
             try
             {
-                File.WriteAllText(temp,JsonUtility.ToJson(data,true));
-                if(File.Exists(SavePath)){File.Copy(SavePath,SavePath+".bak",true);File.Delete(SavePath);}
-                File.Move(temp,SavePath);if(notify)Show("Progress saved on this device.");
+                // Explicitly overwriting a different adventure must clear its recovery copies too.
+                saves.Write(slot,JsonUtility.ToJson(data,true),slot!=ActiveSlot||saveBlocked);
+                saves.Select(slot);ActiveSlot=slot;saveBlocked=false;
+                if(notify)Show("Progress saved to Slot "+slot+".");
+                RefreshCamp();return true;
             }
-            catch(Exception e){Show("Save failed: device storage unavailable.");Debug.LogWarning(e.Message);}
+            catch(Exception e){Show("Save failed: device storage unavailable.");Debug.LogWarning(e.Message);return false;}
+        }
+        public bool LoadSlot(int slot)
+        {
+            if(!ready||!Paused)return false;
+            var loaded=ReadSlot(slot);
+            if(loaded==null){Show("This slot is empty or unreadable.");return false;}
+            try{saves.Select(slot);}
+            catch(Exception e){Debug.LogWarning(e.Message);Show("Could not select save: device storage unavailable.");return false;}
+            ActiveSlot=slot;saveBlocked=false;ApplyAdventure(loaded);
+            Show("Loaded Slot "+slot+" • "+Difficulty.Name+".");return true;
         }
         void Load()
         {
-            foreach(string path in new[]{SavePath,SavePath+".bak",SavePath+".tmp"})
+            saves=new SaveSlotStore(Application.persistentDataPath);
+            try{saves.MigrateLegacy(json=>ParseProgress(json)!=null);}
+            catch(Exception e){saveBlocked=true;Debug.LogWarning("Save migration failed: "+e.Message);}
+            ActiveSlot=saves.ActiveSlot;
+            var loaded=ReadSlot(ActiveSlot);
+            if(loaded!=null)data=loaded;
+            else if(saves.Exists(ActiveSlot))
             {
-                if(!File.Exists(path))continue;
-                try
-                {
-                    string json=File.ReadAllText(path);if(!json.TrimStart().StartsWith("{"))continue;
-                    var loaded=JsonUtility.FromJson<Progress>(json);
-                    if(loaded==null||loaded.version!=1||loaded.sword<1||float.IsNaN(loaded.health)||float.IsNaN(loaded.time)||float.IsInfinity(loaded.time)||float.IsNaN(loaded.x)||float.IsNaN(loaded.z)||float.IsInfinity(loaded.x)||float.IsInfinity(loaded.z))continue;
-                    if(!json.Contains("\"masterVolume\"")){loaded.masterVolume=.75f;loaded.musicVolume=.2f;loaded.effectsVolume=.8f;}
-                    data=loaded;data.sword=Mathf.Clamp(data.sword,1,10);data.armor=Mathf.Clamp(data.armor,1,10);data.barding=Mathf.Clamp(data.barding,1,10);
-                    data.health=Mathf.Clamp(data.health,0,MaxHealth);data.coins=Mathf.Max(0,data.coins);data.potions=Mathf.Max(0,data.potions);data.time=Mathf.Repeat(data.time,1);
-                    data.gemMask &= GemRules.FullMask;
-                    data.gemsPlaced=Mathf.Clamp(data.gemsPlaced,0,GemRules.Count(data.gemMask));
-                    return;
-                }catch(Exception){Debug.LogWarning("Could not read save; trying recovery copy.");}
+                saveBlocked=true;
+                notice="Save unreadable. Camp > SAVE / LOAD lets you load another slot or replace this one.";
             }
+        }
+        static Progress ParseProgress(string json)
+        {
+            try
+            {
+                if(!json.TrimStart().StartsWith("{"))return null;
+                var loaded=JsonUtility.FromJson<Progress>(json);
+                if(loaded==null||loaded.version!=1||loaded.sword<1||!Finite(loaded.health)||!Finite(loaded.time)||!Finite(loaded.x)||!Finite(loaded.z))return null;
+                if(!json.Contains("\"masterVolume\"")){loaded.masterVolume=.75f;loaded.musicVolume=.2f;loaded.effectsVolume=.8f;}
+                NormalizeProgress(loaded);return loaded;
+            }
+            catch(Exception){return null;}
+        }
+        static bool Finite(float value)=>!float.IsNaN(value)&&!float.IsInfinity(value);
+        static void NormalizeProgress(Progress loaded)
+        {
+            if(loaded.skills==null)loaded.skills=new SkillSave();if(loaded.journey==null)loaded.journey=new JourneySave();
+            SkillRules.Normalize(loaded.skills);JourneyRules.Normalize(loaded.journey);
+            loaded.sword=Mathf.Clamp(loaded.sword,1,10);loaded.armor=Mathf.Clamp(loaded.armor,1,10);loaded.barding=Mathf.Clamp(loaded.barding,1,10);
+            loaded.health=Mathf.Clamp(loaded.health,0,90+loaded.armor*10+loaded.barding*10+(loaded.journey.level-1)*3);
+            loaded.coins=Mathf.Max(0,loaded.coins);loaded.potions=Mathf.Max(0,loaded.potions);loaded.time=Mathf.Repeat(loaded.time,1);
+            loaded.masterVolume=SafeVolume(loaded.masterVolume,.75f);loaded.musicVolume=SafeVolume(loaded.musicVolume,.2f);loaded.effectsVolume=SafeVolume(loaded.effectsVolume,.8f);
+            loaded.quality=Mathf.Clamp(loaded.quality,0,2);loaded.difficulty=DifficultyRules.Normalize(loaded.difficulty);
+            GemRules.NormalizeState(loaded);
         }
         void OnApplicationPause(bool pause){if(pause)Save(false);}
         void OnApplicationQuit(){Save(false);}
@@ -409,7 +453,7 @@ namespace DonkeyForest
             var canvas=hudRoot.GetComponent<Canvas>();if(canvas)canvas.enabled=value;
             var raycaster=hudRoot.GetComponent<GraphicRaycaster>();if(raycaster)raycaster.enabled=value;
         }
-        void RefreshCamp(){inventory.text=$"CAMP & EQUIPMENT\nCoins: {data.coins}\nSword Lv.{data.sword}   Rider armor Lv.{data.armor}   Donkey armor Lv.{data.barding}\nUpgrades cost 40 × current level. Maximum level 10.\nLocal autosave every 30 seconds. One save per device.";}
+        void RefreshCamp(){inventory.text=$"CAMP & EQUIPMENT\nCoins: {data.coins}\nSword Lv.{data.sword}   Rider armor Lv.{data.armor}   Donkey armor Lv.{data.barding}\nUpgrades cost 40 × current level. Maximum level 10.\nSlot {ActiveSlot}/5 • {Difficulty.Name} • Autosave every 30 seconds.";}
         void Upgrade(int kind)
         {
             int level=kind==0?data.sword:kind==1?data.armor:data.barding;
@@ -418,43 +462,41 @@ namespace DonkeyForest
             data.coins-=level*40;if(kind==0)data.sword++;else if(kind==1)data.armor++;else data.barding++;
             RefreshCamp();Save();
         }
-        public bool ResetProgress()
+        public bool ResetProgress()=>StartNewAdventure(data.difficulty);
+        // Called only after Camp's destructive-change confirmation.
+        public bool ConfirmDifficultyChange(int value)
         {
-            if(!Paused)return false;
-            var fresh=Progress.NewAdventure(data);
-            try{ProgressResetStore.Replace(SavePath,JsonUtility.ToJson(fresh,true));}
+            value=DifficultyRules.Normalize(value);
+            if(value==data.difficulty)return true;
+            return StartNewAdventure(value);
+        }
+        bool StartNewAdventure(int difficulty)
+        {
+            if(!ready||!Paused)return false;
+            var fresh=Progress.NewAdventure(data,difficulty);
+            try{saves.Write(ActiveSlot,JsonUtility.ToJson(fresh,true),true);}
             catch(Exception e){Debug.LogWarning("Progress reset failed: "+e.Message);return false;}
-            // Commit the new state only after the fresh save is installed successfully.
+            saveBlocked=false;ApplyAdventure(fresh);
+            Show("New "+Difficulty.Name+" adventure started in Slot "+ActiveSlot+".");return true;
+        }
+        void ApplyAdventure(Progress loaded)
+        {
             Skills.CancelEffects();
             if(Encounter){Encounter.gameObject.SetActive(false);Destroy(Encounter.gameObject);}
             foreach(var enemy in enemies)if(enemy){enemy.gameObject.SetActive(false);Destroy(enemy.gameObject);}
             enemies.Clear();
             foreach(var loot in FindObjectsByType<ForestLoot>(FindObjectsInactive.Include,FindObjectsSortMode.None))
             {loot.gameObject.SetActive(false);Destroy(loot.gameObject);}
-            data=fresh;Skills.ResetProgress();Audio.ResetCombat();
-            controller.enabled=false;rider.position=Ground(Vector3.zero,.08f);rider.rotation=Quaternion.identity;controller.enabled=true;
+            data=loaded;NormalizeProgress(data);Skills.ResetProgress();Audio.ResetCombat();Audio.ApplyVolumes();
+            controller.enabled=false;rider.position=RestoredPlayerPosition();rider.rotation=Quaternion.identity;controller.enabled=true;
             moveInput=Vector2.zero;dodgeDirection=Vector3.zero;comboStep=0;
             comboWindow=attackCooldown=swing=spawnClock=autoSave=0;dodge.Reset();damageInbox.Clear();
             foreach(var stick in FindObjectsByType<MobileStick>(FindObjectsSortMode.None))stick.ResetStick();
-            MountedModel.Animate(false,false,0);
+            MountedModel.Animate(false,false,0);MobilePerformance.Apply(this);
             Encounter=new GameObject("Gems and summoning altar").AddComponent<DragonEncounter>();Encounter.Setup(this);
-            for(int i=0;i<MobilePerformance.InitialEnemies(data.quality,data.difficulty);i++)SpawnEnemy(false);
-            sky.Tick();hudClock=0;ToggleMenu();
-            Show("New adventure started! Hunt enemies for ten orbs and challenge the dragon again.");
-            return true;
-        }
-        public void SetDifficulty(int value)
-        {
-            if(!Paused)return;
-            value=DifficultyRules.Normalize(value);if(value==data.difficulty)return;
-            bool restart=Encounter&&Encounter.Active;
-            data.difficulty=value;
-            foreach(var enemy in enemies)if(enemy)enemy.ApplyDifficulty();
-            MobilePerformance.Apply(this);
-            if(restart)Encounter.RestartBoss();
-            else if(!Dead)for(int i=enemies.Count;i<MobilePerformance.InitialEnemies(data.quality,data.difficulty);i++)SpawnEnemy(Night);
-            Show(Difficulty.Name+" difficulty applied."+(restart?" Dragon fight restarted at full health.":""));
-            Save(false);
+            if(!Encounter.Active)for(int i=0;i<MobilePerformance.InitialEnemies(data.quality,data.difficulty);i++)SpawnEnemy(Night);
+            sky.Tick();hudClock=0;Paused=false;menu.SetActive(false);creditsPanel.SetActive(false);Additions.Close();
+            // Loading must not overwrite the selected snapshot as a side effect of closing Camp.
         }
         void Revive()
         {
@@ -520,7 +562,7 @@ namespace DonkeyForest
             Button(panel,"Sword",new Vector2(.5f,.5f),new Vector2(-270,0),new Vector2(240,65),()=>Upgrade(0));
             Button(panel,"Rider armor",new Vector2(.5f,.5f),Vector2.zero,new Vector2(240,65),()=>Upgrade(1));
             Button(panel,"Donkey armor",new Vector2(.5f,.5f),new Vector2(270,0),new Vector2(240,65),()=>Upgrade(2));
-            Button(panel,"SAVE",new Vector2(.5f,.5f),new Vector2(-270,-100),new Vector2(240,65),()=>Save());
+            Button(panel,"SAVE / LOAD",new Vector2(.5f,.5f),new Vector2(-270,-100),new Vector2(240,65),()=>Additions.OpenSaves());
             Button(panel,"REVIVE",new Vector2(.5f,.5f),new Vector2(0,-100),new Vector2(240,65),Revive);
             Button(panel,"RESUME",new Vector2(.5f,.5f),new Vector2(270,-100),new Vector2(240,65),ToggleMenu);
             Label(panel,"WASD: ride • Space: attack • Shift: dodge • E: offer orbs • H: heal • F5: save",new Vector2(.5f,0),new Vector2(0,50),new Vector2(850,60),20);

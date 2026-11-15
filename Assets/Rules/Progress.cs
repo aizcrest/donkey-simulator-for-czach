@@ -13,10 +13,10 @@ namespace DonkeyForest
         public float masterVolume=.75f,musicVolume=.2f,effectsVolume=.8f;
         public int difficulty; // Normal is zero, including saves made before difficulty selection.
         public int quality; // Low is the default on a fresh or older save.
-        public static Progress NewAdventure(Progress previous)
+        public static Progress NewAdventure(Progress previous,int? difficulty=null)
         {
             return new Progress {
-                quality=previous.quality,difficulty=previous.difficulty,
+                quality=previous.quality,difficulty=DifficultyRules.Normalize(difficulty??previous.difficulty),
                 masterVolume=previous.masterVolume,musicVolume=previous.musicVolume,effectsVolume=previous.effectsVolume
             };
         }

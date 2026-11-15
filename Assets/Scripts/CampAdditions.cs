@@ -5,7 +5,15 @@ namespace DonkeyForest
     public sealed class CampAdditions:MonoBehaviour
     {
         ForestGame game;
-        GameObject skills,journal,audioPanel,difficultyPanel,resetPanel,forCzachPanel;
+        GameObject skills,journal,audioPanel,difficultyPanel,resetPanel,forCzachPanel,savePanel,confirmPanel;
+        Text confirmMessage;
+        System.Func<bool> pendingAction;
+        GameObject confirmReturn;
+        readonly Text[] saveDetails=new Text[SaveSlotStore.Count];
+        readonly Button[] loadButtons=new Button[SaveSlotStore.Count];
+        readonly Slider[] audioSliders=new Slider[3];
+        readonly Text[] audioLabels=new Text[3];
+        int sliderCount;
         Text resetMessage;
         TutorialGuide tutorial;
         Button difficultySelector;
@@ -19,7 +27,7 @@ namespace DonkeyForest
         readonly string[] descriptions={"Rider • spin attack around you", "Rider • reduce damage for 4–5 seconds", "Donkey • rush, hit once per enemy and stun", "Donkey • kick behind you, knock back and stun"};
         public void Setup(ForestGame owner,Transform camp,Transform hud)
         {
-            game=owner;
+            game=owner;sliderCount=0;
             for(int i=0;i<4;i++)
             {
                 var id=(SkillId)i;
@@ -30,7 +38,7 @@ namespace DonkeyForest
             game.Button(camp,"JOURNAL",new Vector2(.5f,1),new Vector2(-130,-30),new Vector2(160,42),()=>Open(journal));
             game.Button(camp,"SETTINGS",new Vector2(.5f,1),new Vector2(65,-30),new Vector2(150,42),()=>Open(audioPanel));
             var resetButton=game.Button(camp,"RESET PROGRESS",new Vector2(.5f,.5f),new Vector2(0,-165),new Vector2(270,46),()=>{
-                resetMessage.text="Start a new adventure?\n\nThis clears equipment, coins, levels, skills, contracts,\ngems and dragon victory. This cannot be undone.\n\nDifficulty, graphics and audio settings are kept.";
+                resetMessage.text=$"Start a new adventure in Slot {game.ActiveSlot}?\n\nThis clears equipment, coins, levels, skills, contracts,\ngems and dragon victory. This cannot be undone.\n\nOther slots, difficulty, graphics and audio settings are kept.";
                 Open(resetPanel);
             });
             resetButton.transform.SetAsFirstSibling();
@@ -58,11 +66,13 @@ namespace DonkeyForest
             for(int i=0;i<3;i++)
             {
                 int mode=i;var profile=DifficultyRules.Get(mode);float y=125-i*105;
-                difficultyButtons[i]=game.Button(difficultyPanel.transform,profile.Name.ToUpperInvariant(),new Vector2(.5f,.5f),new Vector2(-295,y),new Vector2(230,65),()=>{game.SetDifficulty(mode);Refresh();});
+                difficultyButtons[i]=game.Button(difficultyPanel.transform,profile.Name.ToUpperInvariant(),new Vector2(.5f,.5f),new Vector2(-295,y),new Vector2(230,65),()=>Confirm(
+                    $"Change to {profile.Name}?\n\nThis starts a NEW adventure in Slot {game.ActiveSlot}.\nEquipment, levels, coins, skills, contracts, orbs and\ndragon progress in this slot will be erased.\n\nOther slots and graphics/audio settings are kept.",
+                    ()=>game.ConfirmDifficultyChange(mode),difficultyPanel));
                 string details=$"{profile.HealthMultiplier:0.##}× HP / {profile.DamageMultiplier:0.##}× damage • {(mode==0?"Standard crowds":mode==1?"Larger crowds":"Largest crowds")}\nOrb drops {profile.OrbDropChance*100:0}% • Stamina hit -{profile.StaminaDamagePerHit}\nFireball {profile.FireballRadius:0.#}m / {profile.FireballTravelSeconds:0.##}s • Dive {profile.DiveRadius:0.#}m\nStun {profile.DragonStunSeconds:0.##}s (+2s when exhausted)";
                 game.Label(difficultyPanel.transform,details,new Vector2(.5f,.5f),new Vector2(120,y),new Vector2(560,95),17);
             }
-            game.Label(difficultyPanel.transform,"Extreme: carried orbs are lost on death; altar offerings stay safe.\nChanging difficulty restarts an active dragon fight at full health.",new Vector2(.5f,.5f),new Vector2(0,-165),new Vector2(840,55),18);
+            game.Label(difficultyPanel.transform,"Extreme: carried orbs are lost on death; altar offerings stay safe.\nChanging difficulty resets this slot after confirmation.",new Vector2(.5f,.5f),new Vector2(0,-165),new Vector2(840,55),18);
             AudioSlider("Master",105,game.data.masterVolume,value=>game.data.masterVolume=value);
             AudioSlider("Music",40,game.data.musicVolume,value=>game.data.musicVolume=value);
             AudioSlider("Effects",-25,game.data.effectsVolume,value=>game.data.effectsVolume=value);
@@ -86,8 +96,56 @@ namespace DonkeyForest
                 "Should you have feedbacks and ideas about this game, don't hesitate to tell me. Let's collab!",
                 new Vector2(.5f,.5f),Vector2.zero,new Vector2(790,350),24);
             dedication.alignment=TextAnchor.MiddleLeft;
+            BuildSavePanel(camp);
             tutorial=TutorialGuide.Create(game,camp,Close);
             Close();Refresh();
+        }
+        void BuildSavePanel(Transform camp)
+        {
+            savePanel=Overlay(camp,"SAVE / LOAD • 5 LOCAL SLOTS");
+            game.Label(savePanel.transform,"SAVE copies this adventure into a slot and makes it active. Autosave follows the active slot.",
+                new Vector2(.5f,1),new Vector2(0,-70),new Vector2(840,30),17);
+            for(int i=0;i<SaveSlotStore.Count;i++)
+            {
+                int slot=i+1;float y=132-i*70;
+                saveDetails[i]=game.Label(savePanel.transform,"",new Vector2(.5f,.5f),new Vector2(-145,y),new Vector2(540,65),17);
+                saveDetails[i].alignment=TextAnchor.MiddleLeft;
+                game.Button(savePanel.transform,"SAVE",new Vector2(.5f,.5f),new Vector2(190,y),new Vector2(120,50),()=>{
+                    if(game.SlotExists(slot))Confirm($"Overwrite Slot {slot}?\n\nIts saved adventure will be replaced with your current\n{game.Difficulty.Name} adventure. This cannot be undone.\n\nSlot {slot} will become the active autosave slot.",()=>game.SaveSlot(slot),savePanel);
+                    else {game.SaveSlot(slot);RefreshSaves();}
+                });
+                loadButtons[i]=game.Button(savePanel.transform,"LOAD",new Vector2(.5f,.5f),new Vector2(335,y),new Vector2(120,50),()=>
+                    Confirm($"Load Slot {slot}?\n\nUnsaved changes in your current adventure will be lost.\nSave them into another slot first if you want to keep them.\n\nAutosaves will then update Slot {slot}.",()=>game.LoadSlot(slot),savePanel));
+            }
+            confirmPanel=Overlay(camp,"PLEASE CONFIRM");
+            confirmMessage=game.Label(confirmPanel.transform,"",new Vector2(.5f,.5f),new Vector2(0,40),new Vector2(810,280),23);
+            var cancel=confirmPanel.transform.Find("BACK").GetComponent<Button>();
+            cancel.GetComponentInChildren<Text>(true).text="CANCEL";
+            cancel.onClick.RemoveAllListeners();cancel.onClick.AddListener(()=>{var target=confirmReturn;Open(target);});
+            game.Button(confirmPanel.transform,"CONFIRM",new Vector2(.5f,.5f),new Vector2(0,-135),new Vector2(300,60),()=>{
+                var action=pendingAction;var target=confirmReturn;
+                if(action==null)return;
+                if(!action()){confirmMessage.text="Could not complete the action.\nCheck device storage or choose a readable slot.\nYour current adventure is still loaded.";return;}
+                if(game.Paused){Open(target);if(target==savePanel)RefreshSaves();}
+            });
+        }
+        void Confirm(string message,System.Func<bool> action,GameObject returnTo)
+        {
+            Open(confirmPanel);confirmMessage.text=message;pendingAction=action;confirmReturn=returnTo;
+        }
+        public void OpenSaves(){Open(savePanel);RefreshSaves();}
+        void RefreshSaves()
+        {
+            for(int i=0;i<SaveSlotStore.Count;i++)
+            {
+                int slot=i+1;var saved=game.ReadSlot(slot);
+                string prefix=$"Slot {slot}"+(slot==game.ActiveSlot?" • ACTIVE":"");
+                saveDetails[i].text=saved==null?prefix+(game.SlotExists(slot)?" • Unreadable (can overwrite)":" • Empty"):
+                    $"{prefix} • {DifficultyRules.Get(saved.difficulty).Name} • Lv.{saved.journey.level} • HP {saved.health:0}\n"+
+                    $"Sword {saved.sword} • Armor {saved.armor} • Donkey {saved.barding} • Coins {saved.coins}\n"+
+                    $"Orbs {GemRules.Count(saved.gemMask)-saved.gemsPlaced} held / {saved.gemsPlaced} offered • "+(saved.dragonDefeated?"Dragon defeated":"Dragon undefeated");
+                loadButtons[i].interactable=saved!=null;
+            }
         }
         GameObject Overlay(Transform camp,string title)
         {
@@ -107,9 +165,10 @@ namespace DonkeyForest
             slider.minValue=0;slider.maxValue=1;slider.value=initial;
             slider.onValueChanged.AddListener(value=>{changed(value);label.text=name+" "+Mathf.RoundToInt(value*100)+"%";game.Audio.ApplyVolumes();});
             label.text=name+" "+Mathf.RoundToInt(initial*100)+"%";
+            audioSliders[sliderCount]=slider;audioLabels[sliderCount++]=label;
         }
-        void Open(GameObject panel){Close();panel.SetActive(true);Refresh();game.Audio.Play("ui");}
-        public void Close(){if(skills)skills.SetActive(false);if(journal)journal.SetActive(false);if(audioPanel)audioPanel.SetActive(false);if(difficultyPanel)difficultyPanel.SetActive(false);if(resetPanel)resetPanel.SetActive(false);if(forCzachPanel)forCzachPanel.SetActive(false);if(tutorial)tutorial.gameObject.SetActive(false);}
+        void Open(GameObject panel){Close();panel.SetActive(true);Refresh();if(game.Audio)game.Audio.Play("ui");}
+        public void Close(){pendingAction=null;confirmReturn=null;if(savePanel)savePanel.SetActive(false);if(confirmPanel)confirmPanel.SetActive(false);if(skills)skills.SetActive(false);if(journal)journal.SetActive(false);if(audioPanel)audioPanel.SetActive(false);if(difficultyPanel)difficultyPanel.SetActive(false);if(resetPanel)resetPanel.SetActive(false);if(forCzachPanel)forCzachPanel.SetActive(false);if(tutorial)tutorial.gameObject.SetActive(false);}
         void Upgrade(SkillId id)
         {
             if(!game.Skills.Book.TryUpgrade(id,ref game.data.coins,ref game.data.journey.skillPoints)){game.Show("Need a skill point and enough coins; skills cap at level 5.");return;}
@@ -136,6 +195,12 @@ namespace DonkeyForest
             }
             if(!game.Paused)return;
             difficultySelector.GetComponentInChildren<Text>(true).text="DIFFICULTY: "+game.Difficulty.Name.ToUpperInvariant();
+            for(int i=0;i<sliderCount;i++)
+            {
+                float volume=i==0?game.data.masterVolume:i==1?game.data.musicVolume:game.data.effectsVolume;
+                audioSliders[i].SetValueWithoutNotify(volume);
+                audioLabels[i].text=(i==0?"Master":i==1?"Music":"Effects")+" "+Mathf.RoundToInt(volume*100)+"%";
+            }
             string xp=journey.level>=JourneyRules.MaxLevel?"MAX LEVEL":$"XP {journey.xp}/{JourneyRules.Needed(journey.level)}";
             skillSummary.text=$"Level {journey.level} • {xp} • Skill points {journey.skillPoints} • Coins {game.data.coins}";
             journalSummary.text=$"Level {journey.level} • {xp} • Claim each completed contract once";

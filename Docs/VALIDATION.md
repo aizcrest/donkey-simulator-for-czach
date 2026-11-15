@@ -1,5 +1,13 @@
 # Validation
 
+
+## Five save slots and difficulty confirmation — 2026-11-15
+
+- **71 standalone NUnit cases passed** on .NET 8, including five-slot isolation, last-active selection, corrupt primary recovery, legacy migration, write failures, reset recovery cleanup and fresh adventures under each difficulty.
+- Extended the Unity-only Camp UI regression to check difficulty selection/cancellation, five slot summaries, disabled empty-slot loading and load cancellation without save mutation. This test is committed but has **not been run in Unity** here.
+- Loading rebuilds encounter/skill state, removes previous wildlife and loot, restores audio/graphics, and reuses startup's terrain/obstacle-safe placement. The loaded snapshot is not saved merely by closing Camp during the switch.
+- Unity API compilation, Play Mode and Android save/load flows still require device validation. See the save-slot checklist in README.md.
+
 ## Monster orb drops, side HUD and player-hit stamina — 2026-11-15
 
 Replaced initial/scattered map gems with monster drops rolled independently of ordinary loot: Normal 10%, Hard 8%, Extreme 4%. Pending drops reserve missing objective IDs so multiple kills cannot create duplicates or exceed ten total held/offered/pending orbs. Extreme death discards held and pending orbs; offerings remain protected and replacement orbs require new kills. Obsolete position fields are no longer read; old carried/altar progress migrates as before. Ground orb drops are transient; collected/placed progress and death losses save normally.

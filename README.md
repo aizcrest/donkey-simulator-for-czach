@@ -110,7 +110,7 @@ Choose **CAMP → SETTINGS → DIFFICULTY → Normal / Hard / Extreme**. Normal 
 
 Extreme fireballs travel 2.4× as fast as Normal over the same distance. Warning circles and impact effects match each mode's damage radius. The aerial phase remains 10 seconds, followed by the original dive warning and dive, then the selected stun duration. Higher difficulty multiplies the existing enemy level/elite scaling; rewards and progression costs remain the same.
 
-Existing wildlife keeps its health percentage when you change modes. Changing difficulty during an active dragon encounter clears its hazards and restarts the fight at full health under the new rules. Gems, equipment, progression and dragon victory remain saved; changing difficulty does not summon a defeated dragon again.
+Changing difficulty opens a confirmation prompt. **Confirm starts a new adventure in the active save slot**: equipment, levels, coins, skills, contracts, orbs, altar offerings and dragon victory reset. Cancel keeps the current adventure and difficulty. Graphics/audio settings and the other four slots are kept. Save a copy to another slot first if you want to keep the old adventure.
 
 On death, a gold-and-green **You died.** panel offers a direct **REVIVE** button. It restores health at camp and resumes gameplay without needing to open Camp. On Extreme, carried orbs are **lost**, and outstanding ground orb drops are cleared. You must hunt new enemies for replacements; nothing scatters. Altar offerings remain protected. The loss saves immediately. Normal and Hard retain carried orbs. Old saves keep carried orbs/altar counts; obsolete scattered locations are ignored.
 
@@ -151,13 +151,13 @@ Native Unity Terrain spans 180 × 180m with a 257 × 257 heightmap, broad hills,
 
 Character controllers handle slope movement and collision. Spawns, loot, revival and restored positions sample terrain height; the camera checks terrain/trunk obstruction. Existing flat-world saves adapt to elevation on load.
 
-Saves live at `Application.persistentDataPath/forest-rider.json`, with backup/temporary recovery files. They preserve health, X/Z, time, equipment, inventory counters, gems, victory, XP, skill levels/cooldowns, contract claims, audio, quality and difficulty. Autosave runs every 30s and after progress events/backgrounding/quit; camp also offers manual save. Carried and offered orbs persist. Uncollected monster orb drops, enemy positions and ordinary ground loot are transient and disappear on reload. Uninstalling the app can remove local saves.
+Camp → **SAVE / LOAD** offers five local slots, stored as `Application.persistentDataPath/forest-slot-1.json` through `forest-slot-5.json`, with backup/temporary recovery files. Each row shows difficulty, character level, health, coins, sword/rider/donkey equipment levels, carried/offered orbs and dragon victory. Empty and unreadable slots cannot be loaded. Saving to a slot makes it active; overwriting an occupied slot asks for confirmation. Loading asks before discarding unsaved changes, restores the chosen adventure, and makes that slot active. The game resumes the last active slot on startup; autosaves and F5 write only there. The old `forest-rider.json` save (or a valid recovery copy) migrates into Slot 1 on first upgrade, leaving the original file untouched. Unreadable active saves are protected from automatic overwrites until the player explicitly saves or resets. They preserve health, X/Z, time, equipment, inventory counters, gems, victory, XP, skill levels/cooldowns, contract claims, audio, quality and difficulty. Autosave runs every 30s and after progress events/backgrounding/quit; camp also offers manual save. Carried and offered orbs persist. Uncollected monster orb drops, enemy positions and ordinary ground loot are transient and disappear on reload. Uninstalling the app can remove local saves.
 
 ## Start again
 
 Use **CAMP → RESET PROGRESS → RESET & START AGAIN** to begin a new adventure. The confirmation explains what will be cleared; **CANCEL** leaves your adventure unchanged.
 
-Reset restores the original starting gear, health, three potions, level/skill defaults and daytime at the central clearing. It clears coins, kills, XP, contracts, skill cooldowns, gems, altar deposits and dragon victory. Existing enemies, loot and dragon attacks are removed, all ten orb IDs become available from monster drops again, and new wildlife spawns. Difficulty, graphics and audio preferences are kept. The new adventure is saved immediately; old recovery files are removed so they cannot restore the previous run. The reset cannot be undone through the game.
+Reset affects **only the active slot** and restores the original starting gear, health, three potions, level/skill defaults and daytime at the central clearing. It clears coins, kills, XP, contracts, skill cooldowns, gems, altar deposits and dragon victory. Existing enemies, loot and dragon attacks are removed, all ten orb IDs become available from monster drops again, and new wildlife spawns. Difficulty, graphics and audio preferences are kept. The new adventure is saved immediately; old recovery files are removed so they cannot restore the previous run. The reset cannot be undone through the game.
 
 ## Builds and checks
 
@@ -165,10 +165,10 @@ Reset restores the original starting gear, health, three potions, level/skill de
 - **Forest Rider → Build iOS Xcode project**: output `Builds/iOS`; finish signing/building on macOS with Xcode.
 - `python3 Tools/check_project.py`: repository, model integrity, licensing and audio checks.
 - `blender -b --python Tools/verify_models.py`: FBX mesh/texture/clip round-trip checks.
-- Unity **Window → General → Test Runner → EditMode → Run All**: 36 difficulty/gem/dragon/skill/progression/save-reset test cases plus Unity-only model-import/material, touch-sprite and hidden Camp menu regressions.
+- Unity **Window → General → Test Runner → EditMode → Run All**: difficulty/gem/dragon/skill/progression/save-reset/save-slot tests plus Unity-only model-import/material, touch-sprite and hidden Camp menu regressions.
 - In Play Mode: **Forest Rider → Validate terrain (Play Mode)**.
 
-All 36 standalone C# NUnit test cases passed outside Unity under .NET 8, and C# 9 syntax checks passed. See [Docs/VALIDATION.md](Docs/VALIDATION.md). Unity API compilation, actual Unity imports, device playthroughs and hardware performance remain unverified. Use [TESTING.md](TESTING.md) before release.
+All 71 standalone C# NUnit test cases passed outside Unity under .NET 8, and C# 9 syntax checks passed. See [Docs/VALIDATION.md](Docs/VALIDATION.md). Unity API compilation, actual Unity imports, device playthroughs and hardware performance remain unverified. Use [TESTING.md](TESTING.md) before release.
 
 ## Remaining work
 
@@ -189,3 +189,11 @@ Wildlife and zombies now commit to a facing direction for **wind-up → strike �
 Player movement updates before enemy contact checks. All incoming damage—including dragon fireballs and dive AoE—is resolved after the frame's input callbacks, so a touch dodge pressed in that frame protects against queued hits too. Pause, revival and reset clear or suspend the relevant transient state. See [combat validation and tuning](Docs/ENEMY_COMBAT.md).
 
 [Mobile control layout preview](Docs/mobile-control-layout.png) shows the control arrangement using the shipped sprites; it is a layout illustration, not a Unity gameplay capture. Regenerate it with `python Tools/preview_combat_layout.py`. Verify multitouch (move + attack/skill), circular button edges, cooldowns, Camp overlays and safe-area resizing in Unity/on a phone.
+
+### Save-slot device checks
+
+- In Camp → SAVE / LOAD, save to Slots 1 and 2. Verify the summaries and ACTIVE marker; leave Camp, quit and reopen to check the last slot resumes.
+- Change difficulty: Cancel must keep all progress. Confirm must reset only the active slot with the chosen difficulty, keeping audio/graphics. Load the other slot to restore its original difficulty, equipment, skills, position and altar state.
+- Confirm loading the active slot rolls back unsaved changes. Check empty slots have disabled LOAD buttons; overwriting an occupied slot asks first.
+- Load saves made alive, dead, with carried orbs, with an active dragon and after dragon victory. Check no old enemies, ground loot or attacks remain. Audio sliders should show the loaded settings.
+- Test legacy migration, missing/corrupt primary files with valid backups, and storage-write failures on a device or isolated test data directory. Unity EditMode `SaveSlotTests` exercises file isolation, recovery, migration and reset failures without touching device saves.
