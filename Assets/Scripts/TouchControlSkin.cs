@@ -31,6 +31,26 @@ namespace DonkeyForest
             var fill=overlay.GetComponent<Image>();fill.sprite=Sprite("stick");fill.enabled=fill.sprite;fill.color=new Color(.04f,.07f,.09f,.8f);fill.raycastTarget=false;fill.type=Image.Type.Filled;fill.fillMethod=Image.FillMethod.Radial360;fill.fillOrigin=2;fill.fillAmount=0;
             var fr=overlay.GetComponent<RectTransform>();fr.anchorMin=Vector2.zero;fr.anchorMax=Vector2.one;fr.offsetMin=fr.offsetMax=Vector2.zero;return fill;
         }
+        public Image RoundIcon(Button button,string name,bool large=false)
+        {
+            var rect=button.GetComponent<RectTransform>();float size=rect.sizeDelta.x;
+            var face=button.GetComponent<Image>();face.sprite=Sprite("stick");face.type=Image.Type.Simple;face.preserveAspect=true;
+            button.gameObject.AddComponent<CircularControlHitArea>();
+            var obj=new GameObject(name+" icon",typeof(RectTransform),typeof(Image));obj.transform.SetParent(rect,false);
+            var icon=obj.GetComponent<Image>();icon.sprite=Sprite(name);icon.enabled=icon.sprite;icon.preserveAspect=true;icon.raycastTarget=false;
+            var ir=obj.GetComponent<RectTransform>();ir.anchorMin=ir.anchorMax=new Vector2(.5f,.5f);
+            ir.anchoredPosition=new Vector2(0,size*.10f);ir.sizeDelta=Vector2.one*(size*.52f);
+            var overlay=new GameObject("Cooldown",typeof(RectTransform),typeof(Image));overlay.transform.SetParent(rect,false);
+            var fill=overlay.GetComponent<Image>();fill.sprite=Sprite("stick");fill.enabled=fill.sprite;fill.raycastTarget=false;
+            fill.type=Image.Type.Filled;fill.fillMethod=Image.FillMethod.Radial360;fill.fillOrigin=2;
+            fill.color=new Color(.025f,.04f,.045f,.82f);fill.fillAmount=0;
+            var fr=overlay.GetComponent<RectTransform>();fr.anchorMin=fr.anchorMax=new Vector2(.5f,.5f);fr.sizeDelta=Vector2.one*(size*.88f);
+            var label=button.GetComponentInChildren<Text>(true);label.transform.SetAsLastSibling();
+            label.rectTransform.anchorMin=label.rectTransform.anchorMax=new Vector2(.5f,.5f);
+            label.rectTransform.anchoredPosition=new Vector2(0,-size*.28f);label.rectTransform.sizeDelta=new Vector2(size*.8f,size*.24f);
+            label.fontSize=large?22:14;label.resizeTextForBestFit=true;label.resizeTextMinSize=12;label.resizeTextMaxSize=large?22:16;
+            return fill;
+        }
         public void Stick(Image image,bool thumb)
         {image.sprite=Sprite(thumb?"thumb":"stick");image.color=image.sprite?Color.white:thumb?new Color(.7f,.78f,.6f,.9f):new Color(.12f,.18f,.16f,.7f);image.preserveAspect=true;if(thumb)image.raycastTarget=false;}
         // Imported sprites belong to Resources; never destroy their shared assets.

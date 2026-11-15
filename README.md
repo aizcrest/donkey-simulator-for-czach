@@ -2,7 +2,7 @@
 
 ![Launch artwork](Assets/Resources/Branding/CzachsDonkeyJourney.png)
 
-Generated splash artwork appears for two seconds before gameplay, fitted without cropping or stretching. Wide phones and tablets show dark margins around the complete image. It also appears in Play Mode. The donkey-and-knight launcher icon is in `Assets/Art/AppIcon`. The existing **Forest Rider** editor tools menu and Android package ID remain stable.
+Generated splash artwork appears for two seconds before gameplay, fitted without cropping or stretching. Wide phones and tablets show dark margins around the complete image. A safe-area footer below the artwork reads **“Developed and built by Joven”** in the cartoon UI font; its space is reserved so it does not cover or crop the artwork. It also appears in Play Mode. The donkey-and-knight launcher icon is in `Assets/Art/AppIcon`. The existing **Forest Rider** editor tools menu and Android package ID remain stable.
 
 Keep **both** `Forest` (first) and `TerrainBuildSupport` enabled in your Build Profile scene list. The second scene contains an inactive Terrain placeholder required by Unity to include its native terrain resources for a runtime-generated map; the game never loads that scene. Setup adds it to global and existing custom profile scene lists automatically.
 
@@ -86,7 +86,7 @@ The project includes **19 original synthesized audio files**: day/night ambience
 
 ## Touch controls, sky and skill effects
 
-Touch buttons use original leather/brass textures, a round joystick, action icons, press feedback and skill cooldown wipes. UI textures import as Sprite assets; missing artwork falls back to plain labeled controls. Sprite backgrounds are nine-sliced; labels and hit areas retain their existing layout. Regenerate the artwork with `python3 Tools/generate_touch_art.py` (Pillow and NumPy).
+Touch buttons use original leather/brass textures, a round joystick, action icons, press feedback and skill cooldown wipes. UI textures import as Sprite assets; missing artwork falls back to plain labeled controls. Menu backgrounds are nine-sliced. Combat uses round leather/brass buttons: a large Attack at bottom right, four skill icons and Dodge in an arc around it, and Heal at bottom center. Skill names switch to cooldown times or ACTIVE, and radial cooldown wipes remain visible. Skill levels and full descriptions stay in Camp. Circular hit areas leave the gaps free for camera swipes. The combat arc scales within the safe area below the objective controls on shorter/wider displays. Regenerate the artwork with `python3 Tools/generate_touch_art.py` (Pillow and NumPy).
 
 The saved six-minute day/night cycle now drives a skybox with blue daylight, warm dawn/dusk, a moving sun and moon, drifting clouds and stars. Ambient light, directional light and fog blend with the sky. Camp pauses the clock; loading restores the saved sky phase. The sky uses one small lookup texture and no realtime reflection updates.
 
@@ -187,3 +187,5 @@ Open **Camp → Tutorial** for four short illustrated pages: ride/look, combat a
 Wildlife and zombies now commit to a facing direction for **wind-up → strike → recovery**. Orange health bars and body poses warn of the attack. Being nearby alone deals no damage: the active swipe/bite/headbutt must overlap the player's body capsule. Sidestepping, backing away, moving behind the attacker, or interrupting it with a stunning skill can avoid the strike. Each attack hits at most once; missed strikes do not cause delayed damage during recovery. Moose charges sweep their actual movement path and also hit at most once. Terrain and scenery block contact checks.
 
 Player movement updates before enemy contact checks. All incoming damage—including dragon fireballs and dive AoE—is resolved after the frame's input callbacks, so a touch dodge pressed in that frame protects against queued hits too. Pause, revival and reset clear or suspend the relevant transient state. See [combat validation and tuning](Docs/ENEMY_COMBAT.md).
+
+[Mobile control layout preview](Docs/mobile-control-layout.png) shows the control arrangement using the shipped sprites; it is a layout illustration, not a Unity gameplay capture. Regenerate it with `python Tools/preview_combat_layout.py`. Verify multitouch (move + attack/skill), circular button edges, cooldowns, Camp overlays and safe-area resizing in Unity/on a phone.

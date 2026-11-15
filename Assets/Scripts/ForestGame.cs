@@ -23,6 +23,7 @@ namespace DonkeyForest
         public DifficultyProfile Difficulty=>DifficultyRules.Get(data.difficulty);
         public Camera View=>view;
         public TouchControlSkin Controls { get; private set; }
+        public CombatControlLayout CombatControls { get; private set; }
         DayNightSky sky;
         public bool IsDodging=>dodge.Invulnerable;
         public bool IsInvulnerable=>dodge.Invulnerable;
@@ -236,6 +237,7 @@ namespace DonkeyForest
             {
             hudClock=.2f;
             sideHud.Refresh(1/frameTime,dodge.Cooldown);
+            CombatControls.RefreshDodge(dodge.Cooldown,!Paused&&!Dead&&!Skills.Charging);
             Additions.Refresh();
             }
             messageClock-=Time.unscaledDeltaTime;message.text=Dead?"":messageClock>0?notice:"";
@@ -501,16 +503,18 @@ namespace DonkeyForest
             var parent=safe.transform;
             message=Label(parent,"",new Vector2(.5f,.5f),new Vector2(0,125),new Vector2(650,80),22);
             Button(parent,"CAMP",new Vector2(1,1),new Vector2(-125,-35),new Vector2(210,48),ToggleMenu);
-            Controls.Icon(Button(parent,"ATTACK",new Vector2(1,0),new Vector2(-110,115),new Vector2(180,110),Attack),"attack");
-            var dodgeButton=Button(parent,"DODGE",new Vector2(1,0),new Vector2(-300,180),new Vector2(150,70),Dodge);Controls.Icon(dodgeButton,"dodge");
+            CombatControls=CombatControlLayout.Create(parent);
+            Controls.RoundIcon(Button(CombatControls.transform,"ATTACK",new Vector2(1,0),CombatControlLayout.AttackPosition,Vector2.one*CombatControlLayout.AttackSize,Attack),"attack",true);
+            var dodgeButton=Button(CombatControls.transform,"DODGE",new Vector2(1,0),CombatControlLayout.AbilityPosition(4),Vector2.one*CombatControlLayout.AbilitySize,Dodge);
+            CombatControls.SetDodge(dodgeButton,Controls.RoundIcon(dodgeButton,"dodge"));
             Button(parent,"OFFER ORBS",new Vector2(1,1),new Vector2(-125,-285),new Vector2(210,48),()=>Encounter.OfferGems());
-            Controls.Icon(Button(parent,"HEAL",new Vector2(1,0),new Vector2(-280,80),new Vector2(120,70),Heal),"heal");
+            Controls.RoundIcon(Button(parent,"HEAL",new Vector2(.5f,0),new Vector2(0,78),Vector2.one*100,Heal),"heal");
             var joystick=Panel("Movement",parent,Vector2.zero,new Vector2(135,135),new Vector2(190,190),new Color(.12f,.18f,.16f,.7f));
             var knob=Panel("Thumb",joystick,new Vector2(.5f,.5f),Vector2.zero,new Vector2(65,65),new Color(.7f,.78f,.6f,.9f));
             Controls.Stick(joystick.GetComponent<Image>(),false);Controls.Stick(knob.GetComponent<Image>(),true);
             var stick=joystick.gameObject.AddComponent<MobileStick>();stick.knob=knob;stick.game=this;
             Label(parent,"Drag to ride",Vector2.zero,new Vector2(135,30),new Vector2(230,30),19);
-            Label(parent,"Swipe empty right side to look • Mouse: hold right button",new Vector2(.5f,0),new Vector2(0,16),new Vector2(660,28),16);
+            Label(parent,"Swipe open right side to look",new Vector2(.5f,0),new Vector2(0,12),new Vector2(360,18),14);
             var panel=Panel("Camp",parent,new Vector2(.5f,.5f),Vector2.zero,new Vector2(880,530),new Color(.06f,.1f,.09f,.98f));menu=panel.gameObject;
             inventory=Label(panel,"",new Vector2(.5f,1),new Vector2(0,-132),new Vector2(840,145),22);
             Button(panel,"Sword",new Vector2(.5f,.5f),new Vector2(-270,0),new Vector2(240,65),()=>Upgrade(0));

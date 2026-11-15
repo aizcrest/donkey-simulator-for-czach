@@ -23,8 +23,8 @@ namespace DonkeyForest
             for(int i=0;i<4;i++)
             {
                 var id=(SkillId)i;
-                hotbar[i]=game.Button(hud,"",new Vector2(.5f,0),new Vector2(-220+i*140,62),new Vector2(130,80),()=>game.Skills.Use(id));
-                cooldowns[i]=game.Controls.Icon(hotbar[i],icons[i],true);
+                hotbar[i]=game.Button(game.CombatControls.transform,shortNames[i],new Vector2(1,0),CombatControlLayout.AbilityPosition(i),Vector2.one*CombatControlLayout.AbilitySize,()=>game.Skills.Use(id));
+                cooldowns[i]=game.Controls.RoundIcon(hotbar[i],icons[i]);
             }
             game.Button(camp,"SKILLS",new Vector2(0,1),new Vector2(90,-30),new Vector2(150,42),()=>Open(skills));
             game.Button(camp,"JOURNAL",new Vector2(.5f,1),new Vector2(-130,-30),new Vector2(160,42),()=>Open(journal));
@@ -130,7 +130,7 @@ namespace DonkeyForest
             for(int i=0;i<4;i++)
             {
                 var id=(SkillId)i;int level=book.Level(id);float remaining=book.Remaining(id);bool active=book.Active(id)>0;
-                hotbar[i].GetComponentInChildren<Text>(true).text=$"{i+1}: {shortNames[i]}\nLv.{level} • {(active?"ACTIVE":remaining>0?remaining.ToString("0.0")+"s":"READY")}";
+                hotbar[i].GetComponentInChildren<Text>(true).text=active?"ACTIVE":remaining>0?remaining.ToString("0.0")+"s":shortNames[i];
                 cooldowns[i].fillAmount=Mathf.Clamp01(remaining/SkillRules.Cooldown(id,level));
                 hotbar[i].interactable=!game.Paused&&!game.Dead&&remaining<=0 && !(id==SkillId.Charge&&game.IsDodging);
             }
