@@ -1,0 +1,26 @@
+[
+  {
+    "file": "Donkey.glb",
+    "title": "Donkey",
+    "creator": "Polyfork",
+    "source": "https://polyfork.dev/asset/donkey-base",
+    "download": "https://polyfork.dev/cdn/donkey-base.glb",
+    "license": "CC BY 4.0",
+    "license_url": "https://creativecommons.org/licenses/by/4.0/",
+    "license_statement": "https://polyfork.dev/licensing",
+    "changes": "Welded duplicate vertices and smoothed normals; fitted scale; added original saddle and saddlecloth; adapted kick animation; exported explicit bone bindings and vertex colors.",
+    "sha256": "41f49e88114e031bc15abe0c09d83a79ecd6d24ad133b39cfc906831dbb73a08"
+  },
+  {
+    "file": "Knight.glb",
+    "title": "KayKit Adventurers Knight",
+    "creator": "Kay Lousberg",
+    "source": "https://kaylousberg.itch.io/kaykit-adventurers",
+    "download": "https://raw.githubusercontent.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/main/addons/kaykit_character_pack_adventures/Characters/gltf/Knight.glb",
+    "license": "CC0 1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "license_statement": "https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0/blob/main/LICENSE.txt",
+    "changes": "Selected one-handed sword, badge shield, helmet and cape; resized and adapted clips to a seated, spread-leg riding pose with fitted leg proportions; added riding balance motions; baked atlas to vertex colors and exported explicit bone bindings.",
+    "sha256": "60428e3abc09ba83e595d256e3af8c5c976b46cdae599f0802fc82b4a3445168"
+  }
+]

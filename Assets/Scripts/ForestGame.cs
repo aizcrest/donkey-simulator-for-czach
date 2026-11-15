@@ -215,7 +215,8 @@ namespace DonkeyForest
                 Landscape.KeepAboveGround(controller);
                 if(charging)Skills.CheckCharge(previous,rider.position);
                 Skills.Tick(dt);
-                MountedModel.Animate(direction.sqrMagnitude>.01f,charging||dodgeTime>0,swing);
+                float visualSpeed=Vector3.ProjectOnPlane(rider.position-previous,Vector3.up).magnitude/Mathf.Max(dt,.0001f);
+                MountedModel.Animate(visualSpeed>.08f,charging||dodgeTime>0,swing,visualSpeed);
                 Audio.Hooves(dt,(rider.position-previous).sqrMagnitude>.0001f&&direction.sqrMagnitude>.01f,charging||dodgeTime>0);
                 data.time=Mathf.Repeat(data.time+dt/360,1);
                 spawnClock+=dt;if(spawnClock>4){spawnClock=0;if(enemies.Count<MobilePerformance.EnemyCap(data.quality,data.difficulty)&&!Encounter.Active)SpawnEnemy(Night);}
@@ -509,8 +510,8 @@ namespace DonkeyForest
             Button(panel,"ASSET CREDITS",new Vector2(1,1),new Vector2(-115,-30),new Vector2(210,42),()=>creditsPanel.SetActive(true));
             var credits=Panel("Asset credits",panel,new Vector2(.5f,.5f),Vector2.zero,new Vector2(880,530),new Color(.06f,.1f,.09f,1));
             creditsPanel=credits.gameObject;
-            Label(credits,"FREE MODEL CREDITS\n\nBear / Elk (Moose adaptation): Poly by Google\nReference Knight: Dawid2K • both under CC BY 3.0\nhttps://creativecommons.org/licenses/by/3.0/\n\nDonkey, Deer, Wolf, Fox, Zombie and Dragon: Quaternius\nCC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/\n\nModels converted to FBX; moose and rider adapted.\nActive player models, animation and audio are original project work.\nFont: Lilita One • Juan Montoreano • SIL OFL 1.1.\nSources and licenses: THIRD_PARTY.md.",new Vector2(.5f,.5f),new Vector2(0,40),new Vector2(830,380),18);
-            Button(credits,"MODEL SOURCES",new Vector2(.5f,0),new Vector2(-150,65),new Vector2(250,65),()=>Application.OpenURL("https://github.com/aizcrest/donkey-simulator-for-czach/blob/main/THIRD_PARTY.md"));
+            Label(credits,"FREE MODEL CREDITS\n\nDonkey: Polyfork • CC BY 4.0\nhttps://polyfork.dev/asset/donkey-base\nhttps://creativecommons.org/licenses/by/4.0/\nAdapted mesh, colors, scale, saddle and mounted animations.\nKnight: Kay Lousberg / KayKit Adventurers • CC0 1.0\n\nBear / Elk: Poly by Google; reference Knight: Dawid2K\nCC BY 3.0 • creativecommons.org/licenses/by/3.0/\nOther animals, zombie, dragon, reference donkey: Quaternius • CC0\nFont: Lilita One • Juan Montoreano • SIL OFL 1.1\nFull source links and licenses: MODEL SOURCES.",new Vector2(.5f,.5f),new Vector2(0,40),new Vector2(830,380),18);
+            Button(credits,"MODEL SOURCES",new Vector2(.5f,0),new Vector2(-150,65),new Vector2(250,65),()=>Application.OpenURL("https://github.com/aizcrest/donkey-simulator-for-czach/blob/v2_dev/THIRD_PARTY.md"));
             Button(credits,"BACK",new Vector2(.5f,0),new Vector2(150,65),new Vector2(250,65),()=>creditsPanel.SetActive(false));
             creditsPanel.SetActive(false);
             if(!Additions)Additions=gameObject.AddComponent<CampAdditions>();

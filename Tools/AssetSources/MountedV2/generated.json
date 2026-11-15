@@ -1,0 +1,96 @@
+[
+  {
+    "kind": "Donkey",
+    "vertices": 3732,
+    "triangles": 3424,
+    "bones": 26,
+    "clips": {
+      "idle": {
+        "duration": 6.0,
+        "frames": 18
+      },
+      "move": {
+        "duration": 1.1499999364217122,
+        "frames": 18
+      },
+      "charge": {
+        "duration": 0.7200000286102295,
+        "frames": 18
+      },
+      "kick": {
+        "duration": 1.0,
+        "frames": 18
+      }
+    },
+    "bounds": [
+      [
+        -0.319583535194397,
+        -0.07333571463823318,
+        -1.1803536415100098
+      ],
+      [
+        0.319583535194397,
+        1.7621408700942993,
+        0.9585414528846741
+      ]
+    ],
+    "max_skin_error_m": 4.915124923727108e-07,
+    "bytes": 312291,
+    "sha256": "fc80fbe67fb6fb587e8af07b25e4e19578f7d0661219f52870af5b946f83c3b6"
+  },
+  {
+    "kind": "Knight",
+    "vertices": 4996,
+    "triangles": 5274,
+    "bones": 41,
+    "clips": {
+      "idle": {
+        "duration": 3.599999745686849,
+        "frames": 12
+      },
+      "move": {
+        "duration": 1.15,
+        "frames": 12
+      },
+      "charge": {
+        "duration": 0.72,
+        "frames": 12
+      },
+      "attack": {
+        "duration": 1.0,
+        "frames": 18
+      },
+      "chop": {
+        "duration": 1.0666667620340984,
+        "frames": 18
+      },
+      "guard": {
+        "duration": 1.0666667620340984,
+        "frames": 12
+      },
+      "whirlwind": {
+        "duration": 0.6666666666666666,
+        "frames": 18
+      },
+      "kick": {
+        "duration": 1.0,
+        "frames": 12
+      }
+    },
+    "bounds": [
+      [
+        -1.2008163928985596,
+        0.7684633135795593,
+        -0.6756744980812073
+      ],
+      [
+        0.6598359942436218,
+        2.535109519958496,
+        1.019796371459961
+      ]
+    ],
+    "max_skin_error_m": 7.160314188441016e-07,
+    "bytes": 513590,
+    "sha256": "22d240f4ef078cf28ac8268acfc1dc36d5c636195240e05d6b901ec8733201ed"
+  }
+]

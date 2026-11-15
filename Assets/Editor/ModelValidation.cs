@@ -28,6 +28,7 @@ namespace DonkeyForest.Editor
             Require(EditorApplication.isPlaying&&game,"Enter Play Mode before reporting mounted rendering.");
             var presentation=game.rider.GetComponent<PlayerMountVisual>();
             Require(presentation,"Mounted mesh presentation component is missing.");
+            presentation.ValidateModels();
             Debug.Log(presentation.Diagnostics(game.View));
         }
         [MenuItem("Forest Rider/Validate model presentation (Play Mode)")]
