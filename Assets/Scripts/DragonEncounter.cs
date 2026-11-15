@@ -24,67 +24,39 @@ namespace DonkeyForest
                 Vector3 slot=center+new Vector3(Mathf.Cos(angle)*1.2f,.5f,Mathf.Sin(angle)*1.2f);
                 offerings[i]=Crystal(transform,slot,.28f);
                 offerings[i].SetActive(i<game.data.gemsPlaced);
-                // Stable IDs and fixed positions survive reloads; move aside from trunks deterministically.
-                float radius=i%2==0?33:63;
-                Vector3 point=new Vector3(Mathf.Cos(angle)*radius,0,Mathf.Sin(angle)*radius);
-                for(int attempt=0;attempt<12;attempt++)
-                {
-                    Vector3 grounded=game.Ground(point);
-                    if(!Physics.CheckCapsule(grounded+Vector3.up*.5f,grounded+Vector3.up*1.8f,.9f,1<<ForestTerrain.SceneryLayer))break;
-                    point+=new Vector3(Mathf.Cos(angle+.7f),0,Mathf.Sin(angle+.7f))*1.5f;
-                }
-                if((game.data.scatteredGemMask&(1<<i))!=0)
-                {
-                    float x=game.data.gemX[i],z=game.data.gemZ[i];
-                    if(!float.IsNaN(x)&&!float.IsInfinity(x)&&!float.IsNaN(z)&&!float.IsInfinity(z)&&Mathf.Abs(x)<=78&&Mathf.Abs(z)<=78&&x*x+z*z>=100)
-                        point=new Vector3(x,0,z);
-                }
-                point=game.Ground(point,.9f);gemLocations[i]=point;
-                if((game.data.gemMask&(1<<i))!=0)continue;
-                CreateGem(i);
             }
             if(Unlocked&&!game.Dead)RestartBoss();
         }
         void CreateGem(int i)
         {
-            var node=new GameObject("Ancient forest gem "+(i+1));node.transform.SetParent(transform,false);node.transform.position=gemLocations[i];
+            var node=new GameObject("Monster orb "+(i+1));node.transform.SetParent(transform,false);node.transform.position=gemLocations[i];
             gems[i]=node;
-            Crystal(node.transform,Vector3.zero,.6f);
+            game.Shape("Dropped orb",PrimitiveType.Sphere,node.transform,Vector3.zero,Vector3.one*.65f,game.Glow(new Color(.1f,.9f,.8f)));
             Ring(node.transform,Vector3.down*.7f,1,new Color(.1f,.85f,.75f));
             var beacon=node.AddComponent<LineRenderer>();beacon.useWorldSpace=false;
             beacon.positionCount=2;beacon.SetPosition(0,Vector3.up*.2f);beacon.SetPosition(1,Vector3.up*5);
             beacon.startWidth=.06f;beacon.endWidth=.02f;beacon.sharedMaterial=game.Glow(new Color(.12f,.8f,.7f));
         }
+        public void TryDropOrb(Vector3 defeatedPosition)
+        {
+            if(game.Dead||game.Paused||Active)return;
+            int pending=0;
+            for(int i=0;i<gems.Length;i++)if(gems[i])pending|=1<<i;
+            int id=GemRules.RollMonsterDrop(game.data,pending,Random.value);
+            if(id<0)return;
+            gemLocations[id]=game.Ground(defeatedPosition,.9f);CreateGem(id);
+            game.Show("An orb dropped! Ride over it to collect.");
+        }
         public void OnPlayerDeath()
         {
             CancelBoss();wasDead=true;
-            int dropped=GemRules.DropHeldOnDeath(game.data);
-            if(dropped==0)return;
-            var random=new System.Random(System.Guid.NewGuid().GetHashCode());
-            for(int i=0;i<GemRules.Required;i++)if((dropped&(1<<i))!=0)
-            {
-                var point=ScatterPoint(i,random);gemLocations[i]=point;
-                game.data.gemX[i]=point.x;game.data.gemZ[i]=point.z;
-                if(gems[i]){gems[i].SetActive(false);Destroy(gems[i]);}
-                CreateGem(i);
-            }
-            game.Show("Your unoffered gems scattered across the forest. Altar offerings are safe.");
-        }
-        Vector3 ScatterPoint(int id,System.Random random)
-        {
-            for(int attempt=0;attempt<96;attempt++)
-            {
-                var point=new Vector3((float)(random.NextDouble()*152-76),0,(float)(random.NextDouble()*152-76));
-                if(point.sqrMagnitude<400||point.sqrMagnitude>78*78||game.Landscape.Slope(point)>28)continue;
-                point=game.Ground(point,.9f);
-                if(Physics.CheckCapsule(point,point+Vector3.up,.9f,1<<ForestTerrain.SceneryLayer))continue;
-                bool crowded=false;
-                for(int j=0;j<gemLocations.Length;j++)if(j!=id&&Vector3.Distance(point,gemLocations[j])<4)crowded=true;
-                if(!crowded)return point;
-            }
-            // The generated camp excludes trees inside 18m; keep a reachable fallback.
-            float angle=(float)(random.NextDouble()*Mathf.PI*2);
-            return game.Ground(new Vector3(Mathf.Cos(angle)*12,0,Mathf.Sin(angle)*12),.9f);
+            int lost=GemRules.DropHeldOnDeath(game.data);
+            if(game.data.difficulty!=2)return;
+            // Extreme discards carried orbs and any uncollected ground drops.
+            // Nothing scatters or can be recovered after revival without a new kill.
+            for(int i=0;i<gems.Length;i++)if(gems[i])
+            {gems[i].SetActive(false);Destroy(gems[i]);gems[i]=null;}
+            if(lost!=0)game.Show("Carried orbs lost. Hunt enemies for replacements; altar offerings are safe.");
         }
         GameObject Crystal(Transform parent,Vector3 position,float size)
         {
@@ -118,8 +90,8 @@ namespace DonkeyForest
                 if(GemRules.TryCollect(ref game.data.gemMask,i))
                 {
                     Destroy(gems[i]);gems[i]=null;game.Audio.Play("gem");
-                    if((game.data.scatteredGemMask&(1<<i))==0)game.GainXP(25);
-                    game.Show($"Ancient gem found! {GemRules.Count(game.data.gemMask)}/10. Bring gems to the central altar.");game.Save(false);
+                    game.GainXP(25);
+                    game.Show($"Orb collected! {GemRules.Count(game.data.gemMask)}/10. Bring orbs to the central altar.");game.Save(false);
                 }
             }
         }
@@ -134,7 +106,7 @@ namespace DonkeyForest
             for(int i=0;i<offerings.Length;i++)offerings[i].SetActive(i<game.data.gemsPlaced);
             game.Save(false);
             if(Unlocked)RestartBoss();
-            else game.Show(held>0?$"Placed {held} gems. Altar: {game.data.gemsPlaced}/10.":"Find the glowing gems scattered around the forest.");
+            else game.Show(held>0?$"Placed {held} orbs. Altar: {game.data.gemsPlaced}/10.":"Hunt enemies for orb drops.");
         }
         public void RestartBoss()
         {
@@ -156,15 +128,8 @@ namespace DonkeyForest
             {
                 if(game.data.dragonDefeated)return "DRAGON DEFEATED — forest champion!";
                 if(Boss)return Boss.Status;
-                if(Unlocked)return "Return to the altar and OFFER GEMS to challenge the dragon again.";
-                float distance=float.MaxValue;Vector3 nearest=Vector3.zero;
-                for(int i=0;i<10;i++)if((game.data.gemMask&(1<<i))==0)
-                {
-                    Vector3 delta=gemLocations[i]-game.rider.position;
-                    if(delta.sqrMagnitude<distance){distance=delta.sqrMagnitude;nearest=delta;}
-                }
-                string hint=GemRules.Count(game.data.gemMask)==10?"Return to the central altar":$"Nearest gem: {Mathf.Sqrt(distance):0}m {(nearest.z>5?"N":nearest.z< -5?"S":"")}{(nearest.x>5?"E":nearest.x< -5?"W":"")}";
-                return $"GEMS {GemRules.Count(game.data.gemMask)}/10 • Carrying {GemRules.Held(game.data.gemMask,game.data.gemsPlaced)} • Altar {game.data.gemsPlaced}/10 • {hint}";
+                if(Unlocked)return "Return to the altar and OFFER ORBS to challenge the dragon again.";
+                return $"ORBS {GemRules.Held(game.data.gemMask,game.data.gemsPlaced)} carried • ALTAR {game.data.gemsPlaced}/10 • {game.Difficulty.OrbDropChance*100:0}% per kill";
             }
         }
         public void Win()

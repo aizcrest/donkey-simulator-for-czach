@@ -36,16 +36,16 @@ namespace DonkeyForest.Tests
             }
             finally{UnityEngine.Object.DestroyImmediate(ui);UnityEngine.Object.DestroyImmediate(host);}
         }
-        [Test] public void UnityJsonRetainsDroppedGemLocationsAndExactAltarIds()
+        [Test] public void UnityJsonPreservesAltarAndIgnoresLegacyScatteredPositions()
         {
             var data=new Progress{difficulty=2,gemMask=(1<<7)|(1<<9)};GemRules.DepositAll(data);
             GemRules.TryCollect(ref data.gemMask,2);GemRules.DropHeldOnDeath(data);
-            data.gemX[2]=-44.5f;data.gemZ[2]=31.25f;data.health=0;
-            var loaded=JsonUtility.FromJson<Progress>(JsonUtility.ToJson(data));GemRules.NormalizeState(loaded);
+            data.health=0;
+            var json=JsonUtility.ToJson(data);json=json.Insert(json.Length-1,",\"scatteredGemMask\":4,\"gemX\":[0,0,-44.5],\"gemZ\":[0,0,31.25]");
+            var loaded=JsonUtility.FromJson<Progress>(json);GemRules.NormalizeState(loaded);
             Assert.AreEqual(data.gemDepositedMask,loaded.gemDepositedMask);Assert.AreEqual(data.gemMask,loaded.gemMask);
-            Assert.AreEqual(1<<2,loaded.scatteredGemMask);Assert.AreEqual(2,loaded.gemsPlaced);
-            Assert.AreEqual(-44.5f,loaded.gemX[2]);Assert.AreEqual(31.25f,loaded.gemZ[2]);
-            Assert.AreEqual(0,GemRules.DropHeldOnDeath(loaded),"Reloading a death must not scatter twice.");
+            Assert.AreEqual(2,loaded.gemsPlaced);Assert.AreEqual(0,GemRules.Held(loaded.gemMask,loaded.gemsPlaced));
+            Assert.AreEqual(0,GemRules.DropHeldOnDeath(loaded),"Reloading cannot remove deposited orbs.");
         }
     }
 }

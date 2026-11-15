@@ -6,8 +6,7 @@ namespace DonkeyForest
         public int version = 1, kills, coins, sword = 1, armor = 1, barding = 1, potions = 3;
         public float health = 100, time = 0.25f, x, z;
         public int gemMask, gemsPlaced;
-        public int gemDepositedMask,scatteredGemMask;
-        public float[] gemX=new float[GemRules.Required],gemZ=new float[GemRules.Required];
+        public int gemDepositedMask;
         public bool dragonDefeated;
         public SkillSave skills=new SkillSave();
         public JourneySave journey=new JourneySave();

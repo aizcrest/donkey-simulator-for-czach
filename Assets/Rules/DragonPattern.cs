@@ -6,15 +6,23 @@ namespace DonkeyForest
     public sealed class DragonPattern
     {
         public const double AirSeconds=10, WarningSeconds=1.5, DiveSeconds=.8;
-        public const int MaxStamina=100,FireballCost=10,DiveCost=30;
+        public const int MaxStamina=100;
         public const double ExhaustionBonus=2;
         readonly double baseStunDuration;
+        readonly int staminaDamagePerHit;
         bool exhaustedStun;
         public int Stamina { get; private set; }=MaxStamina;
         public double StunDuration => baseStunDuration+(exhaustedStun?ExhaustionBonus:0);
-        public DragonPattern(int difficulty=0){baseStunDuration=DifficultyRules.Get(difficulty).DragonStunSeconds;}
-        public void FireballAttack(){if(Phase==DragonPhase.Airborne)Stamina=Math.Max(0,Stamina-FireballCost);}
-        public void DiveAttack(){if(Phase==DragonPhase.Diving)Stamina=Math.Max(0,Stamina-DiveCost);}
+        public DragonPattern(int difficulty=0)
+        {var profile=DifficultyRules.Get(difficulty);baseStunDuration=profile.DragonStunSeconds;staminaDamagePerHit=profile.StaminaDamagePerHit;}
+        // Only a confirmed, damaging player hit calls this. Extend this stun once.
+        public bool RegisterPlayerHit()
+        {
+            if(!Vulnerable||Stamina==0)return false;
+            Stamina=Math.Max(0,Stamina-staminaDamagePerHit);
+            if(Stamina!=0)return false;
+            exhaustedStun=true;return true;
+        }
         public DragonPhase Phase { get; private set; } = DragonPhase.Airborne;
         public double Elapsed { get; private set; }
         public double Duration => Phase==DragonPhase.Airborne?AirSeconds:Phase==DragonPhase.DiveWarning?WarningSeconds:Phase==DragonPhase.Diving?DiveSeconds:StunDuration;
@@ -58,17 +66,24 @@ namespace DonkeyForest
             // Older saves tracked only the altar count: reserve that many collected IDs.
             for(int i=Required-1;Count(offered)>data.gemsPlaced;i--)offered&=~(1<<i);
             for(int i=0;i<Required&&Count(offered)<data.gemsPlaced;i++)if((data.gemMask&(1<<i))!=0)offered|=1<<i;
-            data.gemDepositedMask=offered;data.scatteredGemMask&=FullMask;
-            if(data.gemX==null||data.gemX.Length!=Required)data.gemX=new float[Required];
-            if(data.gemZ==null||data.gemZ.Length!=Required)data.gemZ=new float[Required];
+            data.gemDepositedMask=offered;
         }
         public static int DropHeldOnDeath(Progress data)
         {
             NormalizeState(data);
             if(DifficultyRules.Normalize(data.difficulty)!=2)return 0;
             int dropped=data.gemMask&~data.gemDepositedMask;
-            data.gemMask=data.gemDepositedMask;data.scatteredGemMask|=dropped;
+            data.gemMask=data.gemDepositedMask;
             return dropped;
+        }
+        // Reserve missing IDs for ground drops, so simultaneous kills cannot
+        // produce duplicate orbs or more than the ten needed by the altar.
+        public static int RollMonsterDrop(Progress data,int pendingMask,float roll)
+        {
+            if(data.dragonDefeated||float.IsNaN(roll)||roll<0||roll>=DifficultyRules.Get(data.difficulty).OrbDropChance)return -1;
+            int unavailable=(data.gemMask|pendingMask)&FullMask;
+            for(int id=0;id<Required;id++)if((unavailable&(1<<id))==0)return id;
+            return -1;
         }
         public static void DepositAll(Progress data)
         {

@@ -24,7 +24,7 @@ For an existing checkout, close Unity, preserve any local edits, and run `git pu
 | Dodge | DODGE | Shift |
 | Potion | HEAL | H |
 | Rider / donkey skills | Four numbered skill buttons | 1–4 |
-| Deposit gems at central altar | OFFER GEMS | E |
+| Deposit orbs at central altar | OFFER ORBS | E |
 | Equipment, training, journal, settings, save, revive | CAMP | Escape |
 | Manual save | CAMP → SAVE | F5 |
 
@@ -52,14 +52,14 @@ Levels and cooldowns save locally. Cooldowns freeze in camp and while offline. A
 - Wildlife includes bears, deer, moose, wolves and foxes. Deer/foxes flee until attacked; wolves flank; moose telegraph a one-second charge before rushing. Zombie spawns begin at night and disappear at dawn. A full day takes six real minutes.
 - **12%** of spawns are elites, marked with a golden diamond: 60% more health, 30% more damage and double kill XP/coins. Normal enemies also scale gently with player level.
 - A kill has a 65% loot chance (90% for elites). Ride over golden drops to receive potions, gear upgrades or coins. Gear caps at level 10; camp gear upgrades cost 40 × current level coins. Armor reduces incoming damage up to 65%; rider/donkey armor also increase maximum health. Potions restore 50 health.
-- **CAMP → JOURNAL** tracks four one-time contracts: defeat 5 animals, defeat 3 zombies, find 4 gems, defeat the dragon. Claim rewards explicitly. Standard contracts award 80 coins, one skill point, one potion and 60 XP. Dragon Slayer awards 200 coins, two points, one potion and 200 XP. Claims persist and cannot be repeated.
+- **CAMP → JOURNAL** tracks four one-time contracts: defeat 5 animals, defeat 3 zombies, collect 4 orbs, defeat the dragon. Claim rewards explicitly. Standard contracts award 80 coins, one skill point, one potion and 60 XP. Dragon Slayer awards 200 coins, two points, one potion and 200 XP. Claims persist and cannot be repeated.
 - Death preserves gear, XP, skills and gems. **CAMP → REVIVE** returns you to the central clearing.
 
 Older saves retain their existing progress. XP/hunt counters begin tracking with this update; already-found gems and dragon victory still count toward their new contracts.
 
 ## Ten gems and the dragon
 
-Find ten unique glowing turquoise gems. The HUD shows the nearest remaining gem's distance and cardinal direction. Each gem has a saved ID, preventing duplication after reload. Deposit any carried gems within 4.5m of the central altar; you may deposit in batches. The tenth deposit summons the dragon and clears/suspends ordinary enemies.
+Hunt monsters for turquoise orb drops: **10% per kill on Normal, 8% on Hard, 4% on Extreme**. Animals, zombies and elites use the same difficulty rate, independent of ordinary loot. Ride over a dropped orb to collect it. The map starts with no collectible orbs. Carried, offered and pending drops share ten unique IDs, so you cannot exceed the altar requirement. Deposit carried orbs within 4.5m of the central altar, in any batch size. The tenth offering summons the dragon and clears/suspends ordinary enemies.
 
 On **Normal**, the dragon has 650 health and repeats this cycle (Hard/Extreme values are listed under Difficulty below):
 
@@ -68,7 +68,7 @@ On **Normal**, the dragon has 650 health and repeats this cycle (Hard/Extreme va
 3. **Dive — .8 seconds.** The dragon dives to the marker and deals 36 base damage once on impact.
 4. **Stunned — 5 seconds, or 7 when exhausted.** A green ring appears and sword/skill hits can damage the grounded dragon. It becomes immune again at takeoff.
 
-Iron Guard and armor reduce dragon damage; dodge grants brief immunity. Leaving the 32m altar arena resets boss health and attacks. Death/revival or reloading starts an unlocked fight at full health, preserving your deposited gems. Boss health/phase/stamina are transient. The dragon starts with 100 stamina, spends 10 per launched fireball and 30 per dive, and retains remaining stamina between cycles. At zero, its next stun is extended by exactly two seconds; stamina refills at takeoff after that extended stun. The gold-framed stamina bar appears during the encounter.
+Iron Guard and armor reduce dragon damage; dodge grants brief immunity. Leaving the 32m altar arena resets boss health and attacks. Death/revival or reloading starts an unlocked fight at full health, preserving your deposited gems. Boss health/phase/stamina are transient. The dragon starts with 100 stamina. Successful player hits remove **5/3/2 stamina on Normal/Hard/Extreme**, including damaging skills. Misses, invulnerable hits and the dragon's own fireballs/dive remove none. Remaining stamina carries between cycles. Reaching zero during the vulnerable phase immediately extends that current stun by exactly two seconds, once; stamina refills at the following takeoff. The right panel shows boss health, stamina, phase and remaining time.
 
 Victory saves permanently and awards 500 coins, three potions and 250 XP, in addition to the separately claimable Dragon Slayer contract. Ordinary wildlife resumes. The boss is a one-time progression encounter per save.
 
@@ -100,13 +100,15 @@ Choose **CAMP → SETTINGS → DIFFICULTY → Normal / Hard / Extreme**. Normal 
 | Fireball travel / dodge-warning time | 1.2s | 0.85s | 0.5s |
 | Base dragon stun window | 5s | 3.75s | 2.5s |
 | Dragon dive radius | 4m | 4.5m | 5m |
-| Death drops carried gems | No | No | Yes |
+| Monster orb drop chance | 10% | 8% | 4% |
+| Stamina lost per successful player hit | 5 | 3 | 2 |
+| Death loses carried orbs | No | No | Yes |
 
 Extreme fireballs travel 2.4× as fast as Normal over the same distance. Warning circles and impact effects match each mode's damage radius. The aerial phase remains 10 seconds, followed by the original dive warning and dive, then the selected stun duration. Higher difficulty multiplies the existing enemy level/elite scaling; rewards and progression costs remain the same.
 
 Existing wildlife keeps its health percentage when you change modes. Changing difficulty during an active dragon encounter clears its hazards and restarts the fight at full health under the new rules. Gems, equipment, progression and dragon victory remain saved; changing difficulty does not summon a defeated dragon again.
 
-On death, a gold-and-green **You died.** panel offers a direct **REVIVE** button. It restores health at camp and resumes gameplay without needing to open Camp. On Extreme, all carried (unoffered) gem IDs are dropped at randomly chosen reachable map positions, saved immediately with the death. Altar offerings remain protected. Reloading preserves those locations; recollection does not grant gem XP again. Normal and Hard keep carried gems.
+On death, a gold-and-green **You died.** panel offers a direct **REVIVE** button. It restores health at camp and resumes gameplay without needing to open Camp. On Extreme, carried orbs are **lost**, and outstanding ground orb drops are cleared. You must hunt new enemies for replacements; nothing scatters. Altar offerings remain protected. The loss saves immediately. Normal and Hard retain carried orbs. Old saves keep carried orbs/altar counts; obsolete scattered locations are ignored.
 
 Enemy counts increase with difficulty while still following the selected graphics budget. Each cell is **initial count / maximum alive**; terrain clearance may reduce the number successfully spawned initially. Night zombies share the same cap. No ordinary enemies spawn during a dragon encounter.
 
@@ -115,6 +117,10 @@ Enemy counts increase with difficulty while still following the selected graphic
 | Low | 8 / 12 | 12 / 16 | 16 / 20 |
 | Balanced | 12 / 18 | 16 / 24 | 20 / 30 |
 | High | 14 / 22 | 20 / 30 | 26 / 38 |
+
+## Compact side HUD
+
+The left panel shows health, level, coins, kills and sword/armor/donkey-gear/potion icons with numeric values. The right panel shows carried orbs and altar progress, swapping to dragon health/stamina/phase during the fight. Dodge cooldown appears on its button. Detailed equipment names remain in Camp. Lilita One provides the cartoon-style UI font; the SIL OFL license is bundled in Resources and linked in THIRD_PARTY.md. One 1024px atlas supplies all eight stat icons, and stat labels refresh at 5Hz.
 
 ## Graphics quality and mobile performance
 
@@ -141,13 +147,13 @@ Native Unity Terrain spans 180 × 180m with a 257 × 257 heightmap, broad hills,
 
 Character controllers handle slope movement and collision. Spawns, loot, revival and restored positions sample terrain height; the camera checks terrain/trunk obstruction. Existing flat-world saves adapt to elevation on load.
 
-Saves live at `Application.persistentDataPath/forest-rider.json`, with backup/temporary recovery files. They preserve health, X/Z, time, equipment, inventory counters, gems, victory, XP, skill levels/cooldowns, contract claims, audio, quality and difficulty. Autosave runs every 30s and after progress events/backgrounding/quit; camp also offers manual save. Scattered objective gem positions persist. Enemy positions and ordinary uncollected loot drops are transient. Uninstalling the app can remove local saves.
+Saves live at `Application.persistentDataPath/forest-rider.json`, with backup/temporary recovery files. They preserve health, X/Z, time, equipment, inventory counters, gems, victory, XP, skill levels/cooldowns, contract claims, audio, quality and difficulty. Autosave runs every 30s and after progress events/backgrounding/quit; camp also offers manual save. Carried and offered orbs persist. Uncollected monster orb drops, enemy positions and ordinary ground loot are transient and disappear on reload. Uninstalling the app can remove local saves.
 
 ## Start again
 
 Use **CAMP → RESET PROGRESS → RESET & START AGAIN** to begin a new adventure. The confirmation explains what will be cleared; **CANCEL** leaves your adventure unchanged.
 
-Reset restores the original starting gear, health, three potions, level/skill defaults and daytime at the central clearing. It clears coins, kills, XP, contracts, skill cooldowns, gems, altar deposits and dragon victory. Existing enemies, loot and dragon attacks are removed, all ten gems return, and new wildlife spawns. Difficulty, graphics and audio preferences are kept. The new adventure is saved immediately; old recovery files are removed so they cannot restore the previous run. The reset cannot be undone through the game.
+Reset restores the original starting gear, health, three potions, level/skill defaults and daytime at the central clearing. It clears coins, kills, XP, contracts, skill cooldowns, gems, altar deposits and dragon victory. Existing enemies, loot and dragon attacks are removed, all ten orb IDs become available from monster drops again, and new wildlife spawns. Difficulty, graphics and audio preferences are kept. The new adventure is saved immediately; old recovery files are removed so they cannot restore the previous run. The reset cannot be undone through the game.
 
 ## Builds and checks
 
@@ -155,10 +161,10 @@ Reset restores the original starting gear, health, three potions, level/skill de
 - **Forest Rider → Build iOS Xcode project**: output `Builds/iOS`; finish signing/building on macOS with Xcode.
 - `python3 Tools/check_project.py`: repository, model integrity, licensing and audio checks.
 - `blender -b --python Tools/verify_models.py`: FBX mesh/texture/clip round-trip checks.
-- Unity **Window → General → Test Runner → EditMode → Run All**: 32 difficulty/gem/dragon/skill/progression/save-reset test cases plus Unity-only model-import/material, touch-sprite and hidden Camp menu regressions.
+- Unity **Window → General → Test Runner → EditMode → Run All**: 36 difficulty/gem/dragon/skill/progression/save-reset test cases plus Unity-only model-import/material, touch-sprite and hidden Camp menu regressions.
 - In Play Mode: **Forest Rider → Validate terrain (Play Mode)**.
 
-All 20 standalone C# NUnit test cases passed outside Unity under .NET 8, and C# 9 syntax checks passed. See [Docs/VALIDATION.md](Docs/VALIDATION.md). Unity API compilation, actual Unity imports, device playthroughs and hardware performance remain unverified. Use [TESTING.md](TESTING.md) before release.
+All 36 standalone C# NUnit test cases passed outside Unity under .NET 8, and C# 9 syntax checks passed. See [Docs/VALIDATION.md](Docs/VALIDATION.md). Unity API compilation, actual Unity imports, device playthroughs and hardware performance remain unverified. Use [TESTING.md](TESTING.md) before release.
 
 ## Remaining work
 

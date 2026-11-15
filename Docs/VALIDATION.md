@@ -1,5 +1,15 @@
 # Validation
 
+## Monster orb drops, side HUD and player-hit stamina — 2026-11-15
+
+Replaced initial/scattered map gems with monster drops rolled independently of ordinary loot: Normal 10%, Hard 8%, Extreme 4%. Pending drops reserve missing objective IDs so multiple kills cannot create duplicates or exceed ten total held/offered/pending orbs. Extreme death discards held and pending orbs; offerings remain protected and replacement orbs require new kills. Obsolete position fields are no longer read; old carried/altar progress migrates as before. Ground orb drops are transient; collected/placed progress and death losses save normally.
+
+Dragon stamina now drains only after a confirmed damaging player hit: 5/3/2 by difficulty. Own attacks, misses and immune hits do not drain it. Depletion during a stun extends that same stun by exactly two seconds once, with refill at takeoff. Partial stamina persists between cycles.
+
+Replaced the top text blocks with safe-area side cards, eight generated icons, compact numbers, bars and contextual orb/boss information. Dodge cooldown moved onto its control. Imported Lilita One from Google Fonts under SIL OFL 1.1, bundled its license and replaced unsupported checkmark/arrow glyphs. HUD atlas imports as a non-readable 2D texture capped at 1024px; eight FullRect sprites are cached and released with the HUD. Stat strings retain the existing 5Hz refresh cadence.
+
+**36 standalone NUnit cases passed**, including exact probability thresholds and stratified 10,000-sample rate checks per difficulty, pending-ID uniqueness/caps, legacy altar preservation, hit-only stamina damage and one-time current-stun extension/refill. Repository metadata and C# syntax checks passed. Updated Unity-only save migration/HUD tests and added atlas/font import checks. **Unity API/shader compilation, Unity tests, visual layouts, actual font import, Android gameplay and device performance remain unverified here.**
+
 ## Death, crowds, Extreme gem loss and dragon stamina — 2026-11-14
 
 Added a death overlay and direct Revive action using the existing gold/green control sprite and heal icon. Revival now closes menus explicitly rather than toggling Camp, resets input/combat effects and restores the difficulty's initial wildlife count (or restarts an unlocked boss). Hard/Extreme raise initial counts and caps; Low is limited to 12/16/20 alive across Normal/Hard/Extreme. In-place changes apply the new population budget.

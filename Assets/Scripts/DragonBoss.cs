@@ -16,6 +16,10 @@ namespace DonkeyForest
         bool waiting;
         public int Stamina=>pattern==null?DragonPattern.MaxStamina:pattern.Stamina;
         public bool Exhausted=>Stamina==0;
+        public float Health=>Mathf.Max(0,health);
+        public float MaxHealth=>maxHealth;
+        public string PhaseLabel=>waiting?"RETURN TO ALTAR":pattern.Phase==DragonPhase.Airborne?"FIREBALLS":pattern.Phase==DragonPhase.DiveWarning?"DODGE DIVE!":pattern.Phase==DragonPhase.Diving?"DIVING":"ATTACK!";
+        public float PhaseRemaining=>(float)pattern.Remaining;
         public string Status => waiting?"DRAGON — return within 32m of the altar (fight resets on retreat)":
             $"DRAGON {Mathf.CeilToInt(health)}/{maxHealth:0} • {(pattern.Phase==DragonPhase.Airborne?"FIREBALLS — avoid orange circles":pattern.Phase==DragonPhase.DiveWarning?"DIVE INCOMING — DODGE!":pattern.Phase==DragonPhase.Diving?"DIVE — move out!":"STUNNED — ATTACK NOW!")} • {pattern.Remaining:0.0}s";
         public void Setup(ForestGame owner,DragonEncounter source)
@@ -77,7 +81,7 @@ namespace DonkeyForest
                 encounter.Ring(hazards,diveTarget,difficulty.DiveRadius,new Color(1,.15f,.08f));
                 game.Show("DIVE INCOMING! The red circle is locked — ride or DODGE away.");
             }
-            else if(phase==DragonPhase.Diving){pattern.DiveAttack();visual.Play("attack");game.Audio.Play("dive");}
+            else if(phase==DragonPhase.Diving){visual.Play("attack");game.Audio.Play("dive");}
             else if(phase==DragonPhase.Stunned)
             {
                 game.Audio.Play("kick",.65f);visual.transform.position=diveTarget;visual.transform.rotation=Quaternion.Euler(0,visual.transform.eulerAngles.y,0);
@@ -97,15 +101,16 @@ namespace DonkeyForest
             game.Audio.Play("fireball",.45f);
             var obj=new GameObject("Dragon fireball");obj.transform.SetParent(hazards,false);
             obj.AddComponent<DragonFireball>().Setup(game,encounter,visual.transform.position+Vector3.down*.5f,game.Ground(game.rider.position,.1f),difficulty);
-            pattern.FireballAttack();
         }
         public Vector3 Position=>visual.transform.position;
         public void Hit(float damage)=>HitArea(damage,game.rider.position,game.rider.forward,4,-.15f);
         public bool HitArea(float damage,Vector3 origin,Vector3 direction,float radius,float minDot)
         {
-            if(game.Paused||game.Dead||waiting||!pattern.Vulnerable||health<=0)return false;
+            if(game.Paused||game.Dead||waiting||!pattern.Vulnerable||health<=0||damage<=0||float.IsNaN(damage)||float.IsInfinity(damage))return false;
             if(!MountedSkills.InArea(Position,origin,direction,radius,minDot))return false;
-            health-=damage;game.Audio.Play("hit");if(health<=0)encounter.Win();return true;
+            health-=damage;
+            if(pattern.RegisterPlayerHit())game.Show("Dragon exhausted! This stun lasts 2 seconds longer.");
+            game.Audio.Play("hit");if(health<=0)encounter.Win();return true;
         }
         public static bool Inside(Vector3 point,Vector3 center,float radius)
         {

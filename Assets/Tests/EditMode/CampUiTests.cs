@@ -33,6 +33,12 @@ namespace DonkeyForest.Tests
                 SetProperty(game,"Paused",true);
                 var build=game.GetType().GetMethod("BuildUI",BindingFlags.Instance|BindingFlags.NonPublic);
                 Assert.DoesNotThrow(()=>build.Invoke(game,null),"HUD setup must tolerate inactive submenus while paused.");
+                var hud=(GameObject)Field(game,"hudRoot");
+                var left=hud.transform.Find("Safe Area/Player stats").GetComponent<RectTransform>();
+                var right=hud.transform.Find("Safe Area/Orb objective").GetComponent<RectTransform>();
+                Assert.AreEqual(new Vector2(0,1),left.anchorMin);Assert.AreEqual(Vector2.one,right.anchorMin);
+                Assert.Less(left.sizeDelta.x,300);Assert.Less(right.sizeDelta.x,300);
+                Assert.AreSame(Resources.Load<Font>("Fonts/LilitaOne-Regular"),Field(game,"font"));
                 var additions=(Component)game.GetType().GetProperty("Additions").GetValue(game);
                 var refresh=additions.GetType().GetMethod("Refresh");
                 var close=additions.GetType().GetMethod("Close");

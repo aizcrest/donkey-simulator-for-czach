@@ -37,7 +37,8 @@ namespace DonkeyForest
         readonly List<Camera> previousCameras=new List<Camera>();
         readonly List<AudioListener> previousListeners=new List<AudioListener>();
         Light sun;
-        Text status, message, inventory, objective;
+        Text message, inventory;
+        SideHud sideHud;
         GameObject menu, creditsPanel, hudRoot;
         bool ready;
         float comboWindow,hudClock,frameTime=1f/30;
@@ -227,8 +228,7 @@ namespace DonkeyForest
             if(hudClock<=0)
             {
             hudClock=.2f;
-            status.text=$"Czach’s Donkey Journey\n{(Night?"NIGHT — ZOMBIES":"DAY — FOREST HUNT")} • {(data.quality==0?"LOW":data.quality==1?"BALANCED":"HIGH")} / {Mathf.RoundToInt(1/frameTime)} FPS • {Difficulty.Name.ToUpperInvariant()}\nHealth {Mathf.CeilToInt(data.health)} / {MaxHealth:0}    Coins {data.coins}    Kills {data.kills}    Lv.{data.journey.level}\nSword {data.sword}  •  Armor {data.armor}  •  Donkey gear {data.barding}  •  Potions {data.potions}";
-            objective.text=Encounter.Objective+$" • Dodge {(dodgeCooldown<=0?"READY":dodgeCooldown.ToString("0.0")+"s")}";
+            sideHud.Refresh(1/frameTime,dodgeCooldown);
             Additions.Refresh();
             }
             messageClock-=Time.unscaledDeltaTime;message.text=Dead?"":messageClock>0?notice:"";
@@ -309,12 +309,13 @@ namespace DonkeyForest
                 drop.transform.position=Ground(enemy.transform.position,.6f);drop.reward=UnityEngine.Random.Range(0,5);
                 Shape("Loot",PrimitiveType.Cube,drop.transform,Vector3.zero,Vector3.one*.45f,Mat(new Color(1,.74f,.15f)));
             }
+            Encounter.TryDropOrb(enemy.transform.position);
             Save(false);
         }
         public void GainXP(int amount)
         {
             int levels=JourneyRules.GainXP(data.journey,amount);
-            if(levels>0){data.health=Mathf.Min(MaxHealth,data.health+levels*3);Show($"Level {data.journey.level}! +{levels} skill point(s). Train in CAMP → SKILLS.");Audio.Play("level");}
+            if(levels>0){data.health=Mathf.Min(MaxHealth,data.health+levels*3);Show($"Level {data.journey.level}! +{levels} skill point(s). Train in CAMP > SKILLS.");Audio.Play("level");}
         }
         public void Collect(int reward)
         {
@@ -423,7 +424,7 @@ namespace DonkeyForest
             Encounter=new GameObject("Gems and summoning altar").AddComponent<DragonEncounter>();Encounter.Setup(this);
             for(int i=0;i<MobilePerformance.InitialEnemies(data.quality,data.difficulty);i++)SpawnEnemy(false);
             sky.Tick();hudClock=0;ToggleMenu();
-            Show("New adventure started! Find the ten gems and challenge the dragon again.");
+            Show("New adventure started! Hunt enemies for ten orbs and challenge the dragon again.");
             return true;
         }
         public void SetDifficulty(int value)
@@ -463,7 +464,8 @@ namespace DonkeyForest
         {
             var obj=new GameObject("Label",typeof(RectTransform),typeof(Text));obj.transform.SetParent(parent,false);
             var r=obj.GetComponent<RectTransform>();r.anchorMin=r.anchorMax=anchor;r.anchoredPosition=pos;r.sizeDelta=size;
-            var t=obj.GetComponent<Text>();t.font=font;t.fontSize=fontsize;t.text=text;t.color=Color.white;t.alignment=TextAnchor.MiddleCenter;t.raycastTarget=false;return t;
+            var t=obj.GetComponent<Text>();t.font=font;t.fontSize=fontsize;t.text=text;t.color=Color.white;t.alignment=TextAnchor.MiddleCenter;t.raycastTarget=false;
+            var shadow=obj.AddComponent<Shadow>();shadow.effectColor=new Color(0,0,0,.7f);shadow.effectDistance=new Vector2(1,-1);return t;
         }
         public Button Button(Transform parent,string text,Vector2 anchor,Vector2 pos,Vector2 size,UnityEngine.Events.UnityAction click)
         {
@@ -473,7 +475,8 @@ namespace DonkeyForest
         {
             if(hudRoot){hudRoot.SetActive(false);Destroy(hudRoot);}
             menu=creditsPanel=null;inventory=null;
-            font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            font=Resources.Load<Font>("Fonts/LilitaOne-Regular");
+            if(!font)font=Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             var root=new GameObject("Mobile HUD",typeof(Canvas),typeof(CanvasScaler),typeof(GraphicRaycaster));root.GetComponent<Canvas>().renderMode=RenderMode.ScreenSpaceOverlay;
             hudRoot=root;root.transform.SetParent(transform,false);SetHudEnabled(false);
             // Keep objects active for label lookup, but hide rendering/input until setup completes.
@@ -482,13 +485,11 @@ namespace DonkeyForest
             var safe=new GameObject("Safe Area",typeof(RectTransform),typeof(SafeArea));safe.transform.SetParent(root.transform,false);
             var sr=safe.GetComponent<RectTransform>();sr.offsetMin=sr.offsetMax=Vector2.zero;
             var parent=safe.transform;
-            status=Label(parent,"",new Vector2(.5f,1),new Vector2(0,-70),new Vector2(950,125),22);
-            objective=Label(parent,"",new Vector2(.5f,1),new Vector2(0,-150),new Vector2(1120,70),20);
-            message=Label(parent,"",new Vector2(.5f,.5f),new Vector2(0,125),new Vector2(950,80),25);
-            Button(parent,"CAMP",new Vector2(1,1),new Vector2(-85,-55),new Vector2(140,60),ToggleMenu);
+            message=Label(parent,"",new Vector2(.5f,.5f),new Vector2(0,125),new Vector2(650,80),22);
+            Button(parent,"CAMP",new Vector2(1,1),new Vector2(-125,-35),new Vector2(210,48),ToggleMenu);
             Controls.Icon(Button(parent,"ATTACK",new Vector2(1,0),new Vector2(-110,115),new Vector2(180,110),Attack),"attack");
-            Controls.Icon(Button(parent,"DODGE",new Vector2(1,0),new Vector2(-300,180),new Vector2(150,70),Dodge),"dodge");
-            Button(parent,"OFFER GEMS",new Vector2(0,1),new Vector2(120,-230),new Vector2(200,60),()=>Encounter.OfferGems());
+            var dodgeButton=Button(parent,"DODGE",new Vector2(1,0),new Vector2(-300,180),new Vector2(150,70),Dodge);Controls.Icon(dodgeButton,"dodge");
+            Button(parent,"OFFER ORBS",new Vector2(1,1),new Vector2(-125,-285),new Vector2(210,48),()=>Encounter.OfferGems());
             Controls.Icon(Button(parent,"HEAL",new Vector2(1,0),new Vector2(-280,80),new Vector2(120,70),Heal),"heal");
             var joystick=Panel("Movement",parent,Vector2.zero,new Vector2(135,135),new Vector2(190,190),new Color(.12f,.18f,.16f,.7f));
             var knob=Panel("Thumb",joystick,new Vector2(.5f,.5f),Vector2.zero,new Vector2(65,65),new Color(.7f,.78f,.6f,.9f));
@@ -504,17 +505,19 @@ namespace DonkeyForest
             Button(panel,"SAVE",new Vector2(.5f,.5f),new Vector2(-270,-100),new Vector2(240,65),()=>Save());
             Button(panel,"REVIVE",new Vector2(.5f,.5f),new Vector2(0,-100),new Vector2(240,65),Revive);
             Button(panel,"RESUME",new Vector2(.5f,.5f),new Vector2(270,-100),new Vector2(240,65),ToggleMenu);
-            Label(panel,"WASD: ride • Space: attack • Shift: dodge • E: offer gems • H: heal • F5: save",new Vector2(.5f,0),new Vector2(0,50),new Vector2(850,60),20);
+            Label(panel,"WASD: ride • Space: attack • Shift: dodge • E: offer orbs • H: heal • F5: save",new Vector2(.5f,0),new Vector2(0,50),new Vector2(850,60),20);
             Button(panel,"ASSET CREDITS",new Vector2(1,1),new Vector2(-115,-30),new Vector2(210,42),()=>creditsPanel.SetActive(true));
             var credits=Panel("Asset credits",panel,new Vector2(.5f,.5f),Vector2.zero,new Vector2(880,530),new Color(.06f,.1f,.09f,1));
             creditsPanel=credits.gameObject;
-            Label(credits,"FREE MODEL CREDITS\n\nBear / Elk (Moose adaptation): Poly by Google\nReference Knight: Dawid2K • both under CC BY 3.0\nhttps://creativecommons.org/licenses/by/3.0/\n\nDonkey, Deer, Wolf, Fox, Zombie and Dragon: Quaternius\nCC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/\n\nModels converted to FBX; moose and rider adapted.\nActive player models, animation and audio are original project work.\nOriginal model links and modification details are in THIRD_PARTY.md.",new Vector2(.5f,.5f),new Vector2(0,40),new Vector2(830,380),21);
+            Label(credits,"FREE MODEL CREDITS\n\nBear / Elk (Moose adaptation): Poly by Google\nReference Knight: Dawid2K • both under CC BY 3.0\nhttps://creativecommons.org/licenses/by/3.0/\n\nDonkey, Deer, Wolf, Fox, Zombie and Dragon: Quaternius\nCC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/\n\nModels converted to FBX; moose and rider adapted.\nActive player models, animation and audio are original project work.\nFont: Lilita One • Juan Montoreano • SIL OFL 1.1.\nSources and licenses: THIRD_PARTY.md.",new Vector2(.5f,.5f),new Vector2(0,40),new Vector2(830,380),18);
             Button(credits,"MODEL SOURCES",new Vector2(.5f,0),new Vector2(-150,65),new Vector2(250,65),()=>Application.OpenURL("https://github.com/aizcrest/donkey-simulator-for-czach/blob/main/THIRD_PARTY.md"));
             Button(credits,"BACK",new Vector2(.5f,0),new Vector2(150,65),new Vector2(250,65),()=>creditsPanel.SetActive(false));
             creditsPanel.SetActive(false);
             if(!Additions)Additions=gameObject.AddComponent<CampAdditions>();
             Additions.Setup(this,panel,parent);
             menu.SetActive(false);
+            sideHud=GetComponent<SideHud>();if(!sideHud)sideHud=gameObject.AddComponent<SideHud>();
+            sideHud.Setup(this,parent,dodgeButton.GetComponentInChildren<Text>(true));
             var combatHud=GetComponent<CombatHud>();if(!combatHud)combatHud=gameObject.AddComponent<CombatHud>();
             combatHud.Setup(this,parent,Revive);
         }

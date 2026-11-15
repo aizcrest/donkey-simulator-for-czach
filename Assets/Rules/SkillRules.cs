@@ -83,7 +83,7 @@ namespace DonkeyForest
         }
         public static int XP(string kind,bool elite)
         {int value=kind=="Moose"?36:kind=="Bear"?24:kind=="Wolf"?22:kind=="Zombie"?25:kind=="Fox"?12:14;return value*(elite?2:1);}
-        public static string ContractName(ContractId id)=>id==ContractId.ForestHunt?"Forest Hunt: defeat 5 animals":id==ContractId.NightWatch?"Night Watch: defeat 3 zombies":id==ContractId.GemSeeker?"Gem Seeker: find 4 gems":"Dragon Slayer: defeat the dragon";
+        public static string ContractName(ContractId id)=>id==ContractId.ForestHunt?"Forest Hunt: defeat 5 animals":id==ContractId.NightWatch?"Night Watch: defeat 3 zombies":id==ContractId.GemSeeker?"Orb Seeker: collect 4 orbs":"Dragon Slayer: defeat the dragon";
         public static int Goal(ContractId id)=>id==ContractId.ForestHunt?5:id==ContractId.NightWatch?3:id==ContractId.GemSeeker?4:1;
         public static int Progress(JourneySave save,ContractId id,int gemCount,bool dragonDefeated)=>id==ContractId.ForestHunt?save.hunts:id==ContractId.NightWatch?save.zombies:id==ContractId.GemSeeker?gemCount:dragonDefeated?1:0;
         public static bool Claimed(JourneySave save,ContractId id)=>(save.claimed&(1<<(int)id))!=0;
