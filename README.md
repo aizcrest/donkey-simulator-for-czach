@@ -2,7 +2,7 @@
 
 ![Launch artwork](Assets/Resources/Branding/CzachsDonkeyJourney.png)
 
-Generated splash artwork appears for two seconds before gameplay, fitted without cropping or stretching. Wide phones and tablets show dark margins around the complete image. A safe-area footer below the artwork reads **“Developed and built by Joven”** in the cartoon UI font; its space is reserved so it does not cover or crop the artwork. It also appears in Play Mode. The donkey-and-knight launcher icon is in `Assets/Art/AppIcon`. The existing **Forest Rider** editor tools menu and Android package ID remain stable.
+Generated splash artwork appears for two seconds before gameplay. The foreground is fitted at its original aspect ratio to the full safe area, with no fixed footer band reducing its size. A dim, full-screen copy fills any margins on wide phones or tablets; only this decorative backdrop crops. A compact footer reads **“Developed and built by Joven”** over the bottom of the splash (or the lower margin on taller screens). The layout refreshes before canvas rendering when resolution, safe area or orientation changes. It also appears in Play Mode. The donkey-and-knight launcher icon is in `Assets/Art/AppIcon`. The existing **Forest Rider** editor tools menu and Android package ID remain stable.
 
 Keep **both** `Forest` (first) and `TerrainBuildSupport` enabled in your Build Profile scene list. The second scene contains an inactive Terrain placeholder required by Unity to include its native terrain resources for a runtime-generated map; the game never loads that scene. Setup adds it to global and existing custom profile scene lists automatically.
 
