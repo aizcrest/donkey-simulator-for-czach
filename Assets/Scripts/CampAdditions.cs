@@ -5,7 +5,7 @@ namespace DonkeyForest
     public sealed class CampAdditions:MonoBehaviour
     {
         ForestGame game;
-        GameObject skills,journal,audioPanel,difficultyPanel,resetPanel;
+        GameObject skills,journal,audioPanel,difficultyPanel,resetPanel,forCzachPanel;
         Text resetMessage;
         Button difficultySelector;
         readonly Button[] difficultyButtons=new Button[3];
@@ -33,6 +33,8 @@ namespace DonkeyForest
                 Open(resetPanel);
             });
             resetButton.transform.SetAsFirstSibling();
+            var forCzachButton=game.Button(camp,"For Czach",new Vector2(.5f,.5f),new Vector2(270,-165),new Vector2(240,46),()=>Open(forCzachPanel));
+            forCzachButton.transform.SetAsFirstSibling();
             skills=Overlay(camp,"RIDER & DONKEY SKILLS");journal=Overlay(camp,"HUNT CONTRACTS");audioPanel=Overlay(camp,"AUDIO & GRAPHICS");
             skillSummary=game.Label(skills.transform,"",new Vector2(.5f,1),new Vector2(0,-83),new Vector2(850,45),22);
             journalSummary=game.Label(journal.transform,"",new Vector2(.5f,1),new Vector2(0,-83),new Vector2(850,45),22);
@@ -71,6 +73,14 @@ namespace DonkeyForest
                 if(!game.ResetProgress())resetMessage.text="Could not reset progress.\nCheck that device storage is available, then try again.\nYour current adventure is still loaded.";
             });
             resetPanel.transform.Find("BACK").GetComponentInChildren<Text>(true).text="CANCEL";
+            forCzachPanel=Overlay(camp,"For Czach");
+            var dedication=game.Label(forCzachPanel.transform,
+                "Message from Tito Joven:\n\n"+
+                "Continue being a jolly kid. Always show kindness to others. And continue being a good kid to your Nanay and Tatay.\n\n"+
+                "Me and Tita Ana loves you.\n\n"+
+                "Should you have feedbacks and ideas about this game, don't hesitate to tell me. Let's collab!",
+                new Vector2(.5f,.5f),Vector2.zero,new Vector2(790,350),24);
+            dedication.alignment=TextAnchor.MiddleLeft;
             Close();Refresh();
         }
         GameObject Overlay(Transform camp,string title)
@@ -93,7 +103,7 @@ namespace DonkeyForest
             label.text=name+" "+Mathf.RoundToInt(initial*100)+"%";
         }
         void Open(GameObject panel){Close();panel.SetActive(true);Refresh();game.Audio.Play("ui");}
-        public void Close(){if(skills)skills.SetActive(false);if(journal)journal.SetActive(false);if(audioPanel)audioPanel.SetActive(false);if(difficultyPanel)difficultyPanel.SetActive(false);if(resetPanel)resetPanel.SetActive(false);}
+        public void Close(){if(skills)skills.SetActive(false);if(journal)journal.SetActive(false);if(audioPanel)audioPanel.SetActive(false);if(difficultyPanel)difficultyPanel.SetActive(false);if(resetPanel)resetPanel.SetActive(false);if(forCzachPanel)forCzachPanel.SetActive(false);}
         void Upgrade(SkillId id)
         {
             if(!game.Skills.Book.TryUpgrade(id,ref game.data.coins,ref game.data.journey.skillPoints)){game.Show("Need a skill point and enough coins; skills cap at level 5.");return;}
