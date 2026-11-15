@@ -6,10 +6,10 @@
     "clips": {
       "idle": 6,
       "move": 8,
-      "attack": 6,
+      "attack": 12,
       "stun": 6
     },
-    "bytes": 2710562
+    "bytes": 3326306
   },
   {
     "kind": "Wolf",
@@ -18,10 +18,10 @@
     "clips": {
       "idle": 6,
       "move": 8,
-      "attack": 6,
+      "attack": 12,
       "stun": 6
     },
-    "bytes": 2531858
+    "bytes": 3106994
   },
   {
     "kind": "Fox",
@@ -30,10 +30,10 @@
     "clips": {
       "idle": 6,
       "move": 8,
-      "attack": 6,
+      "attack": 12,
       "stun": 6
     },
-    "bytes": 2378514
+    "bytes": 2918802
   },
   {
     "kind": "Zombie",
@@ -42,10 +42,10 @@
     "clips": {
       "idle": 6,
       "move": 8,
-      "attack": 6,
+      "attack": 12,
       "stun": 6
     },
-    "bytes": 3124674
+    "bytes": 3819618
   },
   {
     "kind": "Dragon",
@@ -54,10 +54,10 @@
     "clips": {
       "idle": 6,
       "move": 8,
-      "attack": 6,
+      "attack": 12,
       "stun": 6,
       "fly": 8
     },
-    "bytes": 2451625
+    "bytes": 2879305
   }
 ]

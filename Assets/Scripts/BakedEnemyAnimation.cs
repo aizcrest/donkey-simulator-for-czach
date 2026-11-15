@@ -6,14 +6,17 @@ using UnityEngine;
 
 namespace DonkeyForest
 {
-    // Offline Blender poses render as ordinary meshes. Frames are shared by all enemies of a species.
+    // Shared pose pairs interpolate on the GPU. No per-enemy CPU vertex arrays or per-frame mesh baking.
     public sealed class BakedEnemyAnimation:MonoBehaviour
     {
-        sealed class Clip { public float duration;public Mesh[] frames; }
-        sealed class Library { public Dictionary<string,Clip> clips=new Dictionary<string,Clip>();public Material material; }
+        sealed class Clip { public float duration;public Mesh[] frames;public bool loop; }
+        sealed class Library { public Dictionary<string,Clip> clips=new Dictionary<string,Clip>();public Material material;public Bounds referenceBounds; }
         static readonly Dictionary<string,Library> cache=new Dictionary<string,Library>();
+        static readonly int BlendId=Shader.PropertyToID("_FrameBlend");
+        readonly MaterialPropertyBlock properties=new MaterialPropertyBlock();
         Library library;Clip clip;MeshFilter filter;MeshRenderer meshRenderer;
-        string state;float clock;int frame=-1;
+        string state;float clock;int frame=-1;bool manual;
+        public Bounds ReferenceBounds=>library.referenceBounds;
         public static bool Supports(string kind)=>kind=="Deer"||kind=="Wolf"||kind=="Fox"||kind=="Zombie"||kind=="Dragon";
         public void Setup(string kind)
         {
@@ -42,24 +45,34 @@ namespace DonkeyForest
                         int length=reader.ReadInt32();if(length<1||length>32)throw new InvalidDataException("Invalid clip name.");
                         string name=Encoding.ASCII.GetString(reader.ReadBytes(length));float duration=reader.ReadSingle();int count=reader.ReadInt32();
                         if(duration<=0||count<1||count>32)throw new InvalidDataException("Invalid clip duration/frame count.");
-                        var entry=new Clip{duration=duration,frames=new Mesh[count]};result.clips.Add(name,entry);
-                        var positions=new Vector3[vertices];var normals=new Vector3[vertices];
+                        var entry=new Clip{duration=duration,frames=new Mesh[count],loop=name!="attack"};result.clips.Add(name,entry);
+                        var positions=new Vector3[count][];var normals=new Vector3[count][];Bounds bounds=default;
                         for(int f=0;f<count;f++)
                         {
+                            positions[f]=new Vector3[vertices];normals[f]=new Vector3[vertices];
                             for(int v=0;v<vertices;v++)
                             {
-                                positions[v]=new Vector3(reader.ReadSingle(),reader.ReadSingle(),reader.ReadSingle());
-                                normals[v]=new Vector3(reader.ReadSingle(),reader.ReadSingle(),reader.ReadSingle());
+                                var point=new Vector3(reader.ReadSingle(),reader.ReadSingle(),reader.ReadSingle());positions[f][v]=point;
+                                normals[f][v]=new Vector3(reader.ReadSingle(),reader.ReadSingle(),reader.ReadSingle());
+                                if(f==0&&v==0)bounds=new Bounds(point,Vector3.zero);else bounds.Encapsulate(point);
+                                if(name=="idle"&&f==0)
+                                {if(v==0)result.referenceBounds=new Bounds(point,Vector3.zero);else result.referenceBounds.Encapsulate(point);}
                             }
-                            var mesh=new Mesh{name=kind+" "+name+" "+f};entry.frames[f]=mesh;
-                            mesh.vertices=positions;mesh.normals=normals;mesh.colors32=colors;mesh.triangles=indices;
-                            mesh.RecalculateBounds();mesh.UploadMeshData(true);
+                        }
+                        var deltaPosition=new List<Vector3>(vertices);var deltaNormal=new List<Vector3>(vertices);
+                        for(int f=0;f<count;f++)
+                        {
+                            int next=entry.loop?(f+1)%count:Mathf.Min(f+1,count-1);deltaPosition.Clear();deltaNormal.Clear();
+                            for(int v=0;v<vertices;v++)
+                            {deltaPosition.Add(positions[next][v]-positions[f][v]);deltaNormal.Add(normals[next][v]-normals[f][v]);}
+                            var mesh=new Mesh{name=kind+" interpolated "+name+" "+f};entry.frames[f]=mesh;
+                            mesh.vertices=positions[f];mesh.normals=normals[f];mesh.colors32=colors;mesh.triangles=indices;
+                            mesh.SetUVs(1,deltaPosition);mesh.SetUVs(2,deltaNormal);mesh.bounds=bounds;mesh.UploadMeshData(true);
                         }
                     }
                 }
-                var shader=Shader.Find("Forest Rider/Model Vertex Colors");
-                if(!shader)throw new InvalidOperationException("Missing enemy vertex-color shader.");
-                result.material=new Material(shader){name=kind+" baked colors",enableInstancing=true};
+                result.material=Resources.Load<Material>("EnemyFrames/Interpolated");
+                if(!result.material)throw new InvalidOperationException("Missing interpolated enemy material.");
                 return result;
             }
             catch{Dispose(result);throw;}
@@ -67,27 +80,36 @@ namespace DonkeyForest
         }
         public void Play(string desired)
         {
-            if(desired==state)return;state=desired;
+            manual=false;if(desired==state)return;state=desired;
             if(!library.clips.TryGetValue(desired,out clip))clip=library.clips["idle"];
-            clock=0;frame=0;filter.sharedMesh=clip.frames[0];
+            clock=0;frame=-1;Apply(0);
+        }
+        public void AttackPose(float normalized)
+        {
+            Play("attack");manual=true;Apply(Mathf.Clamp01(normalized)*(clip.frames.Length-1));
+        }
+        void Apply(float pose)
+        {
+            int next=Mathf.Min(clip.frames.Length-1,(int)pose);
+            if(frame!=next){frame=next;filter.sharedMesh=clip.frames[frame];}
+            properties.SetFloat(BlendId,pose-next);meshRenderer.SetPropertyBlock(properties);
         }
         public void ValidateFrames()
         {
             foreach(var entry in library.clips.Values)foreach(var mesh in entry.frames)
-                if(!mesh||mesh.vertexCount<3||mesh.GetIndexCount(0)<3||mesh.bounds.size.y<.05f)
-                    throw new InvalidDataException("Enemy has an empty mesh frame: "+name);
+                if(!mesh||mesh.vertexCount<3||mesh.GetIndexCount(0)<3||mesh.bounds.size.y<.05f||
+                    !mesh.HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.TexCoord1)||!mesh.HasVertexAttribute(UnityEngine.Rendering.VertexAttribute.TexCoord2))
+                    throw new InvalidDataException("Enemy has an invalid interpolated pose pair: "+name);
         }
         void Update()
         {
-            var game=ForestGame.Instance;if(game&&(game.Paused||game.Dead))return;
-            clock=Mathf.Repeat(clock+Time.deltaTime,clip.duration);
-            int next=Mathf.Min(clip.frames.Length-1,(int)(clock/clip.duration*clip.frames.Length));
-            if(frame!=next&&meshRenderer.isVisible){frame=next;filter.sharedMesh=clip.frames[frame];}
+            var game=ForestGame.Instance;if(manual||(game&&(game.Paused||game.Dead)))return;
+            clock=clip.loop?Mathf.Repeat(clock+Time.deltaTime,clip.duration):Mathf.Min(clock+Time.deltaTime,clip.duration);
+            if(meshRenderer.isVisible)Apply(clock/clip.duration*(clip.loop?clip.frames.Length:clip.frames.Length-1));
         }
         static void Dispose(Library data)
         {
             foreach(var entry in data.clips.Values)foreach(var mesh in entry.frames)if(mesh)Destroy(mesh);
-            if(data.material)Destroy(data.material);
         }
         public static void ReleaseAll(){foreach(var data in cache.Values)Dispose(data);cache.Clear();}
     }

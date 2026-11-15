@@ -23,6 +23,8 @@ namespace DonkeyForest
         Transform[] bones;
         Pose[] current, previous;
         Mesh mesh;
+        readonly MaterialPropertyBlock tint=new MaterialPropertyBlock();
+        bool dodgeTint;
         Clip clip;
         string state;
         float clock, fade=1, playback=1;
@@ -122,6 +124,11 @@ namespace DonkeyForest
                 if(fade<1)pose=Pose.Blend(previous[i],pose,blend);
                 current[i]=pose;bones[i].localPosition=pose.position;bones[i].localRotation=pose.rotation;bones[i].localScale=pose.scale;
             }
+        }
+        public void SetDodgeTint(bool active)
+        {
+            if(active==dodgeTint)return;dodgeTint=active;
+            tint.SetColor("_Color",active?new Color(.45f,1,1):Color.white);Renderer.SetPropertyBlock(tint);
         }
         public void ValidateAllClips()
         {

@@ -54,3 +54,5 @@ Original GLBs, license texts, download URLs, SHA-256 hashes and adaptations are 
 ## Tutorial snapshots
 
 `Assets/Resources/Tutorial/{ride,combat,orbs,dragon}.png` are staged instructional renders made with `Tools/render_tutorial_snapshots.py`, not gameplay screenshots. They use the credited Polyfork donkey (CC BY 4.0), KayKit knight/equipment (CC0), and Quaternius wolf/dragon (CC0), alongside original forest props, altar, markers and orbs. The donkey's credit, source link, license and adaptation notice appear above and in Camp → Asset Credits.
+
+The enemy attack update resamples those same CC0 animation clips with 12 attack poses including the endpoint. Runtime pose pairs interpolate the baked positions and normals. Bear/moose keep their existing credited meshes and receive original procedural body-motion cues; their source assets and licenses are unchanged.

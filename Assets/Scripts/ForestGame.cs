@@ -7,6 +7,7 @@ using UnityEngine.EventSystems;
 
 namespace DonkeyForest
 {
+    [DefaultExecutionOrder(-100)]
     public sealed class ForestGame : MonoBehaviour
     {
         public static ForestGame Instance;
@@ -23,7 +24,9 @@ namespace DonkeyForest
         public Camera View=>view;
         public TouchControlSkin Controls { get; private set; }
         DayNightSky sky;
-        public bool IsDodging=>dodgeTime>0;
+        public bool IsDodging=>dodge.Invulnerable;
+        public bool IsInvulnerable=>dodge.Invulnerable;
+        public Bounds PlayerHitBounds=>controller.bounds;
         public float WeaponDamage=>(17+data.sword*8)*(1+(data.journey.level-1)*.01f);
         public Vector3 Ground(Vector3 position, float clearance = 0) => Landscape.Ground(position, clearance);
         public float MaxHealth => 90 + data.armor * 10 + data.barding * 10 + (data.journey==null?0:(Mathf.Clamp(data.journey.level,1,20)-1)*3);
@@ -44,7 +47,9 @@ namespace DonkeyForest
         float comboWindow,hudClock,frameTime=1f/30;
         static readonly string[] AnimalSpecies={"Bear","Deer","Moose","Wolf","Fox"};
         int comboStep;
-        float attackCooldown, swing, spawnClock, autoSave, messageClock, dodgeCooldown, dodgeTime;
+        float attackCooldown, swing, spawnClock, autoSave, messageClock;
+        readonly DodgeWindow dodge=new DodgeWindow();
+        readonly DamageInbox damageInbox=new DamageInbox();
         Vector3 dodgeDirection;
         string notice = "Welcome, rider. Hunt for loot. Zombies arrive after dark.";
         readonly ForestPropMeshes propMeshes=new ForestPropMeshes();
@@ -205,19 +210,20 @@ namespace DonkeyForest
                 comboWindow=Mathf.Max(0,comboWindow-dt);
                 bool charging=Skills.Charging;
                 if(charging)direction=Skills.ChargeDirection;
-                dodgeCooldown=Mathf.Max(0,dodgeCooldown-dt);
-                if(dodgeTime>0){direction=dodgeDirection;dodgeTime=Mathf.Max(0,dodgeTime-dt);}
+                bool dodging=dodge.Remaining>0;
+                dodge.BeginFrame(dt,false);
+                if(dodging)direction=dodgeDirection;
                 if(direction.sqrMagnitude>.01f) rider.rotation=Quaternion.Slerp(rider.rotation,Quaternion.LookRotation(direction),dt*10);
                 Vector3 previous=rider.position;
-                controller.Move((direction*(dodgeTime>0?14f:charging?12.5f:6.5f)+Vector3.down*15)*dt);
+                controller.Move((direction*(dodging?14f:charging?12.5f:6.5f)+Vector3.down*15)*dt);
                 Vector3 pos=rider.position;var correction=new Vector3(Mathf.Clamp(pos.x,-86,86)-pos.x,0,Mathf.Clamp(pos.z,-86,86)-pos.z);
                 if(correction.sqrMagnitude>0)controller.Move(correction);
                 Landscape.KeepAboveGround(controller);
                 if(charging)Skills.CheckCharge(previous,rider.position);
                 Skills.Tick(dt);
                 float visualSpeed=Vector3.ProjectOnPlane(rider.position-previous,Vector3.up).magnitude/Mathf.Max(dt,.0001f);
-                MountedModel.Animate(visualSpeed>.08f,charging||dodgeTime>0,swing,visualSpeed);
-                Audio.Hooves(dt,(rider.position-previous).sqrMagnitude>.0001f&&direction.sqrMagnitude>.01f,charging||dodgeTime>0);
+                MountedModel.Animate(visualSpeed>.08f,charging||dodging,swing,visualSpeed);
+                Audio.Hooves(dt,(rider.position-previous).sqrMagnitude>.0001f&&direction.sqrMagnitude>.01f,charging||dodging);
                 data.time=Mathf.Repeat(data.time+dt/360,1);
                 spawnClock+=dt;if(spawnClock>4){spawnClock=0;if(enemies.Count<MobilePerformance.EnemyCap(data.quality,data.difficulty)&&!Encounter.Active)SpawnEnemy(Night);}
                 autoSave+=dt;if(autoSave>30){autoSave=0;Save(false);}
@@ -229,7 +235,7 @@ namespace DonkeyForest
             if(hudClock<=0)
             {
             hudClock=.2f;
-            sideHud.Refresh(1/frameTime,dodgeCooldown);
+            sideHud.Refresh(1/frameTime,dodge.Cooldown);
             Additions.Refresh();
             }
             messageClock-=Time.unscaledDeltaTime;message.text=Dead?"":messageClock>0?notice:"";
@@ -237,6 +243,7 @@ namespace DonkeyForest
         void LateUpdate()
         {
             if(!ready||!rider)return;
+            ResolveDamage();
             orbitCamera.ReadInput();
             Vector3 look = rider.position + Vector3.up * 1.6f;
             Vector3 target = look + orbitCamera.Offset(Encounter && Encounter.Active?19:10.5f);
@@ -252,8 +259,8 @@ namespace DonkeyForest
         }
         public void Dodge()
         {
-            if(Paused||Dead||dodgeCooldown>0||Skills.Charging)return;
-            dodgeDirection=rider.forward;dodgeTime=.32f;dodgeCooldown=1.6f;Audio.Play("swing",.5f);
+            if(!dodge.TryStart(!Paused&&!Dead&&!Skills.Charging))return;
+            dodgeDirection=rider.forward;Audio.Play("swing",.5f);
         }
         public void Attack()
         {
@@ -274,8 +281,14 @@ namespace DonkeyForest
         }
         public void Damage(float amount)
         {
-            if(Dead||Paused||dodgeTime>0)return;
-            data.health=Mathf.Max(0,data.health-Mathf.Max(1,amount*Skills.GuardMultiplier*(1-Mathf.Min(.65f,(data.armor+data.barding)*.035f))));
+            if(Dead||Paused||IsInvulnerable||amount<=0||float.IsNaN(amount)||float.IsInfinity(amount))return;
+            damageInbox.Add(Mathf.Max(1,amount*Skills.GuardMultiplier*(1-Mathf.Min(.65f,(data.armor+data.barding)*.035f))));
+        }
+        void ResolveDamage()
+        {
+            // All Update/input callbacks finish before LateUpdate: a touch dodge protects this frame too.
+            float amount=damageInbox.Resolve(Dead||Paused||IsInvulnerable);if(amount<=0)return;
+            data.health=Mathf.Max(0,data.health-amount);
             Audio.Play("hit",.55f);
             if(Dead){Skills.CancelEffects();moveInput=Vector2.zero;Audio.Play("death");Encounter.OnPlayerDeath();Save(false);}
         }
@@ -419,7 +432,7 @@ namespace DonkeyForest
             data=fresh;Skills.ResetProgress();Audio.ResetCombat();
             controller.enabled=false;rider.position=Ground(Vector3.zero,.08f);rider.rotation=Quaternion.identity;controller.enabled=true;
             moveInput=Vector2.zero;dodgeDirection=Vector3.zero;comboStep=0;
-            comboWindow=attackCooldown=swing=spawnClock=autoSave=dodgeCooldown=dodgeTime=0;
+            comboWindow=attackCooldown=swing=spawnClock=autoSave=0;dodge.Reset();damageInbox.Clear();
             foreach(var stick in FindObjectsByType<MobileStick>(FindObjectsSortMode.None))stick.ResetStick();
             MountedModel.Animate(false,false,0);
             Encounter=new GameObject("Gems and summoning altar").AddComponent<DragonEncounter>();Encounter.Setup(this);
@@ -446,7 +459,7 @@ namespace DonkeyForest
             if(!ready||!Dead)return;
             data.health=MaxHealth;controller.enabled=false;rider.position=Ground(Vector3.zero,.08f);controller.enabled=true;
             foreach(var e in enemies.ToArray())if(e){e.gameObject.SetActive(false);Destroy(e.gameObject);}
-            enemies.Clear();moveInput=Vector2.zero;dodgeTime=dodgeCooldown=comboWindow=attackCooldown=swing=spawnClock=0;comboStep=0;
+            enemies.Clear();moveInput=Vector2.zero;comboWindow=attackCooldown=swing=spawnClock=0;dodge.Reset();damageInbox.Clear();comboStep=0;
             foreach(var stick in FindObjectsByType<MobileStick>(FindObjectsSortMode.None))stick.ResetStick();
             Skills.CancelEffects();Audio.ResetCombat();Paused=false;
             if(menu)menu.SetActive(false);if(creditsPanel)creditsPanel.SetActive(false);Additions.Close();

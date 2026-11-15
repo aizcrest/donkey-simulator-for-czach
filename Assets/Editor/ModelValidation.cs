@@ -47,6 +47,7 @@ namespace DonkeyForest.Editor
                     var visual=EnemyVisual.Create(kinds[i],root.transform,heights[i]);
                     var frames=visual.Model.GetComponent<BakedEnemyAnimation>();if(frames)frames.ValidateFrames();
                     Bounds initial=EnemyVisual.GeometryBounds(visual.Model,visual.transform);
+                    if(frames)initial=new Bounds(frames.ReferenceBounds.center*heights[i],frames.ReferenceBounds.size*heights[i]);
                     Require(Mathf.Abs(initial.size.y-heights[i])<.03f,kinds[i]+" has incorrect fitted height.");
                     Require(Mathf.Abs(initial.min.y)<.03f,kinds[i]+" feet are not grounded.");
                     Require(new Vector2(initial.center.x,initial.center.z).magnitude<.03f,kinds[i]+" is off center.");
@@ -70,7 +71,7 @@ namespace DonkeyForest.Editor
                             bool needsTexture=kinds[i]=="Bear"||
                                 (kinds[i]=="Moose"&&!material.name.ToLowerInvariant().Contains("antler"));
                             if(needsTexture)Require(material.mainTexture,kinds[i]+" is missing its color texture.");
-                            if(BakedEnemyAnimation.Supports(kinds[i]))Require(material.shader.name=="Forest Rider/Model Vertex Colors",
+                            if(BakedEnemyAnimation.Supports(kinds[i]))Require(material.shader.name=="Forest Rider/Animated Enemy",
                                 kinds[i]+" must render its baked colors.");
                         }
                 }

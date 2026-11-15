@@ -28,7 +28,7 @@ For an existing checkout, close Unity, preserve any local edits, and run `git pu
 | Equipment, training, journal, settings, save, revive | CAMP | Escape |
 | Manual save | CAMP → SAVE | F5 |
 
-Movement follows the camera. The third consecutive sword attack deals 40% extra damage and briefly staggers ordinary enemies; wait more than 1.3 seconds between attacks to reset the combo. Dodge lasts .32 seconds with damage immunity and a 1.6-second cooldown. Charge and dodge cannot run at the same time.
+Movement follows the camera. The third consecutive sword attack deals 40% extra damage and briefly staggers ordinary enemies; wait more than 1.3 seconds between attacks to reset the combo. Dodge lasts .32 seconds with damage immunity and a 1.6-second cooldown. A cyan rider/mount tint marks the protected frames; the final movement frame stays protected, including touch input received later in the same frame. Charge and dodge cannot run at the same time.
 
 ## Rider and donkey skills
 
@@ -80,7 +80,7 @@ On **v2_dev**, the active player uses the **Polyfork donkey (CC BY 4.0)** and **
 
 Regenerate with `blender -b -t 2 --python Tools/build_mounted_v2.py`; validate with `python Tools/check_mounted_v2.py` (numpy required). In Unity Play Mode use **Forest Rider → Report mounted rendering (Play Mode)**: it now also bakes and checks every clip plus intermediate poses before reporting the current renderers. See [v2 testing notes](Docs/V2_MODELS.md).
 
-The earlier Quaternius donkey and Dawid2K knight FBXs remain as reference assets and retain their license credits, but gameplay no longer loads them. Bear and moose use their existing static source meshes. Their color maps explicitly import as 2D textures. Missing maps fall back to an existing 2D texture or plain coat color so they cannot abort startup. Textures are assigned to shared runtime material copies after import; the model postprocessor does not synchronously load texture/shader assets. Deer, wolf, fox, zombie and dragon retain their licensed designs, rendered through precomputed ordinary-mesh frames instead of imported skinning. Idle, movement, attack and hit poses are included; the dragon also has flight poses. Frames are shared across enemies of the same species, and no runtime skin baking is used. `Tools/bake_enemy_frames.py` regenerates these from the included source FBXs in Blender; `python3 Tools/check_enemy_frames.py` validates every pose.
+The earlier Quaternius donkey and Dawid2K knight FBXs remain as reference assets and retain their license credits, but gameplay no longer loads them. Bear and moose retain their static source meshes, now animated with body weight shifts, wind-up, swipe/headbutt and recovery poses. Their color maps explicitly import as 2D textures. Missing maps fall back to an existing 2D texture or plain coat color so they cannot abort startup. Textures are assigned to shared runtime material copies after import; the model postprocessor does not synchronously load texture/shader assets. Deer, wolf, fox, zombie and dragon retain their licensed designs, rendered through precomputed ordinary-mesh frames instead of imported skinning. Idle, movement, attack and hit poses are included; the dragon also has flight poses. Pose pairs are shared across enemies of the same species and interpolate positions/normals on the GPU. Attack clips include 12 samples and their final recovery pose; the combat clock samples the animation directly during each strike. No runtime skin baking is used. `Tools/bake_enemy_frames.py` regenerates these from the included source FBXs in Blender; `python3 Tools/check_enemy_frames.py` validates every pose.
 
 The project includes **19 original synthesized audio files**: day/night ambience, a quiet music loop, hooves, sword/combat/skill sounds, dragon attacks, gems, loot, healing and UI feedback. There are no third-party sample recordings. **CAMP → SETTINGS** has saved Master, Music and Effects sliders; camp pauses world audio while menu feedback remains audible.
 
@@ -172,7 +172,7 @@ All 36 standalone C# NUnit test cases passed outside Unity under .NET 8, and C# 
 
 ## Remaining work
 
-See [Docs/ROADMAP.md](Docs/ROADMAP.md). Priority gaps are Unity/device validation and balancing, more polished transitions/tutorials, and animations for the static bear/moose. Inventory/crafting, additional environments and bosses are optional future design expansions.
+See [Docs/ROADMAP.md](Docs/ROADMAP.md). Priority gaps are Unity/device validation and balancing, more polished transitions/tutorials, and fully articulated limb animation for bear/moose. Inventory/crafting, additional environments and bosses are optional future design expansions.
 
 The generated image in `Docs/forest-rider-concept.png` is concept artwork, not a gameplay screenshot.
 
@@ -181,3 +181,9 @@ The generated image in `Docs/forest-rider-concept.png` is concept artwork, not a
 Open **Camp → Tutorial** for four short illustrated pages: ride/look, combat and Camp, orb hunting, and the dragon fight. Use Previous/Next, Done, or Back to Camp; reopening starts at page one. Camp keeps gameplay paused while reading. The four 768×288 snapshots are staged Blender renders of the actual licensed game meshes, not Unity gameplay captures. They preserve their aspect ratio and load only as their pages are opened.
 
 `blender -b -t 4 --python Tools/render_tutorial_snapshots.py` regenerates the images. In Unity/Android, check all four pages at your phone's aspect ratio, including page boundaries, Done, closing/reopening Camp and changing difficulty. Unity UI rendering still needs device verification.
+
+## Enemy attacks and dodge timing
+
+Wildlife and zombies now commit to a facing direction for **wind-up → strike → recovery**. Orange health bars and body poses warn of the attack. Being nearby alone deals no damage: the active swipe/bite/headbutt must overlap the player's body capsule. Sidestepping, backing away, moving behind the attacker, or interrupting it with a stunning skill can avoid the strike. Each attack hits at most once; missed strikes do not cause delayed damage during recovery. Moose charges sweep their actual movement path and also hit at most once. Terrain and scenery block contact checks.
+
+Player movement updates before enemy contact checks. All incoming damage—including dragon fireballs and dive AoE—is resolved after the frame's input callbacks, so a touch dodge pressed in that frame protects against queued hits too. Pause, revival and reset clear or suspend the relevant transient state. See [combat validation and tuning](Docs/ENEMY_COMBAT.md).

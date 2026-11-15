@@ -6,7 +6,10 @@ namespace DonkeyForest
         public string kind;
         ForestGame game;
         float baseHealth,baseDamage;
-        float health,maxHealth,cooldown,wanderTime,speed,damage,attackReach;
+        float health,maxHealth,wanderTime,speed,damage,attackReach;
+        EnemyAttackCycle attack;
+        bool attackSound;
+        Vector3 attackDirection;
         Vector3 wander;
         Transform healthBar;
         CharacterController controller;
@@ -29,6 +32,7 @@ namespace DonkeyForest
             damage*=(1+(game.data.journey.level-1)*.02f)*(Elite?1.3f:1);
             baseHealth=maxHealth;baseDamage=damage;ApplyDifficulty();
             attackReach=kind=="Moose"?2.6f:2.2f;
+            attack=new EnemyAttackCycle(EnemyAttackProfile.For(kind));
             visual=EnemyVisual.Create(kind,transform,height);
             controller=gameObject.AddComponent<CharacterController>();
             controller.radius=kind=="Moose"?.7f:.5f;controller.height=Mathf.Max(1.2f,height*.8f);controller.center=Vector3.up*controller.height*.5f;
@@ -46,9 +50,9 @@ namespace DonkeyForest
         }
         void Update()
         {
-            if(!game||game.Paused||game.Dead)return;
+            if(!game||game.Paused||game.Dead||health<=0)return;
             if(kind=="Zombie"&&!game.Night){game.enemies.Remove(this);Destroy(gameObject);return;}
-            float dt=Time.deltaTime;cooldown-=dt;wanderTime-=dt;chargeCooldown-=dt;
+            float dt=Time.deltaTime;wanderTime-=dt;chargeCooldown-=dt;
             if(stunTime>0)
             {
                 stunTime=Mathf.Max(0,stunTime-dt);controller.Move(Vector3.down*15*dt);ClampPosition();visual.Play("stun");
@@ -57,16 +61,20 @@ namespace DonkeyForest
             }
             if(chargeWarning>0)
             {
-                chargeWarning-=dt;visual.Play("attack");controller.Move(Vector3.down*15*dt);ClampPosition();
+                chargeWarning-=dt;visual.AttackPose(Mathf.Clamp01(1-chargeWarning)*.4f);controller.Move(Vector3.down*15*dt);ClampPosition();
                 if(chargeWarning<=0){rushTime=.7f;rushHit=false;healthRenderer.sharedMaterial=game.Mat(new Color(.8f,.22f,.15f));}
                 return;
             }
             if(rushTime>0)
             {
-                rushTime-=dt;controller.Move((rushDirection*8+Vector3.down*15)*dt);ClampPosition();visual.Play("move");
-                if(!rushHit&&MountedSkills.InArea(game.rider.position,transform.position,rushDirection,2.6f,-1)){rushHit=true;game.Damage(damage*1.4f);}
+                Vector3 before=transform.position;float moveTime=Mathf.Min(dt,rushTime);rushTime=Mathf.Max(0,rushTime-dt);
+                var flags=controller.Move((rushDirection*8+Vector3.down*15)*moveTime);ClampPosition();visual.Play("move");
+                Vector3 tip=rushDirection*1.35f+Vector3.up*1.55f;
+                if(!rushHit&&Connects(before+tip,transform.position+tip,.6f)){rushHit=true;game.Damage(damage*1.4f);}
+                if((flags&CollisionFlags.Sides)!=0&&(transform.position-before).sqrMagnitude<.01f)rushTime=0;
                 return;
             }
+            if(attack.Running){TickAttack(dt);return;}
             Vector3 delta=game.rider.position-transform.position;delta.y=0;float distance=delta.magnitude;
             if(kind=="Moose"&&distance>3&&distance<11&&chargeCooldown<=0)
             {
@@ -90,10 +98,55 @@ namespace DonkeyForest
             }
             if(kind=="Wolf"&&chase&&distance>3&&distance<10)velocity+=Vector3.Cross(delta.normalized,Vector3.up)*((GetInstanceID()&1)==0?1.2f:-1.2f);
             controller.Move((velocity+Vector3.down*15)*dt);ClampPosition();
-            bool attacking=chase&&distance<attackReach&&Mathf.Abs(transform.position.y-game.rider.position.y)<2.5f;
-            visual.Play(attacking?"attack":velocity.sqrMagnitude>.1f?"move":"idle");
-            if(attacking&&cooldown<=0){cooldown=kind=="Wolf"?1.1f:1.4f;game.Damage(damage);}
+            delta=game.rider.position-transform.position;float heightDelta=Mathf.Abs(delta.y);delta.y=0;distance=delta.magnitude;
+            if(chase&&distance<attackReach&&distance>.001f)
+                transform.rotation=Quaternion.Slerp(transform.rotation,Quaternion.LookRotation(delta),1-Mathf.Exp(-10*dt));
+            if(chase&&distance<attackReach&&heightDelta<2.2f&&Vector3.Dot(transform.forward,delta.normalized)>.7f)
+            {
+                attackDirection=transform.forward;attack.Begin();attackSound=false;
+                healthRenderer.sharedMaterial=game.Mat(new Color(1,.55f,.1f));visual.AttackPose(0);
+            }
+            else visual.Play(velocity.sqrMagnitude>.1f?"move":"idle");
             if(distance>65){game.enemies.Remove(this);Destroy(gameObject);}
+        }
+        void TickAttack(float dt)
+        {
+            Vector3 before=transform.position;attack.Tick(dt);var profile=attack.Profile;
+            float activeStep=(float)(attack.ActiveTo-attack.ActiveFrom);
+            controller.Move(attackDirection*(profile.Lunge*activeStep/(float)profile.Active)+Vector3.down*15*dt);ClampPosition();
+            if(attack.ActiveThisStep)
+            {
+                if(!attackSound){attackSound=true;game.Audio.Play("swing",.2f);}
+                // Sweep the active part only, split at 40 ms to retain curved swipes on slow phones.
+                int steps=Mathf.Clamp(Mathf.CeilToInt(activeStep/.04f),1,6);
+                for(int i=0;i<steps&&!attack.ContactSpent;i++)
+                {
+                    float a=(float)i/steps,b=(float)(i+1)/steps;
+                    float start=(float)(attack.ActiveFrom+activeStep*a)/(float)profile.Active;
+                    float end=(float)(attack.ActiveFrom+activeStep*b)/(float)profile.Active;
+                    Vector3 from=StrikePoint(Vector3.Lerp(before,transform.position,a),start);
+                    Vector3 to=StrikePoint(Vector3.Lerp(before,transform.position,b),end);
+                    if(attack.TryContact(Connects(from,to,profile.Radius)))game.Damage(damage);
+                }
+            }
+            visual.AttackPose((float)attack.PoseTime);
+            healthRenderer.sharedMaterial=game.Mat(attack.Phase==EnemyAttackPhase.Windup?new Color(1,.55f,.1f):new Color(.8f,.22f,.15f));
+            if(!attack.Running)visual.Play("idle");
+        }
+        Vector3 StrikePoint(Vector3 origin,float progress)
+        {
+            var p=attack.Profile;Vector3 right=Vector3.Cross(Vector3.up,attackDirection);
+            return origin+Vector3.up*p.Height+attackDirection*(p.Offset+Mathf.Sin(progress*Mathf.PI)*.2f)+right*(p.Sweep*(progress*2-1));
+        }
+        static CombatPoint Point(Vector3 value)=>new CombatPoint(value.x,value.y,value.z);
+        bool Connects(Vector3 from,Vector3 to,float radius)
+        {
+            Bounds target=game.PlayerHitBounds;float bodyRadius=Mathf.Min(target.extents.x,target.extents.z);
+            float half=Mathf.Max(0,target.extents.y-bodyRadius);
+            if(!AttackContact.SweptSphereHitsCapsule(Point(from),Point(to),radius,
+                Point(target.center-Vector3.up*half),Point(target.center+Vector3.up*half),bodyRadius))return false;
+            int obstacles=(1<<ForestTerrain.SceneryLayer)|(1<<ForestTerrain.GroundLayer);
+            return !Physics.Linecast(transform.position+Vector3.up*attack.Profile.Height,target.center,obstacles,QueryTriggerInteraction.Ignore);
         }
         void ClampPosition()
         {
@@ -106,7 +159,7 @@ namespace DonkeyForest
             if(health<=0)return;Hit(amount);if(health<=0)return;
             if(stun>0)
             {
-                stunTime=Mathf.Max(stunTime,stun);cooldown=Mathf.Max(cooldown,stun+.2f);chargeWarning=0;rushTime=0;
+                stunTime=Mathf.Max(stunTime,stun);attack.Cancel();chargeWarning=0;rushTime=0;visual.Play("stun");
                 healthRenderer.sharedMaterial=game.Glow(new Color(1,.8f,.1f));
             }
             if(push.sqrMagnitude>0){controller.Move(push);ClampPosition();}
@@ -114,7 +167,7 @@ namespace DonkeyForest
         public void Hit(float damage)
         {
             if(health<=0)return;game.Audio.Play("hit",.55f);angry=true;health-=damage;healthBar.localScale=new Vector3(Mathf.Max(0,health/maxHealth),.08f,.08f);
-            if(health<=0){game.Killed(this);Destroy(gameObject);}
+            if(health<=0){attack.Cancel();game.Killed(this);gameObject.SetActive(false);Destroy(gameObject);}
         }
     }
     public sealed class ForestLoot:MonoBehaviour

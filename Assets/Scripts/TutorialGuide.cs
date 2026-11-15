@@ -60,10 +60,10 @@ namespace DonkeyForest
             switch(page)
             {
                 case 0:
-                    body.text="Drag the LEFT STICK to ride.\nSwipe empty space on the RIGHT to rotate the camera.\nPC: WASD to ride; hold right mouse to look.";
+                    body.text="Drag the LEFT STICK to ride.\nSwipe empty space on the RIGHT to rotate the camera.\nPC: WASD to ride; hold right mouse to look.\nWatch for zombies at night.";
                     break;
                 case 1:
-                    body.text="ATTACK up close; DODGE hits; HEAL uses a potion.\nUse your four skills. Watch for zombies at night.\nRide over loot. Upgrade gear and skills in Camp.\nCamp also has SAVE, REVIVE and settings.";
+                    body.text="ATTACK up close; HEAL uses a potion.\nDODGE gives brief invincibility. Use your four skills.\nRide over loot. Upgrade gear and skills in Camp.\nCamp also has SAVE, REVIVE and settings.";
                     break;
                 case 2:
                     body.text=$"Enemies drop orbs: Normal {DifficultyRules.Get(0).OrbDropChance*100:0}% • Hard {DifficultyRules.Get(1).OrbDropChance*100:0}% • Extreme {DifficultyRules.Get(2).OrbDropChance*100:0}%.\n"+

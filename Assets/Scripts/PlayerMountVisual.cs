@@ -29,7 +29,9 @@ namespace DonkeyForest
         }
         void LateUpdate()
         {
-            if(!game||game.Paused||game.Dead||!donkey||!knight)return;
+            if(!game||!donkey||!knight)return;
+            donkey.SetDodgeTint(game.IsInvulnerable&&!game.Dead);knight.SetDodgeTint(game.IsInvulnerable&&!game.Dead);
+            if(game.Paused||game.Dead)return;
             float dt=Time.deltaTime;
             if(attackPending){attackPending=false;attackTime=.5f;attackVariant^=1;}
             else attackTime=Mathf.Max(0,attackTime-dt);

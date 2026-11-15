@@ -8,6 +8,11 @@ namespace DonkeyForest
         Animation[] animations=Array.Empty<Animation>();
         string state="";
         bool frozen;
+        string species;
+        float poseTime,motionClock;
+        bool attacking;
+        Vector3 visualOffset;
+        Quaternion visualRotation=Quaternion.identity;
         BakedEnemyAnimation bakedAnimation;
         public GameObject Model { get; private set; }
         Dictionary<string,string>[] choices=Array.Empty<Dictionary<string,string>>();
@@ -27,7 +32,7 @@ namespace DonkeyForest
             if(BakedEnemyAnimation.Supports(kind))
             {
                 var bakedModel=new GameObject(kind+" baked model");bakedModel.transform.SetParent(root.transform,false);bakedModel.transform.localScale=Vector3.one*height;
-                var bakedVisual=root.AddComponent<EnemyVisual>();bakedVisual.Model=bakedModel;bakedVisual.animations=Array.Empty<Animation>();
+                var bakedVisual=root.AddComponent<EnemyVisual>();bakedVisual.species=kind;bakedVisual.Model=bakedModel;bakedVisual.animations=Array.Empty<Animation>();
                 bakedVisual.bakedAnimation=bakedModel.AddComponent<BakedEnemyAnimation>();bakedVisual.bakedAnimation.Setup(kind);
                 return bakedVisual;
             }
@@ -39,7 +44,7 @@ namespace DonkeyForest
             var model=Instantiate(source,fit,false);model.name=kind+" licensed model";
             foreach(var collider in model.GetComponentsInChildren<Collider>()){collider.enabled=false;Destroy(collider);}
             var visual=pivot.gameObject.AddComponent<EnemyVisual>();
-            visual.Model=model;
+            visual.species=kind;visual.Model=model;
             ImportedModelMaterials.Apply(model,kind);
             visual.animations=model.GetComponentsInChildren<Animation>();
             visual.choices=new Dictionary<string,string>[visual.animations.Length];
@@ -104,7 +109,8 @@ namespace DonkeyForest
         }
         public void Play(string desired)
         {
-            if(bakedAnimation){bakedAnimation.Play(desired);return;}
+            attacking=false;
+            if(bakedAnimation){state=desired;bakedAnimation.Play(desired);return;}
             if(state==desired)return;bool first=state=="";state=desired;
             for(int i=0;i<animations.Length;i++)
             {
@@ -115,6 +121,41 @@ namespace DonkeyForest
                 }
                 else animations[i].Stop();
             }
+        }
+        public void AttackPose(float normalized)
+        {
+            attacking=true;state="attack";poseTime=Mathf.Clamp01(normalized);
+            if(bakedAnimation)bakedAnimation.AttackPose(poseTime);
+        }
+        void LateUpdate()
+        {
+            if(species=="Dragon")return;
+            var game=ForestGame.Instance;if(game&&(game.Paused||game.Dead))return;
+            motionClock+=Time.deltaTime*(state=="move"?9:2);
+            Vector3 offset=Vector3.zero;Quaternion rotation=Quaternion.identity;
+            if(attacking)
+            {
+                // Bear/moose have static source meshes: give them clear weight shifts and a committed strike.
+                // Authored skeletal poses on the other species receive only a small body accent.
+                float wind,strike;
+                if(poseTime<.45f){wind=Mathf.SmoothStep(0,1,poseTime/.45f);strike=0;}
+                else if(poseTime<.58f){strike=Mathf.SmoothStep(0,1,(poseTime-.45f)/.13f);wind=1-strike;}
+                else{wind=0;strike=1-Mathf.SmoothStep(0,1,(poseTime-.58f)/.42f);}
+                float strength=bakedAnimation ? .25f : 1;
+                float pitch=species=="Moose"?18*wind-10*strike:-12*wind+18*strike;
+                float yaw=species=="Bear"||species=="Zombie"?-12*wind+18*strike:0;
+                offset=new Vector3(0,(species=="Bear"?.1f:0)*wind,(-.12f*wind+.2f*strike))*strength;
+                rotation=Quaternion.Euler(pitch*strength,yaw*strength,0);
+            }
+            else if(!bakedAnimation)
+            {
+                bool moving=state=="move";float bob=Mathf.Sin(motionClock);
+                offset=Vector3.up*(moving?Mathf.Abs(bob)*.025f:bob*.005f);
+                rotation=Quaternion.Euler(moving?bob*2:0,0,moving?Mathf.Sin(motionClock*.5f):0);
+            }
+            float blend=1-Mathf.Exp(-22*Time.deltaTime);
+            visualOffset=Vector3.Lerp(visualOffset,offset,blend);visualRotation=Quaternion.Slerp(visualRotation,rotation,blend);
+            transform.localPosition=visualOffset;transform.localRotation=visualRotation;
         }
         void Update()
         {

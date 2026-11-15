@@ -59,20 +59,28 @@ for kind in ['Deer','Wolf','Fox','Zombie','Dragon']:
     indices.append(lookup[key])
  points=[ev.matrix_world@v.co for ev,mesh in items for v in mesh.vertices]
  low=Vector(tuple(min(p[i] for p in points) for i in range(3)));high=Vector(tuple(max(p[i] for p in points) for i in range(3)))
- scale=1/(high.z-low.z);center=Vector(((low.x+high.x)/2,(low.y+high.y)/2,low.z));release(items)
+ scale=1/(high.z-low.z);center=Vector(((low.x+high.x)/2,(low.y+high.y)/2,low.z))
+ reference_normals=[]
+ for oi,li in refs:
+  ev,mesh=items[oi];reference_normals.append((ev.matrix_world.to_3x3().inverted().transposed()@mesh.corner_normals[li].vector).normalized())
+ release(items)
  info={'kind':kind,'vertices':len(refs),'triangles':len(indices)//3,'clips':{}}
  with (out/(kind+'.bytes')).open('wb') as file:
   file.write(b'FRM1');file.write(struct.pack('<iii',len(refs),len(indices),len(clips)))
   for color in colors:file.write(bytes(color))
   file.write(struct.pack('<'+'i'*len(indices),*indices))
   for state,action in clips.items():
-   start,end=action.frame_range;duration=max(.1,(end-start)/bpy.context.scene.render.fps);count=8 if state in ['move','fly'] else 6
+   start,end=action.frame_range;duration=max(.1,(end-start)/bpy.context.scene.render.fps);count=12 if state=='attack' else 8 if state in ['move','fly'] else 6
    name=state.encode();file.write(struct.pack('<i',len(name))+name+struct.pack('<fi',duration,count));info['clips'][state]=count
+   previous_normals=list(reference_normals)
    for f in range(count):
-    pose(action,start+(end-start)*f/count);items=snapshot();values=[]
-    for oi,li in refs:
+    pose(action,start+(end-start)*f/(count-1 if state=='attack' else count));items=snapshot();values=[]
+    for vertex,(oi,li) in enumerate(refs):
      ev,mesh=items[oi];v=mesh.vertices[mesh.loops[li].vertex_index];p=(ev.matrix_world@v.co-center)*scale
      n=(ev.matrix_world.to_3x3().inverted().transposed()@mesh.corner_normals[li].vector).normalized()
+     # A source triangle can briefly collapse during a strike; retain its last valid lighting normal.
+     if n.length_squared<.5:n=previous_normals[vertex]
+     else:previous_normals[vertex]=n.copy()
      values.extend((p.x,p.z,-p.y,n.x,n.z,-n.y))
     assert all(math.isfinite(v) for v in values),kind
     file.write(struct.pack('<'+'f'*len(values),*values));release(items)
